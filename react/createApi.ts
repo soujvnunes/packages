@@ -1,31 +1,67 @@
-export interface CreateApiOptions<ErrorResult> {
-  // Prepended to every endpoint, e.g. `process.env.API_URL`.
-  baseURL: string
-  // Sent on every request; per-call `options.headers` win on key collision.
-  headers?: HeadersInit
-  // Maps a thrown fetch/parse error to the caller's own error envelope — the one piece of the
-  // response shape the package can't own, so the consumer supplies it (never inline an envelope).
-  onError: (error: unknown) => ErrorResult
+export interface ApiResponseSuccess<T> {
+  data: T
+  success: true
 }
 
-// Fetch helper factory: binds a baseURL + default JSON headers + an error mapper, then returns a
-// typed `api<T>(endpoint, options)`. A network/parse failure resolves to `onError(error)` instead
-// of rejecting, so callers branch on the value, never a try/catch.
+export interface ApiResponseError {
+  status: number
+  message: string
+  data: undefined
+  success: false
+  timestamp: string
+}
+
+export type ApiResponse<T> = ApiResponseSuccess<T> | ApiResponseError
+
+// Build a success envelope — server/action side.
+export const createApiResponseSuccess = <T = null>(data: T = null as T): ApiResponseSuccess<T> => ({
+  data,
+  success: true,
+})
+
+// Build the single error envelope callers branch on via `success: false`.
+export const createApiResponseError = ({
+  message = 'Not found',
+  status = 404,
+}: Partial<Pick<ApiResponseError, 'message' | 'status'>> = {}): ApiResponseError => ({
+  status,
+  message,
+  data: undefined,
+  success: false,
+  timestamp: new Date().toISOString(),
+})
+
+export interface CreateApiOptions {
+  baseURL: string // prepended to every endpoint, e.g. process.env.API_URL
+  headers?: HeadersInit // sent on every request; per-call options.headers win on collision
+}
+
+// Server-only, THROW-FREE fetch factory (nextjs-conventions §26): binds a baseURL + JSON headers and
+// returns a typed api<T>() that always resolves to an ApiResponse envelope — a non-ok status or a
+// network/parse error becomes createApiResponseError, never a throw. The server owns error policy; a
+// server action reads `.success` and returns the message through useActionState (§26/§38) — so no
+// consumer writes a try/catch or an onError callback.
 export const createApi =
-  <ErrorResult>({ baseURL, headers, onError }: CreateApiOptions<ErrorResult>) =>
-  async <T>(endpoint: string, options?: RequestInit): Promise<T | ErrorResult> => {
+  ({ baseURL, headers }: CreateApiOptions) =>
+  async <T>(endpoint: string, options?: RequestInit): Promise<ApiResponse<T>> => {
     try {
       const response = await fetch(`${baseURL}${endpoint}`, {
         ...options,
-        headers: {
-          'Content-Type': 'application/json',
-          ...headers,
-          ...options?.headers,
-        },
+        headers: { 'Content-Type': 'application/json', ...headers, ...options?.headers },
       })
 
-      return (await response.json()) as T
+      if (!response.ok) {
+        return createApiResponseError({
+          status: response.status,
+          message: response.statusText || 'Request failed',
+        })
+      }
+
+      return (await response.json()) as ApiResponse<T>
     } catch (error) {
-      return onError(error)
+      return createApiResponseError({
+        status: 500,
+        message: error instanceof Error ? error.message : 'Network request failed',
+      })
     }
   }
