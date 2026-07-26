@@ -1,9 +1,5 @@
 {
   "extends": "../tsconfig.base.json",
-  "compilerOptions": {
-    "noEmit": true,
-    "verbatimModuleSyntax": false,
-    "types": ["node"]
-  },
+  "compilerOptions": { "noEmit": true, "verbatimModuleSyntax": false, "types": ["node"] },
   "include": ["index.ts", "declarations.d.ts"]
 }
