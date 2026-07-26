@@ -1,0 +1,28 @@
+{
+  "name": "@soujvnunes/packages",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20.9.0"
+  },
+  "packageManager": "pnpm@10.12.4",
+  "scripts": {
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "eslint .",
+    "format": "prettier --check .",
+    "format:write": "prettier --write .",
+    "changeset": "changeset",
+    "version": "changeset version",
+    "release": "changeset publish"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.27.9",
+    "@soujvnunes/eslint-config": "workspace:*",
+    "@soujvnunes/prettier-config": "workspace:*",
+    "eslint": "^9.39.4",
+    "prettier": "^3.8.1",
+    "tsup": "^8.3.5",
+    "typescript": "^6.0.2"
+  }
+}
