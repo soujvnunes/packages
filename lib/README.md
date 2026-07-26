@@ -1,6 +1,6 @@
 # @soujvnunes/lib
 
-Framework-agnostic **stateful** modules (the `shared/lib` counterpart to the pure `@soujvnunes/utils`). Each subpath's dependencies are **optional peers** — install only what the subpath you import needs.
+Framework-agnostic **stateful** modules (the `shared/lib` counterpart to the pure `@soujvnunes/util`). Each subpath's dependencies are **optional peers** — install only what the subpath you import needs.
 
 ## `./mongoose` — serverless Mongoose client factory
 
