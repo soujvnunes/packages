@@ -1,0 +1,65 @@
+{
+  "name": "@soujvnunes/lib",
+  "version": "0.0.0",
+  "description": "Framework-agnostic stateful modules — serverless Mongoose client + Typegoose base models.",
+  "license": "MIT",
+  "author": "soujvnunes",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/soujvnunes/packages.git",
+    "directory": "lib"
+  },
+  "type": "module",
+  "exports": {
+    "./mongoose": {
+      "types": "./dist/mongoose.d.ts",
+      "default": "./dist/mongoose.js"
+    },
+    "./typegoose": {
+      "types": "./dist/typegoose.d.ts",
+      "default": "./dist/typegoose.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup mongoose.ts typegoose.ts --format esm --dts --clean",
+    "typecheck": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "@typegoose/typegoose": ">=12",
+    "@vercel/functions": ">=2",
+    "mongoose": ">=8",
+    "mongoose-lean-virtuals": ">=2",
+    "reflect-metadata": ">=0.2"
+  },
+  "peerDependenciesMeta": {
+    "@typegoose/typegoose": {
+      "optional": true
+    },
+    "@vercel/functions": {
+      "optional": true
+    },
+    "mongoose": {
+      "optional": true
+    },
+    "mongoose-lean-virtuals": {
+      "optional": true
+    },
+    "reflect-metadata": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@typegoose/typegoose": "^12.21.1",
+    "@types/node": "^20.19.39",
+    "@vercel/functions": "^3.7.1",
+    "mongoose": "~8.21.0",
+    "mongoose-lean-virtuals": "^2.1.0",
+    "reflect-metadata": "^0.2.2"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
