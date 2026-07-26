@@ -10,8 +10,9 @@ Monorepo for the shared `@soujvnunes/*` packages.
 | [`@soujvnunes/prettier-config`](./prettier-config) | Prettier config factory (`createConfig`)                               |
 | [`@soujvnunes/util`](./util)                       | Zero-dependency utilities (subpath exports)                            |
 | [`@soujvnunes/lib`](./lib)                         | Stateful modules — Mongoose client + Typegoose bases (subpath exports) |
+| [`@soujvnunes/react`](./react)                     | React utilities — context/error-boundary/fetch/ndjson/motion (subpath exports) |
 
-Separate packages when deps are bundled (the configs); subpaths in one package when deps are peer/zero (`util`, `lib`). Planned: `@soujvnunes/react`.
+Separate packages when deps are bundled (the configs); subpaths in one package when deps are peer/zero (`util`, `lib`, `react`).
 
 ## Convention: every package is a customizable factory
 
