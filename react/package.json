@@ -1,0 +1,62 @@
+{
+  "name": "@soujvnunes/react",
+  "version": "0.0.0",
+  "description": "React utilities — context factory, error boundary, ndjson stream reader, fetch factory, motion helpers (subpath exports, optional peers).",
+  "license": "MIT",
+  "author": "soujvnunes",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/soujvnunes/packages.git",
+    "directory": "react"
+  },
+  "type": "module",
+  "exports": {
+    "./createContextWithHook": {
+      "types": "./dist/createContextWithHook.d.ts",
+      "default": "./dist/createContextWithHook.js"
+    },
+    "./ErrorBoundary": {
+      "types": "./dist/ErrorBoundary.d.ts",
+      "default": "./dist/ErrorBoundary.js"
+    },
+    "./createApi": {
+      "types": "./dist/createApi.d.ts",
+      "default": "./dist/createApi.js"
+    },
+    "./readNdjson": {
+      "types": "./dist/readNdjson.d.ts",
+      "default": "./dist/readNdjson.js"
+    },
+    "./motion": {
+      "types": "./dist/motion.d.ts",
+      "default": "./dist/motion.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup createContextWithHook.ts ErrorBoundary.tsx createApi.ts readNdjson.ts motion.ts --format esm --dts --clean",
+    "typecheck": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "motion": ">=11",
+    "react": ">=18"
+  },
+  "peerDependenciesMeta": {
+    "motion": {
+      "optional": true
+    },
+    "react": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.0",
+    "motion": "^11.18.0",
+    "react": "^19.2.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
