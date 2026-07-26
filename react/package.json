@@ -1,6 +1,6 @@
 {
   "name": "@soujvnunes/react",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "React utilities — context factory, error boundary, ndjson stream reader, fetch factory, motion helpers (subpath exports, optional peers).",
   "license": "MIT",
   "author": "soujvnunes",
