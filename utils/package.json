@@ -1,0 +1,48 @@
+{
+  "name": "@soujvnunes/utils",
+  "version": "0.0.0",
+  "description": "Zero-dependency TypeScript utilities.",
+  "license": "MIT",
+  "author": "soujvnunes",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/soujvnunes/packages.git",
+    "directory": "utils"
+  },
+  "type": "module",
+  "exports": {
+    "./ellipses": {
+      "types": "./dist/ellipses.d.ts",
+      "default": "./dist/ellipses.js"
+    },
+    "./objectHas": {
+      "types": "./dist/objectHas.d.ts",
+      "default": "./dist/objectHas.js"
+    },
+    "./devLog": {
+      "types": "./dist/devLog.d.ts",
+      "default": "./dist/devLog.js"
+    },
+    "./matchesQuery": {
+      "types": "./dist/matchesQuery.d.ts",
+      "default": "./dist/matchesQuery.js"
+    },
+    "./formatTimestamp": {
+      "types": "./dist/formatTimestamp.d.ts",
+      "default": "./dist/formatTimestamp.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup ellipses.ts objectHas.ts devLog.ts matchesQuery.ts formatTimestamp.ts --format esm --dts --clean",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.39"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
