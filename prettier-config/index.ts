@@ -10,6 +10,8 @@ const base: Config = {
   trailingComma: 'all',
   printWidth: 104,
   bracketSpacing: true,
+  // Collapse any object literal onto one line when it fits — smaller files, less to read.
+  objectWrap: 'collapse',
 }
 
 // Plugin-contributed options (prettier-plugin-tailwindcss) — not part of Prettier's Config type.
@@ -23,8 +25,4 @@ const tailwind = {
  * Shared Prettier config. Pass any Prettier option to override the base; the common one is
  * `tailwindStylesheet` (its path differs between `app/` and `src/app/` layouts).
  */
-export const createConfig = (overrides: Config = {}): Config => ({
-  ...base,
-  ...tailwind,
-  ...overrides,
-})
+export const createConfig = (overrides: Config = {}): Config => ({ ...base, ...tailwind, ...overrides })
