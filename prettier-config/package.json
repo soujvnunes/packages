@@ -1,0 +1,40 @@
+{
+  "name": "@soujvnunes/prettier-config",
+  "version": "0.0.0",
+  "description": "Shared Prettier config factory.",
+  "license": "MIT",
+  "author": "soujvnunes",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/soujvnunes/packages.git",
+    "directory": "prettier-config"
+  },
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup index.ts --format esm --dts --clean",
+    "typecheck": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "prettier": ">=3",
+    "prettier-plugin-tailwindcss": ">=0.6"
+  },
+  "peerDependenciesMeta": {
+    "prettier-plugin-tailwindcss": {
+      "optional": true
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
