@@ -91,6 +91,12 @@ importers:
         specifier: '>=0.6'
         version: 0.8.1(prettier@3.9.6)
 
+  utils:
+    devDependencies:
+      '@types/node':
+        specifier: ^20.19.39
+        version: 20.19.43
+
 packages:
 
   '@babel/code-frame@7.29.7':
