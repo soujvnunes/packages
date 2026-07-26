@@ -1,21 +1,21 @@
-# @soujvnunes/utils
+# @soujvnunes/util
 
 Zero-dependency TypeScript utilities. Each is a subpath export, so you import exactly what you use.
 
 ## Install
 
 ```bash
-pnpm add @soujvnunes/utils
+pnpm add @soujvnunes/util
 ```
 
 ## Use
 
 ```ts
-import { ellipses } from '@soujvnunes/utils/ellipses'
-import { objectHas } from '@soujvnunes/utils/objectHas'
-import { devLog } from '@soujvnunes/utils/devLog'
-import { matchesQuery } from '@soujvnunes/utils/matchesQuery'
-import { formatTimestamp } from '@soujvnunes/utils/formatTimestamp'
+import { ellipses } from '@soujvnunes/util/ellipses'
+import { objectHas } from '@soujvnunes/util/objectHas'
+import { devLog } from '@soujvnunes/util/devLog'
+import { matchesQuery } from '@soujvnunes/util/matchesQuery'
+import { formatTimestamp } from '@soujvnunes/util/formatTimestamp'
 ```
 
 | Subpath             | Export            | What                                                               |
