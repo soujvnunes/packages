@@ -1,6 +1,6 @@
 {
   "name": "@soujvnunes/lib",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Framework-agnostic stateful modules — serverless Mongoose client + Typegoose base models.",
   "license": "MIT",
   "author": "soujvnunes",
