@@ -4,12 +4,14 @@ Monorepo for the shared `@soujvnunes/*` packages.
 
 ## Packages
 
-| Package                                            | What                                                                  |
-| -------------------------------------------------- | --------------------------------------------------------------------- |
-| [`@soujvnunes/eslint-config`](./eslint-config)     | Flat ESLint config factories (`createBaseConfig`, `createNextConfig`) |
-| [`@soujvnunes/prettier-config`](./prettier-config) | Prettier config factory (`createConfig`)                              |
+| Package                                            | What                                                                   |
+| -------------------------------------------------- | ---------------------------------------------------------------------- |
+| [`@soujvnunes/eslint-config`](./eslint-config)     | Flat ESLint config factories (`createBaseConfig`, `createNextConfig`)  |
+| [`@soujvnunes/prettier-config`](./prettier-config) | Prettier config factory (`createConfig`)                               |
+| [`@soujvnunes/util`](./util)                       | Zero-dependency utilities (subpath exports)                            |
+| [`@soujvnunes/lib`](./lib)                         | Stateful modules — Mongoose client + Typegoose bases (subpath exports) |
 
-Planned: `@soujvnunes/utils`, `@soujvnunes/react`, `@soujvnunes/mongodb`.
+Separate packages when deps are bundled (the configs); subpaths in one package when deps are peer/zero (`util`, `lib`). Planned: `@soujvnunes/react`.
 
 ## Convention: every package is a customizable factory
 
