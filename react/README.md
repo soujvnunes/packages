@@ -31,18 +31,31 @@ const Fallback = ({ error, reset }: ErrorBoundaryFallbackProps) => (
 // <ErrorBoundary Fallback={Fallback}>{children}</ErrorBoundary>
 ```
 
-## `./createApi` — fetch factory
+## `./createApi` — throw-free fetch factory + response envelope
 
-`createApi({ baseURL, headers?, onError })` binds a base URL + default JSON headers and returns a typed `api<T>(endpoint, options?)`. A network/parse failure resolves to `onError(error)` (your own error envelope) instead of rejecting — so the response shape stays yours, not the package's.
+`createApi({ baseURL, headers? })` binds a base URL + default JSON headers and returns a typed,
+**throw-free** `api<T>(endpoint, options?)` that always resolves to an `ApiResponse<T>` — a non-ok
+status or a network/parse error becomes an error envelope, never a rejection. Ships the envelope
+builders (`createApiResponseSuccess`, `createApiResponseError`) so the server produces the same shape.
+Callers branch on `.success`; a server action returns the message through `useActionState` — no
+try/catch, no `onError` callback (nextjs-conventions §26/§38).
 
 ```ts
+// shared/lib/api.ts — 'use server'
 import { createApi } from '@soujvnunes/react/createApi'
 
-export const api = createApi({
-  baseURL: process.env.API_URL!,
-  onError: (error) => ({ success: false as const, error: String(error) }),
-})
-// const res = await api<{ success: true; data: User }>('/users/1')
+export const api = createApi({ baseURL: process.env.API_URL! })
+```
+
+```ts
+// features/x/actions.ts — 'use server'
+export const claim = async (_prev: State, formData: FormData): Promise<State> => {
+  const res = await api<User>('/claim', { method: 'POST', body: formData })
+
+  if (!res.success) return { error: res.message } // surfaced client-side via useActionState → toast
+
+  return { user: res.data }
+}
 ```
 
 ## `./readNdjson` — newline-delimited-JSON stream reader
