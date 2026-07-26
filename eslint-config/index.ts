@@ -160,6 +160,25 @@ const restrictedSyntaxRule: Linter.RulesRecord = {
       selector: 'TSEnumDeclaration',
       message: 'Avoid enums; use const assertions or union types instead.',
     },
+    {
+      selector: "ImportDeclaration[source.value='react'] > ImportDefaultSpecifier",
+      message:
+        'Do not import the React default — use the ambient `React.*` namespace (the react-jsx runtime needs no React import).',
+    },
+    {
+      selector: "ImportDeclaration[source.value='react'] > ImportNamespaceSpecifier",
+      message: 'Do not `import * as React` — use the ambient `React.*` namespace.',
+    },
+    {
+      selector: "ImportDeclaration[source.value='react'] > ImportSpecifier[importKind='type']",
+      message:
+        'Reference React types via the ambient `React.*` namespace, not a named `{ type X }` import from react.',
+    },
+    {
+      selector: "ImportDeclaration[importKind='type'][source.value='react']",
+      message:
+        'Reference React types via the ambient `React.*` namespace, not `import type … from "react"`.',
+    },
   ],
 }
 
@@ -191,11 +210,7 @@ const nextRules: Linter.RulesRecord = {
 const importOrderRule = (groups: (string | string[])[]): Linter.RulesRecord => ({
   'import-helpers/order-imports': [
     'warn',
-    {
-      newlinesBetween: 'always',
-      groups,
-      alphabetize: { order: 'asc', ignoreCase: true },
-    },
+    { newlinesBetween: 'always', groups, alphabetize: { order: 'asc', ignoreCase: true } },
   ],
 })
 
