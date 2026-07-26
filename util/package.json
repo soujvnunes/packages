@@ -1,5 +1,5 @@
 {
-  "name": "@soujvnunes/utils",
+  "name": "@soujvnunes/util",
   "version": "0.0.0",
   "description": "Zero-dependency TypeScript utilities.",
   "license": "MIT",
@@ -7,7 +7,7 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/soujvnunes/packages.git",
-    "directory": "utils"
+    "directory": "util"
   },
   "type": "module",
   "exports": {
