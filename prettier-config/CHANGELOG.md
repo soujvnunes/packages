@@ -1,5 +1,11 @@
 # @soujvnunes/prettier-config
 
+## 0.2.1
+
+### Patch Changes
+
+- 01a8110: Bundle `prettier-plugin-tailwindcss` as a dependency (it was an optional peer), so `createConfig()` is self-contained — Tailwind consumers no longer have to install the plugin themselves. Non-Tailwind consumers strip it via `plugins: []` as before.
+
 ## 0.2.0
 
 ### Minor Changes
