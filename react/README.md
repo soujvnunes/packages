@@ -1,10 +1,10 @@
 # @soujvnunes/react
 
-React utilities as **subpath exports with optional peers** — import a subpath and install only what it needs. `react` is an optional peer (the `createApi`/`readNdjson` subpaths need nothing at all); `motion` is optional and only the `./motion` subpath uses it.
+React utilities as **subpath exports with optional peers** — import a subpath and install only what it needs. `react` is an optional peer; `motion` is optional and only the `./motion` subpath uses it. (The React-agnostic `createApi` + `readNdjson` moved to [`@soujvnunes/util`](../util).)
 
-## `./createContextWithHook` — context + guarded hook factory
+## `./createHookedContext` — context + guarded hook factory
 
-Returns a `[Context, useContext]` pair whose hook throws if rendered with no provider above. Uses a private symbol sentinel, so a state that legitimately **is** `null` never triggers the "missing provider" error.
+`createHookedContext<State>(name)` returns `{ Context, useHook }`: render `<X.Context value={…}>` (React 19 context-as-provider) and read with `X.useHook()`, which throws if used with no provider above. A private symbol sentinel means a state that legitimately **is** `null` never trips the "missing provider" error.
 
 ```bash
 pnpm add @soujvnunes/react react
@@ -12,10 +12,10 @@ pnpm add @soujvnunes/react react
 
 ```tsx
 'use client'
-import { createContextWithHook } from '@soujvnunes/react/createContextWithHook'
+import { createHookedContext } from '@soujvnunes/react/createHookedContext'
 
-const [RingContext, useRing] = createContextWithHook<Ring>('Ring')
-// <RingContext value={ring}>…</RingContext>  →  const ring = useRing()
+export const Ring = createHookedContext<RingState>('Ring')
+// <Ring.Context value={ring}>…</Ring.Context>   →   const ring = Ring.useHook()
 ```
 
 ## `./ErrorBoundary` — class error boundary with a Fallback prop
@@ -29,45 +29,6 @@ const Fallback = ({ error, reset }: ErrorBoundaryFallbackProps) => (
   <button onClick={reset}>{error.message}</button>
 )
 // <ErrorBoundary Fallback={Fallback}>{children}</ErrorBoundary>
-```
-
-## `./createApi` — throw-free fetch factory + response envelope
-
-`createApi({ baseURL, headers? })` binds a base URL + default JSON headers and returns a typed,
-**throw-free** `api<T>(endpoint, options?)` that always resolves to an `ApiResponse<T>` — a non-ok
-status or a network/parse error becomes an error envelope, never a rejection. Ships the envelope
-builders (`createApiResponseSuccess`, `createApiResponseError`) so the server produces the same shape.
-Callers branch on `.success`; a server action returns the message through `useActionState` — no
-try/catch, no `onError` callback (nextjs-conventions §26/§38).
-
-```ts
-// shared/lib/api.ts — 'use server'
-import { createApi } from '@soujvnunes/react/createApi'
-
-export const api = createApi({ baseURL: process.env.API_URL! })
-```
-
-```ts
-// features/x/actions.ts — 'use server'
-export const claim = async (_prev: State, formData: FormData): Promise<State> => {
-  const res = await api<User>('/claim', { method: 'POST', body: formData })
-
-  if (!res.success) return { error: res.message } // surfaced client-side via useActionState → toast
-
-  return { user: res.data }
-}
-```
-
-## `./readNdjson` — newline-delimited-JSON stream reader
-
-Async generator that yields one typed value per `\n`-terminated line of a `ReadableStream` — buffers partial lines, yields any final unterminated line on close. Zero dependencies.
-
-```ts
-import { readNdjson } from '@soujvnunes/react/readNdjson'
-
-for await (const event of readNdjson<ProgressEvent>(response.body!)) {
-  // handle each event as it streams in
-}
 ```
 
 ## `./motion` — motion helpers
