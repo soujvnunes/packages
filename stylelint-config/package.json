@@ -1,6 +1,6 @@
 {
   "name": "@soujvnunes/stylelint-config",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Shared Stylelint config factory (standard + Tailwind v4 at-rules).",
   "license": "MIT",
   "author": "soujvnunes",
