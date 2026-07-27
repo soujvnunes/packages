@@ -1,0 +1,41 @@
+{
+  "name": "@soujvnunes/stylelint-config",
+  "version": "0.0.0",
+  "description": "Shared Stylelint config factory (standard + Tailwind v4 at-rules).",
+  "license": "MIT",
+  "author": "soujvnunes",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/soujvnunes/packages.git",
+    "directory": "stylelint-config"
+  },
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup index.ts --format esm --dts --clean",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "stylelint-config-standard": "^40.0.0"
+  },
+  "peerDependencies": {
+    "stylelint": ">=16"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.39",
+    "stylelint": "^17.6.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
