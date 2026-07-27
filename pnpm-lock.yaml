@@ -111,6 +111,10 @@ importers:
       prettier-plugin-tailwindcss:
         specifier: ^0.7.2
         version: 0.7.4(prettier@3.9.6)
+    devDependencies:
+      '@types/node':
+        specifier: ^20.19.39
+        version: 20.19.43
 
   react:
     devDependencies:

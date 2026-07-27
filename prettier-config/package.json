@@ -31,6 +31,9 @@
   "peerDependencies": {
     "prettier": ">=3"
   },
+  "devDependencies": {
+    "@types/node": "^20.19.39"
+  },
   "publishConfig": {
     "access": "public"
   }
