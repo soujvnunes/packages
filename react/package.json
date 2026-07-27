@@ -1,6 +1,6 @@
 {
   "name": "@soujvnunes/react",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "React utilities — hooked-context factory, error boundary, motion helpers (subpath exports, optional peers).",
   "license": "MIT",
   "author": "soujvnunes",
