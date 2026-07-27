@@ -1,7 +1,7 @@
 {
   "name": "@soujvnunes/react",
   "version": "0.2.0",
-  "description": "React utilities — context factory, error boundary, ndjson stream reader, fetch factory, motion helpers (subpath exports, optional peers).",
+  "description": "React utilities — hooked-context factory, error boundary, motion helpers (subpath exports, optional peers).",
   "license": "MIT",
   "author": "soujvnunes",
   "repository": {
@@ -11,21 +11,13 @@
   },
   "type": "module",
   "exports": {
-    "./createContextWithHook": {
-      "types": "./dist/createContextWithHook.d.ts",
-      "default": "./dist/createContextWithHook.js"
+    "./createHookedContext": {
+      "types": "./dist/createHookedContext.d.ts",
+      "default": "./dist/createHookedContext.js"
     },
     "./ErrorBoundary": {
       "types": "./dist/ErrorBoundary.d.ts",
       "default": "./dist/ErrorBoundary.js"
-    },
-    "./createApi": {
-      "types": "./dist/createApi.d.ts",
-      "default": "./dist/createApi.js"
-    },
-    "./readNdjson": {
-      "types": "./dist/readNdjson.d.ts",
-      "default": "./dist/readNdjson.js"
     },
     "./motion": {
       "types": "./dist/motion.d.ts",
@@ -36,7 +28,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsup createContextWithHook.ts ErrorBoundary.tsx createApi.ts readNdjson.ts motion.ts --format esm --dts --clean",
+    "build": "tsup createHookedContext.ts ErrorBoundary.tsx motion.ts --format esm --dts --clean",
     "typecheck": "tsc --noEmit"
   },
   "peerDependencies": {
