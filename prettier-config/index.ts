@@ -1,4 +1,8 @@
+import { createRequire } from 'node:module'
+
 import type { Config } from 'prettier'
+
+const require = createRequire(import.meta.url)
 
 // Base — only Prettier's own options, so the `Config` type is the enforced source of truth.
 const base: Config = {
@@ -18,7 +22,10 @@ const base: Config = {
 const tailwind = {
   tailwindStylesheet: './app/tailwind.config.css',
   tailwindFunctions: ['cva', 'twMerge', 'cn'],
-  plugins: ['prettier-plugin-tailwindcss'],
+  // Resolve to an absolute path from THIS package (where the plugin is a bundled dependency), so
+  // consumers load it regardless of their package manager's hoisting — pnpm keeps it out of the app
+  // root, and prettier would otherwise resolve the bare string against the consumer and fail.
+  plugins: [require.resolve('prettier-plugin-tailwindcss')],
 }
 
 /**
