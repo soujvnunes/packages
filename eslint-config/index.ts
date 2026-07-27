@@ -2,6 +2,7 @@ import js from '@eslint/js'
 import nextPlugin from '@next/eslint-plugin-next'
 import type { Linter } from 'eslint'
 import prettier from 'eslint-config-prettier'
+import { createTypeScriptImportResolver } from 'eslint-import-resolver-typescript'
 import importHelpers from 'eslint-plugin-import-helpers'
 import importXPlugin from 'eslint-plugin-import-x'
 import jsxA11y from 'eslint-plugin-jsx-a11y'
@@ -247,8 +248,10 @@ const buildConfig = ({
     ...importOrderRule(importGroups),
   }
   const languageGlobals: Record<string, unknown> = { ...globals.node, ...globals.es2021 }
-  // Default to import-x's built-in node resolver (pure JS, no native binary to build in
-  // consumers). Projects needing `@/…` alias resolution add a TS resolver via `extend`.
+  // Base (pure TS libs) stays on import-x's built-in node resolver. Next apps get the TS resolver
+  // wired below — this package bundles `eslint-import-resolver-typescript` and passes the resolver
+  // object via `resolver-next`, so consumers resolve `@/…` aliases + `.d.ts` types out of the box
+  // with no install and no `extend` (the object form sidesteps pnpm's bare-name resolution).
   const settings: Record<string, unknown> = {}
 
   if (next) {
@@ -265,6 +268,9 @@ const buildConfig = ({
       NodeJS: 'readonly',
     })
     settings.react = { version: 'detect' }
+    // `alwaysTryTypes` resolves `@types/*` for value imports; the resolver finds tsconfig.json from
+    // cwd. A consumer with a non-standard tsconfig path can still append its own via `extend`.
+    settings['import-x/resolver-next'] = [createTypeScriptImportResolver({ alwaysTryTypes: true })]
   }
 
   // Root config files + scripts legitimately default-export — always exempt (a base TS lib
