@@ -30,13 +30,21 @@
     "./formatTimestamp": {
       "types": "./dist/formatTimestamp.d.ts",
       "default": "./dist/formatTimestamp.js"
+    },
+    "./createApi": {
+      "types": "./dist/createApi.d.ts",
+      "default": "./dist/createApi.js"
+    },
+    "./readNdjson": {
+      "types": "./dist/readNdjson.d.ts",
+      "default": "./dist/readNdjson.js"
     }
   },
   "files": [
     "dist"
   ],
   "scripts": {
-    "build": "tsup ellipses.ts objectHas.ts devLog.ts matchesQuery.ts formatTimestamp.ts --format esm --dts --clean",
+    "build": "tsup ellipses.ts objectHas.ts devLog.ts matchesQuery.ts formatTimestamp.ts createApi.ts readNdjson.ts --format esm --dts --clean",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
