@@ -25,14 +25,11 @@
     "build": "tsup index.ts --format esm --dts --clean",
     "typecheck": "tsc --noEmit"
   },
-  "peerDependencies": {
-    "prettier": ">=3",
-    "prettier-plugin-tailwindcss": ">=0.6"
+  "dependencies": {
+    "prettier-plugin-tailwindcss": "^0.7.2"
   },
-  "peerDependenciesMeta": {
-    "prettier-plugin-tailwindcss": {
-      "optional": true
-    }
+  "peerDependencies": {
+    "prettier": ">=3"
   },
   "publishConfig": {
     "access": "public"
