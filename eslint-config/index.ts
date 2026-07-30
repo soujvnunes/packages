@@ -24,8 +24,7 @@ const DEFAULT_IGNORES: string[] = [
   'next-env.d.ts',
 ]
 
-// Generic skeleton — no project paths. Consumers pass their own `@/…` groups between
-// `module` and `parent` via the `importGroups` option.
+// Generic skeleton — no project paths. Consumers pass their own `@/…` groups between `module` and `parent` via the `importGroups` option.
 const DEFAULT_IMPORT_GROUPS: (string | string[])[] = [
   '/^react/',
   '/^next/',
@@ -248,10 +247,7 @@ const buildConfig = ({
     ...importOrderRule(importGroups),
   }
   const languageGlobals: Record<string, unknown> = { ...globals.node, ...globals.es2021 }
-  // Base (pure TS libs) stays on import-x's built-in node resolver. Next apps get the TS resolver
-  // wired below — this package bundles `eslint-import-resolver-typescript` and passes the resolver
-  // object via `resolver-next`, so consumers resolve `@/…` aliases + `.d.ts` types out of the box
-  // with no install and no `extend` (the object form sidesteps pnpm's bare-name resolution).
+  // Base (pure TS libs) stays on import-x's built-in node resolver. Next apps get the TS resolver wired below — this package bundles `eslint-import-resolver-typescript` and passes the resolver object via `resolver-next`, so consumers resolve `@/…` aliases + `.d.ts` types out of the box with no install and no `extend` (the object form sidesteps pnpm's bare-name resolution).
   const settings: Record<string, unknown> = {}
 
   if (next) {
@@ -268,13 +264,11 @@ const buildConfig = ({
       NodeJS: 'readonly',
     })
     settings.react = { version: 'detect' }
-    // `alwaysTryTypes` resolves `@types/*` for value imports; the resolver finds tsconfig.json from
-    // cwd. A consumer with a non-standard tsconfig path can still append its own via `extend`.
+    // `alwaysTryTypes` resolves `@types/*` for value imports; the resolver finds tsconfig.json from cwd. A consumer with a non-standard tsconfig path can still append its own via `extend`.
     settings['import-x/resolver-next'] = [createTypeScriptImportResolver({ alwaysTryTypes: true })]
   }
 
-  // Root config files + scripts legitimately default-export — always exempt (a base TS lib
-  // has e.g. `vitest.config.ts` / `tsup.config.ts`, which aren't in DEFAULT_IGNORES).
+  // Root config files + scripts legitimately default-export — always exempt (a base TS lib has e.g. `vitest.config.ts` / `tsup.config.ts`, which aren't in DEFAULT_IGNORES).
   const rootConfigOverride: Linter.Config = {
     files: ['*.{mjs,js,ts,mts,cts}'],
     rules: { 'import-x/no-default-export': 'off', 'no-restricted-syntax': 'off' },
