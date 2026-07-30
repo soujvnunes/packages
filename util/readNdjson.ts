@@ -1,7 +1,4 @@
-// Reads a newline-delimited-JSON HTTP body as an async stream of typed values. Each `\n`-terminated
-// line is one JSON object; a partial trailing line is buffered until its newline arrives, and any
-// final unterminated line is yielded on close. Used client-side to consume a progress stream one
-// event at a time.
+// Reads a newline-delimited-JSON HTTP body as an async stream of typed values. Each `\n`-terminated line is one JSON object; a partial trailing line is buffered until its newline arrives, and any final unterminated line is yielded on close. Used client-side to consume a progress stream one event at a time.
 export const readNdjson = async function* <T>(body: ReadableStream<Uint8Array>): AsyncGenerator<T> {
   const reader = body.getReader()
   const decoder = new TextDecoder()
