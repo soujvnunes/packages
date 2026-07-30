@@ -24,9 +24,7 @@ const base: Config = {
 const tailwind = {
   tailwindStylesheet: './app/tailwind.config.css',
   tailwindFunctions: ['cva', 'twMerge', 'cn'],
-  // Resolve to an absolute path from THIS package (where the plugin is a bundled dependency), so
-  // consumers load it regardless of their package manager's hoisting — pnpm keeps it out of the app
-  // root, and prettier would otherwise resolve the bare string against the consumer and fail.
+  // Resolve to an absolute path from THIS package (where the plugin is a bundled dependency), so consumers load it regardless of their package manager's hoisting — pnpm keeps it out of the app root, and prettier would otherwise resolve the bare string against the consumer and fail.
   plugins: [require.resolve('prettier-plugin-tailwindcss')],
 }
 
