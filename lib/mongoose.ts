@@ -62,8 +62,7 @@ export const createMongooseConnection = ({
     return cached.conn
   }
 
-  // Return types are annotated so the emitted .d.ts can name the driver types without a
-  // non-portable reference into the transitive `mongodb` package.
+  // Return types are annotated so the emitted .d.ts can name the driver types without a non-portable reference into the transitive `mongodb` package.
   const getDbClient = async (): Promise<mongo.MongoClient> => {
     const conn = await connectDb()
 
