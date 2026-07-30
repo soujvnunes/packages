@@ -20,15 +20,15 @@ import { createApi } from '@soujvnunes/util/createApi'
 import { readNdjson } from '@soujvnunes/util/readNdjson'
 ```
 
-| Subpath             | Export                            | What                                                                   |
-| ------------------- | --------------------------------- | ---------------------------------------------------------------------- |
-| `./ellipses`        | `ellipses`                        | Truncate a string to `head…tail`                                       |
-| `./objectHas`       | `objectHas`                       | Narrow an untrusted key to `keyof O` (own-key check)                   |
-| `./devLog`          | `devLog`                          | Scope-tagged `console.log`, no-op outside `NODE_ENV=development`       |
-| `./matchesQuery`    | `matchesQuery`                    | Validate + type-narrow `searchParams` against an allow-list schema     |
-| `./formatTimestamp` | `formatTimestamp`                 | `Intl.DateTimeFormat` wrapper (locale-aware)                           |
-| `./createApi`       | `createApi` (+ envelope builders) | Throw-free `fetch` factory → `ApiResponse<T>` (nextjs-conventions §26) |
-| `./readNdjson`      | `readNdjson`                      | Async generator over a newline-delimited-JSON `ReadableStream`         |
+| Subpath | Export | What |
+| --- | --- | --- |
+| `./ellipses` | `ellipses` | Truncate a string to `head…tail` |
+| `./objectHas` | `objectHas` | Narrow an untrusted key to `keyof O` (own-key check) |
+| `./devLog` | `devLog` | Scope-tagged `console.log`, no-op outside `NODE_ENV=development` |
+| `./matchesQuery` | `matchesQuery` | Validate + type-narrow `searchParams` against an allow-list schema |
+| `./formatTimestamp` | `formatTimestamp` | `Intl.DateTimeFormat` wrapper (locale-aware) |
+| `./createApi` | `createApi` (+ envelope builders) | Throw-free `fetch` factory → `ApiResponse<T>` (nextjs-conventions §26) |
+| `./readNdjson` | `readNdjson` | Async generator over a newline-delimited-JSON `ReadableStream` |
 
 ### `createApi` — throw-free fetch factory
 
