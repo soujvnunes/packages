@@ -39,11 +39,11 @@ export default createBaseConfig()
 
 ## Options
 
-| Option            | Default                                          | Purpose                                                |
-| ----------------- | ------------------------------------------------ | ------------------------------------------------------ |
-| `importGroups`    | react → next → module → parent → sibling → index | Full import-order groups; insert your `@/…` paths      |
-| `ignores`         | —                                                | Extra ignore globs, merged after the built-in defaults |
-| `tsconfigRootDir` | `process.cwd()`                                  | Root for typescript-eslint's project service           |
-| `extend`          | `[]`                                             | Extra flat-config objects appended at the end          |
+| Option | Default | Purpose |
+| --- | --- | --- |
+| `importGroups` | react → next → module → parent → sibling → index | Full import-order groups; insert your `@/…` paths |
+| `ignores` | — | Extra ignore globs, merged after the built-in defaults |
+| `tsconfigRootDir` | `process.cwd()` | Root for typescript-eslint's project service |
+| `extend` | `[]` | Extra flat-config objects appended at the end |
 
 Type-aware rules use typescript-eslint's **project service**, so no `parserOptions.project` wiring is needed — it discovers the nearest `tsconfig.json` per file.
