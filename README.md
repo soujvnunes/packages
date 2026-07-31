@@ -8,6 +8,7 @@ Monorepo for the shared `@soujvnunes/*` packages.
 | --- | --- |
 | [`@soujvnunes/eslint-config`](./eslint-config) | Flat ESLint config factories (`createBaseConfig`, `createNextConfig`) |
 | [`@soujvnunes/prettier-config`](./prettier-config) | Prettier config factory (`createConfig`) |
+| [`@soujvnunes/stylelint-config`](./stylelint-config) | Stylelint config factory (`createConfig`) — standard + Tailwind v4 at-rules |
 | [`@soujvnunes/util`](./util) | Zero-dependency utilities (subpath exports) |
 | [`@soujvnunes/lib`](./lib) | Stateful modules — Mongoose client + Typegoose bases (subpath exports) |
 | [`@soujvnunes/react`](./react) | React utilities — context/error-boundary/fetch/ndjson/motion (subpath exports) |
