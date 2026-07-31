@@ -17,5 +17,8 @@ export const createHookedContext = <State>(name: string) => {
     return context
   }
 
-  return { Context, useHook }
+  // Expose the context typed as `Context<State>` — the UNPROVIDED sentinel is an internal default, so
+  // hiding it keeps `<X.Context value>` typed to `State` AND stops the module-private `unique symbol`
+  // from leaking into the inferred type of any factory that composes this (a `.d.ts` emit error).
+  return { Context: Context as React.Context<State>, useHook }
 }
