@@ -31,6 +31,18 @@
       "types": "./dist/formatTimestamp.d.ts",
       "default": "./dist/formatTimestamp.js"
     },
+    "./getErrorMessage": {
+      "types": "./dist/getErrorMessage.d.ts",
+      "default": "./dist/getErrorMessage.js"
+    },
+    "./isConnectionError": {
+      "types": "./dist/isConnectionError.d.ts",
+      "default": "./dist/isConnectionError.js"
+    },
+    "./buildQueryString": {
+      "types": "./dist/buildQueryString.d.ts",
+      "default": "./dist/buildQueryString.js"
+    },
     "./createApi": {
       "types": "./dist/createApi.d.ts",
       "default": "./dist/createApi.js"
@@ -44,7 +56,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsup ellipses.ts objectHas.ts devLog.ts matchesQuery.ts formatTimestamp.ts createApi.ts readNdjson.ts --format esm --dts --clean",
+    "build": "tsup ellipses.ts objectHas.ts devLog.ts matchesQuery.ts formatTimestamp.ts getErrorMessage.ts isConnectionError.ts buildQueryString.ts createApi.ts readNdjson.ts --format esm --dts --clean",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
