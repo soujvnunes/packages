@@ -15,6 +15,10 @@
       "types": "./dist/createHookedContext.d.ts",
       "default": "./dist/createHookedContext.js"
     },
+    "./createPersistedToggle": {
+      "types": "./dist/createPersistedToggle.d.ts",
+      "default": "./dist/createPersistedToggle.js"
+    },
     "./ErrorBoundary": {
       "types": "./dist/ErrorBoundary.d.ts",
       "default": "./dist/ErrorBoundary.js"
@@ -28,15 +32,19 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsup createHookedContext.ts ErrorBoundary.tsx motion.ts --format esm --dts --clean",
+    "build": "tsup createHookedContext.ts createPersistedToggle.tsx ErrorBoundary.tsx motion.ts --format esm --dts --clean",
     "typecheck": "tsc --noEmit"
   },
   "peerDependencies": {
     "motion": ">=11",
+    "next": ">=14",
     "react": ">=18"
   },
   "peerDependenciesMeta": {
     "motion": {
+      "optional": true
+    },
+    "next": {
       "optional": true
     },
     "react": {
@@ -46,6 +54,7 @@
   "devDependencies": {
     "@types/react": "^19.2.0",
     "motion": "^11.18.0",
+    "next": "^16.1.3",
     "react": "^19.2.0"
   },
   "publishConfig": {
