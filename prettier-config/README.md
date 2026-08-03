@@ -8,7 +8,7 @@ Shared Prettier config as a factory. No semicolons, single quotes, trailing comm
 pnpm add -D @soujvnunes/prettier-config prettier
 ```
 
-`prettier-plugin-tailwindcss` is bundled (and resolved to an absolute path, so pnpm consumers load it) — no need to install it. Drop it with `createConfig({ plugins: [] })` on a non-Tailwind repo.
+`prettier-plugin-tailwindcss` is bundled (and resolved to an absolute path, so pnpm consumers load it), so you don't need to install it. Drop it with `createConfig({ plugins: [] })` on a non-Tailwind repo.
 
 ## Use
 
