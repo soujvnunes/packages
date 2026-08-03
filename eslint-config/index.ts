@@ -3,6 +3,7 @@ import nextPlugin from '@next/eslint-plugin-next'
 import type { Linter } from 'eslint'
 import prettier from 'eslint-config-prettier'
 import { createTypeScriptImportResolver } from 'eslint-import-resolver-typescript'
+import betterTailwind from 'eslint-plugin-better-tailwindcss'
 import importHelpers from 'eslint-plugin-import-helpers'
 import importXPlugin from 'eslint-plugin-import-x'
 import jsxA11y from 'eslint-plugin-jsx-a11y'
@@ -24,7 +25,7 @@ const DEFAULT_IGNORES: string[] = [
   'next-env.d.ts',
 ]
 
-// Generic skeleton — no project paths. Consumers pass their own `@/…` groups between `module` and `parent` via the `importGroups` option.
+// Generic skeleton, no project paths. Consumers pass their own `@/...` groups between `module` and `parent` via the `importGroups` option.
 const DEFAULT_IMPORT_GROUPS: (string | string[])[] = [
   '/^react/',
   '/^next/',
@@ -163,11 +164,11 @@ const restrictedSyntaxRule: Linter.RulesRecord = {
     {
       selector: "ImportDeclaration[source.value='react'] > ImportDefaultSpecifier",
       message:
-        'Do not import the React default — use the ambient `React.*` namespace (the react-jsx runtime needs no React import).',
+        'Do not import the React default. Use the ambient `React.*` namespace (the react-jsx runtime needs no React import).',
     },
     {
       selector: "ImportDeclaration[source.value='react'] > ImportNamespaceSpecifier",
-      message: 'Do not `import * as React` — use the ambient `React.*` namespace.',
+      message: 'Do not `import * as React`. Use the ambient `React.*` namespace.',
     },
     {
       selector: "ImportDeclaration[source.value='react'] > ImportSpecifier[importKind='type']",
@@ -221,6 +222,15 @@ export interface ConfigOptions {
   importGroups?: (string | string[])[]
   /** Root for typescript-eslint's project service. Defaults to cwd. */
   tsconfigRootDir?: string
+  /**
+   * Path to the Tailwind v4 CSS entry (the file with `@import "tailwindcss"` + `@theme`, e.g.
+   * `./app/tailwind.config.css`). When set on the Next preset, it wires the bundled
+   * `eslint-plugin-better-tailwindcss` correctness rules, chiefly `no-unknown-classes`, which flags a
+   * class not registered in the theme (a dead token `tsc`/build cannot see; see DESIGN-TOKENS). Leave it
+   * unset and the plugin stays off, since without the entry the rule cannot resolve the theme and would
+   * flag every class.
+   */
+  tailwindEntryPoint?: string
   /** Extra flat-config objects appended at the end. */
   extend?: Linter.Config[]
 }
@@ -230,6 +240,7 @@ const buildConfig = ({
   ignores = [],
   importGroups = DEFAULT_IMPORT_GROUPS,
   tsconfigRootDir = process.cwd(),
+  tailwindEntryPoint,
   extend = [],
 }: ConfigOptions & { next?: boolean } = {}) => {
   const plugins: Record<string, unknown> = {
@@ -247,7 +258,7 @@ const buildConfig = ({
     ...importOrderRule(importGroups),
   }
   const languageGlobals: Record<string, unknown> = { ...globals.node, ...globals.es2021 }
-  // Base (pure TS libs) stays on import-x's built-in node resolver. Next apps get the TS resolver wired below — this package bundles `eslint-import-resolver-typescript` and passes the resolver object via `resolver-next`, so consumers resolve `@/…` aliases + `.d.ts` types out of the box with no install and no `extend` (the object form sidesteps pnpm's bare-name resolution).
+  // Base (pure TS libs) stays on import-x's built-in node resolver. Next apps get the TS resolver wired below: this package bundles `eslint-import-resolver-typescript` and passes the resolver object via `resolver-next`, so consumers resolve `@/...` aliases + `.d.ts` types out of the box with no install and no `extend` (the object form sidesteps pnpm's bare-name resolution).
   const settings: Record<string, unknown> = {}
 
   if (next) {
@@ -266,21 +277,34 @@ const buildConfig = ({
     settings.react = { version: 'detect' }
     // `alwaysTryTypes` resolves `@types/*` for value imports; the resolver finds tsconfig.json from cwd. A consumer with a non-standard tsconfig path can still append its own via `extend`.
     settings['import-x/resolver-next'] = [createTypeScriptImportResolver({ alwaysTryTypes: true })]
+
+    // Opt-in, and only when the Tailwind v4 CSS entry is set so the rule can resolve the theme. Just the
+    // correctness rules run here. The stylistic ones (class order, whitespace) would fight
+    // `prettier-plugin-tailwindcss`, which already owns ordering.
+    if (tailwindEntryPoint) {
+      plugins['better-tailwindcss'] = betterTailwind
+      Object.assign(rules, {
+        'better-tailwindcss/no-unknown-classes': 'error',
+        'better-tailwindcss/no-conflicting-classes': 'error',
+        'better-tailwindcss/no-concatenated-classes': 'error',
+      })
+      settings['better-tailwindcss'] = { entryPoint: tailwindEntryPoint }
+    }
   }
 
-  // Root config files + scripts legitimately default-export — always exempt (a base TS lib has e.g. `vitest.config.ts` / `tsup.config.ts`, which aren't in DEFAULT_IGNORES).
+  // Root config files + scripts legitimately default-export, so always exempt them (a base TS lib has e.g. `vitest.config.ts` / `tsup.config.ts`, which aren't in DEFAULT_IGNORES).
   const rootConfigOverride: Linter.Config = {
     files: ['*.{mjs,js,ts,mts,cts}'],
     rules: { 'import-x/no-default-export': 'off', 'no-restricted-syntax': 'off' },
   }
-  // Next.js framework file conventions (page, layout, error, …) must default-export — next only.
+  // Next.js framework file conventions (page, layout, error, and so on) must default-export. Next only.
   const nextFileConventionsOverride: Linter.Config = {
     files: [
       '**/{default,page,layout,error,loading,forbidden,not-found,template,unauthorized,icon,apple-icon,manifest,opengraph-image,twitter-image,global-error,middleware,sitemap,robots}.{ts,tsx}',
     ],
     rules: { 'import-x/no-default-export': 'off', 'no-restricted-syntax': 'off' },
   }
-  // Node scripts own stdout — printing IS their job.
+  // Node scripts own stdout, so printing IS their job.
   const scriptsOverride: Linter.Config = {
     files: ['scripts/**/*.mjs'],
     languageOptions: { globals: { ...globals.node } },
@@ -318,5 +342,5 @@ const buildConfig = ({
 /** Base config for TypeScript libraries (no React/Next layers). */
 export const createBaseConfig = (options?: ConfigOptions) => buildConfig({ ...options, next: false })
 
-/** Full config for Next.js apps — base plus React, React Hooks, jsx-a11y and Next plugins. */
+/** Full config for Next.js apps: base plus React, React Hooks, jsx-a11y and Next plugins. */
 export const createNextConfig = (options?: ConfigOptions) => buildConfig({ ...options, next: true })
