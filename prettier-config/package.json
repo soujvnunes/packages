@@ -4,6 +4,18 @@
   "description": "Shared Prettier config factory.",
   "license": "MIT",
   "author": "soujvnunes",
+  "keywords": [
+    "prettier",
+    "prettier-config",
+    "prettierconfig",
+    "prettier-plugin-tailwindcss",
+    "tailwindcss",
+    "formatter",
+    "code-style",
+    "config"
+  ],
+  "homepage": "https://github.com/soujvnunes/packages/tree/main/prettier-config#readme",
+  "bugs": "https://github.com/soujvnunes/packages/issues",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/soujvnunes/packages.git",

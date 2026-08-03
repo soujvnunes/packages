@@ -4,6 +4,19 @@
   "description": "Zero-dependency TypeScript utilities.",
   "license": "MIT",
   "author": "soujvnunes",
+  "keywords": [
+    "typescript",
+    "utils",
+    "utilities",
+    "zero-dependency",
+    "type-guard",
+    "ndjson",
+    "query-string",
+    "fetch",
+    "tree-shakeable"
+  ],
+  "homepage": "https://github.com/soujvnunes/packages/tree/main/util#readme",
+  "bugs": "https://github.com/soujvnunes/packages/issues",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/soujvnunes/packages.git",

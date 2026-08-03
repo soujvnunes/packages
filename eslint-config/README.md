@@ -1,6 +1,6 @@
 # @soujvnunes/eslint-config
 
-Shared flat ESLint config as factories. Bundles the plugin set (typescript-eslint, import-x, import-helpers, unused-imports, security, and — for the Next preset — react, react-hooks, jsx-a11y, `@next/next`); you only bring `eslint` + `typescript`.
+Shared flat ESLint config as factories. Bundles the plugin set (typescript-eslint, import-x, import-helpers, unused-imports, security, and — for the Next preset — react, react-hooks, jsx-a11y, `@next/next`); you only bring `eslint` + `typescript`. The Next preset also bundles the TypeScript import resolver (`eslint-import-resolver-typescript`, wired via `import-x/resolver-next`), so `@/…` path aliases and `.d.ts` types resolve out of the box — no extra install, no `settings` wiring.
 
 ## Install
 
