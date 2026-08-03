@@ -1,5 +1,11 @@
 # @soujvnunes/lib
 
+## 0.1.2
+
+### Patch Changes
+
+- 9a76f9c: Docs: rewrite the package READMEs in the house plain voice (no em dashes, no AI tells). No code or API change.
+
 ## 0.1.1
 
 ### Patch Changes
