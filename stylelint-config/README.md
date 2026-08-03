@@ -1,6 +1,6 @@
 # @soujvnunes/stylelint-config
 
-Shared Stylelint config as a factory — extends `stylelint-config-standard` with Tailwind v4 at-rule support (`@theme`, `@utility`, `@variant`, `@custom-variant`, …), string `import-notation`, modern `color-function-notation`, and relaxed selector/keyframes/custom-property patterns.
+Shared Stylelint config as a factory. It extends `stylelint-config-standard` with Tailwind v4 at-rule support (`@theme`, `@utility`, `@variant`, `@custom-variant`, and so on), string `import-notation`, modern `color-function-notation`, and relaxed selector/keyframes/custom-property patterns.
 
 ## Install
 
@@ -8,7 +8,7 @@ Shared Stylelint config as a factory — extends `stylelint-config-standard` wit
 pnpm add -D @soujvnunes/stylelint-config stylelint
 ```
 
-`stylelint-config-standard` is bundled — you don't install it separately.
+`stylelint-config-standard` is bundled, so you don't install it separately.
 
 ## Use
 
@@ -23,4 +23,4 @@ export default createConfig()
 export default createConfig({ ignoreFiles: ['app/tailwind.config.css'] })
 ```
 
-`rules` you pass merge onto the base; any other [Stylelint option](https://stylelint.io/user-guide/configure) (e.g. `ignoreFiles`) replaces. Peer: `stylelint >=16` (which needs Node ≥20.19).
+`rules` you pass merge onto the base; any other [Stylelint option](https://stylelint.io/user-guide/configure) (e.g. `ignoreFiles`) replaces. Peer: `stylelint >=16`, which needs Node 20.19 or newer.
