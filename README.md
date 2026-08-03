@@ -8,12 +8,12 @@ Monorepo for the shared `@soujvnunes/*` packages.
 | --- | --- |
 | [`@soujvnunes/eslint-config`](./eslint-config) | Flat ESLint config factories (`createBaseConfig`, `createNextConfig`) |
 | [`@soujvnunes/prettier-config`](./prettier-config) | Prettier config factory (`createConfig`) |
-| [`@soujvnunes/stylelint-config`](./stylelint-config) | Stylelint config factory (`createConfig`) — standard + Tailwind v4 at-rules |
-| [`@soujvnunes/util`](./util) | Zero-dependency utilities — type guards, throw-free `fetch` (`createApi`), NDJSON reader, query string (subpath exports) |
-| [`@soujvnunes/lib`](./lib) | Stateful modules — Mongoose client + Typegoose bases (subpath exports) |
-| [`@soujvnunes/react`](./react) | React utilities — hooked-context, persisted-toggle, error-boundary, motion (subpath exports) |
+| [`@soujvnunes/stylelint-config`](./stylelint-config) | Stylelint config factory (`createConfig`), standard rules plus Tailwind v4 at-rules |
+| [`@soujvnunes/util`](./util) | Zero-dependency utilities (subpath exports): type guards, throw-free `fetch` (`createApi`), an NDJSON reader, query strings |
+| [`@soujvnunes/lib`](./lib) | Stateful modules (subpath exports): a Mongoose client and Typegoose bases |
+| [`@soujvnunes/react`](./react) | React utilities (subpath exports): hooked-context, persisted-toggle, error-boundary, motion |
 
-Separate packages when deps are bundled (the configs); subpaths in one package when deps are peer/zero (`util`, `lib`, `react`).
+Separate packages when deps are bundled (the configs); subpaths in one package when deps are peer or zero (`util`, `lib`, `react`).
 
 ## Convention: every package is a customizable factory
 
