@@ -4,6 +4,18 @@
   "description": "Shared Stylelint config factory (standard + Tailwind v4 at-rules).",
   "license": "MIT",
   "author": "soujvnunes",
+  "keywords": [
+    "stylelint",
+    "stylelint-config",
+    "stylelint-config-standard",
+    "tailwindcss",
+    "tailwind",
+    "css",
+    "linter",
+    "config"
+  ],
+  "homepage": "https://github.com/soujvnunes/packages/tree/main/stylelint-config#readme",
+  "bugs": "https://github.com/soujvnunes/packages/issues",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/soujvnunes/packages.git",
