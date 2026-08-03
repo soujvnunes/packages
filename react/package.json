@@ -4,6 +4,19 @@
   "description": "React utilities — hooked-context factory, error boundary, motion helpers (subpath exports, optional peers).",
   "license": "MIT",
   "author": "soujvnunes",
+  "keywords": [
+    "react",
+    "context",
+    "error-boundary",
+    "hooks",
+    "nextjs",
+    "cookie",
+    "persisted-state",
+    "motion",
+    "framer-motion"
+  ],
+  "homepage": "https://github.com/soujvnunes/packages/tree/main/react#readme",
+  "bugs": "https://github.com/soujvnunes/packages/issues",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/soujvnunes/packages.git",
