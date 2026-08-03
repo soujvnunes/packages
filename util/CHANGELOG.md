@@ -1,5 +1,11 @@
 # @soujvnunes/util
 
+## 0.3.1
+
+### Patch Changes
+
+- 3c4914b: npm discoverability: add `keywords`, `homepage`, and `bugs` to every package; add the missing `@soujvnunes/stylelint-config` README, and correct the `@soujvnunes/prettier-config` install note (the Tailwind plugin is bundled, not a manual install).
+
 ## 0.3.0
 
 ### Minor Changes
