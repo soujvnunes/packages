@@ -30,6 +30,10 @@ jobs:
           version: pnpm run version
           publish: pnpm run release
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # A PAT (not the default GITHUB_TOKEN) so the "Version Packages" PR is created by a user and
+          # therefore TRIGGERS CI. A GITHUB_TOKEN-created PR does not start workflows (GitHub recursion
+          # guard), so with a required-status-check branch ruleset the Version PR would never get its
+          # check and could not merge. Falls back to GITHUB_TOKEN when RELEASE_PAT is unset.
+          GITHUB_TOKEN: ${{ secrets.RELEASE_PAT || secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
