@@ -4,6 +4,20 @@
   "description": "Shared flat ESLint config factories (base + Next.js).",
   "license": "MIT",
   "author": "soujvnunes",
+  "keywords": [
+    "eslint",
+    "eslint-config",
+    "eslintconfig",
+    "flat-config",
+    "typescript",
+    "typescript-eslint",
+    "nextjs",
+    "react",
+    "import-order",
+    "prettier"
+  ],
+  "homepage": "https://github.com/soujvnunes/packages/tree/main/eslint-config#readme",
+  "bugs": "https://github.com/soujvnunes/packages/issues",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/soujvnunes/packages.git",
