@@ -1,5 +1,4 @@
-// Serialize a flat params object into a query string — a leading `?` plus the pairs, or '' when the
-// object is empty/nullish. Skips undefined/null values; coerces the rest with String().
+// Serialize a flat params object into a query string: a leading `?` plus the pairs, or '' when the object is empty/nullish. Skips undefined/null values; coerces the rest with String().
 export const buildQueryString = (
   params?: Record<string, string | number | boolean | null | undefined> | null,
 ): string => {

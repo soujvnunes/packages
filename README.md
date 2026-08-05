@@ -1,5 +1,7 @@
 # @soujvnunes/packages
 
+[![CI](https://github.com/soujvnunes/packages/actions/workflows/ci.yml/badge.svg)](https://github.com/soujvnunes/packages/actions/workflows/ci.yml)
+
 Monorepo for the shared `@soujvnunes/*` packages.
 
 ## Packages
@@ -33,7 +35,10 @@ export default createNextConfig({ ignores: ['generated/**'], importGroups: [/* p
 
 ```bash
 pnpm install
+pnpm test
 pnpm lint
 pnpm format
 pnpm changeset   # record a change for release
 ```
+
+Tests run on Vitest, one project per package, and sit next to the module they cover (`util/ellipses.ts` and `util/ellipses.test.ts`). The `react` project runs in jsdom against React Testing Library; every other project runs in node. Nothing reaches a real database or network: `lib/mongoose` runs against a mocked driver, and `createApi` against a stubbed `fetch`. CI runs `build`, `typecheck`, `test`, `lint`, and `format` on every pull request.

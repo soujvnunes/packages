@@ -1,5 +1,5 @@
 {
   "extends": "../tsconfig.base.json",
   "compilerOptions": { "noEmit": true, "verbatimModuleSyntax": false, "types": ["node"] },
-  "include": ["index.ts", "declarations.d.ts"]
+  "include": ["index.ts", "index.test.ts", "declarations.d.ts"]
 }

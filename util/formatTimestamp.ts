@@ -5,5 +5,6 @@ export const formatTimestamp = (value: Date | string, lang: string) =>
     day: '2-digit',
     hour: '2-digit',
     minute: '2-digit',
-    hour12: false,
+    // `hourCycle: 'h23'` and not `hour12: false`, which resolves to the h24 cycle in en-US and renders midnight as 24:05.
+    hourCycle: 'h23',
   }).format(new Date(value))
