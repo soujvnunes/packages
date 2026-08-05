@@ -17,7 +17,7 @@ jobs:
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: pnpm
           registry-url: https://registry.npmjs.org
       - run: pnpm install --frozen-lockfile
@@ -25,8 +25,7 @@ jobs:
       # Opens/updates a "Version Packages" PR; when that PR merges, publishes to npm.
       - uses: changesets/action@v1
         with:
-          # `pnpm run …` forces the package scripts — bare `pnpm version` hits pnpm's
-          # built-in version command and would skip `changeset version` entirely.
+          # `pnpm run …` forces the package scripts. A bare `pnpm version` hits pnpm's built-in version command and would skip `changeset version` entirely.
           version: pnpm run version
           publish: pnpm run release
         env:
