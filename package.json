@@ -3,12 +3,13 @@
   "private": true,
   "type": "module",
   "engines": {
-    "node": ">=20.9.0"
+    "node": ">=20.19.0"
   },
   "packageManager": "pnpm@10.12.4",
   "scripts": {
     "build": "pnpm -r build",
     "typecheck": "pnpm -r typecheck",
+    "test": "vitest run",
     "lint": "eslint .",
     "format": "prettier --check .",
     "format:write": "prettier --write .",
@@ -20,10 +21,15 @@
     "@changesets/cli": "^2.27.9",
     "@soujvnunes/eslint-config": "workspace:*",
     "@soujvnunes/prettier-config": "workspace:*",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/react": "^16.3.2",
+    "@vitejs/plugin-react": "^6.0.5",
     "eslint": "^9.39.4",
+    "jsdom": "^30.0.1",
     "prettier": "^3.8.1",
     "tsup": "^8.3.5",
-    "typescript": "^6.0.2"
+    "typescript": "^6.0.2",
+    "vitest": "^4.1.10"
   },
   "pnpm": {
     "overrides": {
