@@ -5,7 +5,7 @@ import { createContext, useContext } from 'react'
 // The "no provider above" sentinel is a module-private unique symbol, NOT null/undefined: a state can legitimately BE null (e.g. "no failure yet"), and a null sentinel would make the hook throw inside a perfectly mounted provider. The symbol can't collide with any real value.
 const UNPROVIDED: unique symbol = Symbol('unprovided')
 
-// Returns `{ Context, useHook }`: render `<X.Context value={…}>` (React 19 context-as-provider) and read with `X.useHook()`, which throws when used with no provider above — so callers get `State`, never a maybe-type.
+// Returns `{ Context, useHook }`: render `<X.Context value={…}>` (React 19 context-as-provider) and read with `X.useHook()`, which throws when used with no provider above, so callers get `State`, never a maybe-type.
 export const createHookedContext = <State>(name: string) => {
   const Context = createContext<State | typeof UNPROVIDED>(UNPROVIDED)
 
@@ -17,8 +17,6 @@ export const createHookedContext = <State>(name: string) => {
     return context
   }
 
-  // Expose the context typed as `Context<State>` — the UNPROVIDED sentinel is an internal default, so
-  // hiding it keeps `<X.Context value>` typed to `State` AND stops the module-private `unique symbol`
-  // from leaking into the inferred type of any factory that composes this (a `.d.ts` emit error).
+  // Expose the context typed as `Context<State>`: the UNPROVIDED sentinel is an internal default, so hiding it keeps `<X.Context value>` typed to `State` AND stops the module-private `unique symbol` from leaking into the inferred type of any factory that composes this (a `.d.ts` emit error).
   return { Context: Context as React.Context<State>, useHook }
 }
