@@ -1,5 +1,11 @@
 # @soujvnunes/prettier-config
 
+## 0.3.3
+
+### Patch Changes
+
+- 89df975: Swept em dashes out of every source comment and package description, per the house plain-writing voice. No behaviour changes. The `lib` and `react` npm descriptions are the only reader-visible part.
+
 ## 0.3.2
 
 ### Patch Changes

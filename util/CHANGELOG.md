@@ -1,5 +1,17 @@
 # @soujvnunes/util
 
+## 0.4.0
+
+### Minor Changes
+
+- 767ee7e: `isConnectionError` now takes `unknown` instead of `Error`, and reads the message through `getErrorMessage`. A `catch` binding goes straight in, with no `instanceof Error` narrowing at the call site. A throw that is not an `Error` has no message to match and returns `false`. Widening the parameter, so existing calls that already pass an `Error` keep working.
+
+### Patch Changes
+
+- 05e768c: `formatTimestamp` renders midnight as `00`, not `24`. It asked for `hour12: false`, which resolves to the h24 hour cycle in en-US and turned `00:05` into `24:05`. It now asks for `hourCycle: 'h23'`. Locales that already defaulted to h23, such as pt-BR and en-GB, are unaffected.
+- 0118e03: `matchesQuery` reads the query through a `Map` instead of a computed property access. A schema key that names an inherited member, such as `constructor` or `toString`, now sees the param as absent rather than reading the prototype member off the object.
+- 89df975: Swept em dashes out of every source comment and package description, per the house plain-writing voice. No behaviour changes. The `lib` and `react` npm descriptions are the only reader-visible part.
+
 ## 0.3.2
 
 ### Patch Changes
