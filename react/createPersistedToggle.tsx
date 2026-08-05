@@ -18,12 +18,7 @@ interface PersistedToggleOptions<T extends string> {
   maxAge?: number
 }
 
-// Server-seeded, cookie-persisted UI state (nextjs-conventions §21 split State/Dispatch + §5 cookie
-// seed): a client Provider seeded from the server-read cookie whose dispatch writes the cookie back
-// and calls `router.refresh()` so the server re-renders from it. The `defaultValue` prop is whatever
-// the consumer's server seed-leaf read — validate the raw cookie with the returned `isValue`. This
-// owns only the persisted axis; a feature layers transient state (a mobile sheet), a keyboard
-// shortcut, or route-change resets on top.
+// Server-seeded, cookie-persisted UI state (nextjs-conventions §21 split State/Dispatch + §5 cookie seed): a client Provider seeded from the server-read cookie whose dispatch writes the cookie back and calls `router.refresh()` so the server re-renders from it. The `defaultValue` prop is whatever the consumer's server seed-leaf read, so validate the raw cookie with the returned `isValue`. This owns only the persisted axis; a feature layers transient state (a mobile sheet), a keyboard shortcut, or route-change resets on top.
 export const createPersistedToggle = <T extends string>({
   name,
   cookie,
@@ -33,7 +28,7 @@ export const createPersistedToggle = <T extends string>({
   const State = createHookedContext<T>(`${name}State`)
   const Dispatch = createHookedContext<(next?: T) => void>(`${name}Dispatch`)
 
-  // Narrows a raw cookie string to an allowed value — for the server seed-leaf (§5).
+  // Narrows a raw cookie string to an allowed value, for the server seed-leaf (§5).
   const isValue = (value: string | undefined): value is T =>
     value !== undefined && (values as readonly string[]).includes(value)
 
@@ -53,9 +48,7 @@ export const createPersistedToggle = <T extends string>({
         const resolved = next ?? values.at(nextIndex) ?? values[0]
 
         setState(resolved)
-        // Encode the value (a consumer's `values` are arbitrary strings — an unescaped `;`/`,` would
-        // truncate the cookie) and scope it with SameSite=Lax. No `Secure` — this is a non-sensitive UI
-        // preference and `Secure` would drop the cookie over plain-http local dev.
+        // Encode the value (a consumer's `values` are arbitrary strings, and an unescaped `;`/`,` would truncate the cookie) and scope it with SameSite=Lax. No `Secure`, because this is a non-sensitive UI preference and `Secure` would drop the cookie over plain-http local dev.
         document.cookie = `${cookie}=${encodeURIComponent(resolved)}; path=/; max-age=${maxAge}; SameSite=Lax`
         router.refresh()
       },
