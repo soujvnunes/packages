@@ -40,4 +40,4 @@ export class Entry extends BaseTimestampedModel {
 }
 ```
 
-Requires `experimentalDecorators` in the consumer's `tsconfig.json`.
+Requires `experimentalDecorators` in the consumer's `tsconfig.json`, plus `emitDecoratorMetadata` if you want a bare `@prop()` to infer its type. Without the metadata, Typegoose rejects the field with `Type is: "undefined" [E009]`, so give each prop an explicit type instead: `@prop({ type: () => String })`.
