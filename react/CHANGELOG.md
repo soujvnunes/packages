@@ -1,5 +1,11 @@
 # @soujvnunes/react
 
+## 0.5.0
+
+### Minor Changes
+
+- 97f8dac: **Breaking.** Removed `./createPersistedToggle` and the `next` peer dependency. It moved to `@soujvnunes/nextjs/createPersistedToggle`, since it was the only export in this package that needed Next.js, and the peer dependency bled onto every consumer regardless of which export they used.
+
 ## 0.4.3
 
 ### Patch Changes
