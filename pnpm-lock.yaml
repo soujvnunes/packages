@@ -127,6 +127,22 @@ importers:
         specifier: ^0.2.2
         version: 0.2.2
 
+  nextjs:
+    dependencies:
+      '@soujvnunes/react':
+        specifier: workspace:*
+        version: link:../react
+    devDependencies:
+      '@types/react':
+        specifier: ^19.2.0
+        version: 19.2.17
+      next:
+        specifier: ^16.1.3
+        version: 16.2.12(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      react:
+        specifier: ^19.2.0
+        version: 19.2.8
+
   prettier-config:
     dependencies:
       prettier:
@@ -148,9 +164,6 @@ importers:
       motion:
         specifier: ^11.18.0
         version: 11.18.2(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
-      next:
-        specifier: ^16.1.3
-        version: 16.2.12(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       react:
         specifier: ^19.2.0
         version: 19.2.8

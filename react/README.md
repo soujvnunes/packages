@@ -1,6 +1,6 @@
 # @soujvnunes/react
 
-React utilities as **subpath exports with optional peers**, so you import a subpath and install only what it needs. `react` is an optional peer; `motion` (for `./motion`) and `next` (for `./createPersistedToggle`) are optional too.
+React utilities as **subpath exports with optional peers**, so you import a subpath and install only what it needs. `react` is an optional peer; `motion` (for `./motion`) is optional too.
 
 ## `./createHookedContext`: context + guarded hook factory
 
@@ -16,26 +16,6 @@ import { createHookedContext } from '@soujvnunes/react/createHookedContext'
 
 export const Ring = createHookedContext<RingState>('Ring')
 // render <Ring.Context value={ring}>, then read const ring = Ring.useHook()
-```
-
-## `./createPersistedToggle`: server-seeded, cookie-persisted state factory
-
-`createPersistedToggle({ name, cookie, values })` returns `{ State, Dispatch, Provider, isValue }`: a client `Provider` seeded from a server-read cookie whose dispatch writes the cookie back and calls `router.refresh()`, so the server re-renders from it. It gives you split State/Dispatch contexts. Omitting the dispatch argument cycles `values` (the toggle), and `isValue` narrows a raw cookie for the server seed-leaf. `next` is an optional peer.
-
-```bash
-pnpm add @soujvnunes/react react next
-```
-
-```tsx
-import { createPersistedToggle } from '@soujvnunes/react/createPersistedToggle'
-
-export const NavRail = createPersistedToggle({
-  name: 'NavRail',
-  cookie: 'nav',
-  values: ['expanded', 'collapsed'],
-})
-// server: <NavRail.Provider defaultValue={NavRail.isValue(raw) ? raw : undefined}>{children}</NavRail.Provider>
-// client: const state = NavRail.State.useHook(); const set = NavRail.Dispatch.useHook()
 ```
 
 ## `./ErrorBoundary`: class error boundary with a Fallback prop

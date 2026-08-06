@@ -13,9 +13,10 @@ Monorepo for the shared `@soujvnunes/*` packages.
 | [`@soujvnunes/stylelint-config`](./stylelint-config) | Stylelint config factory (`createConfig`), standard rules plus Tailwind v4 at-rules |
 | [`@soujvnunes/util`](./util) | Zero-dependency utilities (subpath exports): type guards, throw-free `fetch` (`createApi`), an NDJSON reader, query strings |
 | [`@soujvnunes/lib`](./lib) | Stateful modules (subpath exports): a Mongoose client and Typegoose bases |
-| [`@soujvnunes/react`](./react) | React utilities (subpath exports): hooked-context, persisted-toggle, error-boundary, motion |
+| [`@soujvnunes/react`](./react) | React utilities (subpath exports): hooked-context, error-boundary, motion |
+| [`@soujvnunes/nextjs`](./nextjs) | Next.js utilities (subpath exports): server-seeded, cookie-persisted state (`createPersistedToggle`) |
 
-Separate packages when deps are bundled (the configs); subpaths in one package when deps are peer or zero (`util`, `lib`, `react`).
+Separate packages when deps are bundled (the configs); subpaths in one package when deps are peer or zero (`util`, `lib`, `react`, `nextjs`).
 
 ## Convention: every package is a customizable factory
 
