@@ -18,7 +18,7 @@ pnpm add @soujvnunes/util
 | [`./getErrorMessage`](#geterrormessage-message-from-an-unknown-throw) | `getErrorMessage` | Message from an unknown thrown value, else a fallback |
 | [`./isConnectionError`](#isconnectionerror-detect-a-network-failure) | `isConnectionError` | `true` for a network failure (`ECONNREFUSED` / `fetch failed`) |
 | [`./buildQueryString`](#buildquerystring-flat-params-to-a-query-string) | `buildQueryString` | Flat params to `?a=1&b=2` (skips `null`/`undefined`) |
-| [`./createApi`](#createapi-throw-free-fetch-factory) | `createApi` (+ envelope builders) | Throw-free `fetch` factory returning `ApiResponse<T>` (nextjs-conventions §26) |
+| [`./createApi`](#createapi-throw-free-fetch-factory) | `createApi` (+ envelope builders) | Throw-free `fetch` factory returning `ApiResponse<T>` |
 | [`./readNdjson`](#readndjson-stream-newline-delimited-json) | `readNdjson` | Async generator over a newline-delimited-JSON `ReadableStream` |
 
 ## `./ellipses`: truncate a string from both ends
@@ -130,11 +130,12 @@ It takes `unknown` and reads the message through [`getErrorMessage`](#geterrorme
 
 ```ts
 import { isConnectionError } from '@soujvnunes/util/isConnectionError'
+import { getErrorMessage } from '@soujvnunes/util/getErrorMessage'
 
 try {
   await connectDb()
 } catch (error) {
-  if (isConnectionError(error)) return { error: 'Cannot reach the database right now.' }
+  if (isConnectionError(error)) return getErrorMessage(error, 'Cannot reach the database right now.')
 
   throw error
 }
@@ -158,7 +159,7 @@ buildQueryString(undefined) // ''
 
 ## `./createApi`: throw-free fetch factory
 
-`createApi({ baseURL, headers? })` returns a typed `api<T>(endpoint, options?)` that always resolves to an `ApiResponse<T>`. A non-ok status or a network/parse error becomes an error envelope, never a rejection. It ships `createApiResponseSuccess` and `createApiResponseError` so the server builds the same shape. Callers branch on `.success`; a server action returns the message through `useActionState`, so there is no try/catch and no `onError` callback (§26/§38).
+`createApi({ baseURL, headers? })` returns a typed `api<T>(endpoint, options?)` that always resolves to an `ApiResponse<T>`. A non-ok status or a network/parse error becomes an error envelope, never a rejection. It ships `createApiResponseSuccess` and `createApiResponseError` so the server builds the same shape. Callers branch on `.success`; a server action returns the message through `useActionState`, so there is no try/catch and no `onError` callback.
 
 ```ts
 // shared/lib/api.ts, 'use server'
