@@ -38,7 +38,7 @@ export interface CreateApiOptions {
   headers?: HeadersInit // sent on every request; per-call options.headers win on collision
 }
 
-// Server-only, THROW-FREE fetch factory (nextjs-conventions §26): binds a baseURL + JSON headers and returns a typed api<T>() that always resolves to an ApiResponse envelope, so a non-ok status or a network/parse error becomes createApiResponseError, never a throw. The factory logs nothing: the envelope carries `success` + `message`, so the consumer decides what to log on `success: false` (with its own call-site context). The server owns error policy; a server action reads `.success` and returns the message through useActionState (§26/§38), so no consumer writes a try/catch or an onError callback.
+// Server-only, THROW-FREE fetch factory: binds a baseURL + JSON headers and returns a typed api<T>() that always resolves to an ApiResponse envelope, so a non-ok status or a network/parse error becomes createApiResponseError, never a throw. The factory logs nothing: the envelope carries `success` + `message`, so the consumer decides what to log on `success: false` (with its own call-site context). The server owns error policy; a server action reads `.success` and returns the message through useActionState, so no consumer writes a try/catch or an onError callback.
 export const createApi =
   ({ baseURL, headers }: CreateApiOptions) =>
   async <T>(endpoint: string, options?: RequestInit): Promise<ApiResponse<T>> => {
