@@ -1,0 +1,51 @@
+{
+  "name": "@soujvnunes/nextjs",
+  "version": "0.0.0",
+  "description": "Next.js utilities: server-seeded, cookie-persisted UI state factory (subpath exports).",
+  "license": "MIT",
+  "author": "soujvnunes",
+  "keywords": [
+    "nextjs",
+    "next",
+    "react",
+    "cookie",
+    "persisted-state",
+    "context"
+  ],
+  "homepage": "https://github.com/soujvnunes/packages/tree/main/nextjs#readme",
+  "bugs": "https://github.com/soujvnunes/packages/issues",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/soujvnunes/packages.git",
+    "directory": "nextjs"
+  },
+  "type": "module",
+  "exports": {
+    "./createPersistedToggle": {
+      "types": "./dist/createPersistedToggle.d.ts",
+      "default": "./dist/createPersistedToggle.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup createPersistedToggle.tsx --format esm --dts --clean",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@soujvnunes/react": "workspace:*"
+  },
+  "peerDependencies": {
+    "next": ">=14",
+    "react": ">=18"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.0",
+    "next": "^16.1.3",
+    "react": "^19.2.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
