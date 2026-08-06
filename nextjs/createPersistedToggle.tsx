@@ -4,7 +4,7 @@ import { useCallback, useState } from 'react'
 
 import { useRouter } from 'next/navigation'
 
-import { createHookedContext } from './createHookedContext'
+import { createHookedContext } from '@soujvnunes/react/createHookedContext'
 
 interface PersistedToggleOptions<T extends string> {
   // Names the split contexts + hook errors, e.g. 'NavRail' → NavRailState / NavRailDispatch.
