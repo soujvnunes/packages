@@ -56,7 +56,7 @@ const typescriptRules: Linter.RulesRecord = {
   '@typescript-eslint/prefer-nullish-coalescing': 'error',
   'no-shadow': 'off',
   '@typescript-eslint/no-shadow': 'error',
-  // Type-aware rules, on because they catch what a generated diff gets wrong and a reviewer does not: a promise nobody awaited, an API that was current in a model's training data and is deprecated now, an assertion the types already prove. `projectService` below is what makes them available.
+  // Type-aware, so they need the project service wired below.
   '@typescript-eslint/no-floating-promises': 'error',
   '@typescript-eslint/no-misused-promises': 'error',
   '@typescript-eslint/await-thenable': 'error',
@@ -73,7 +73,7 @@ const importRules: Linter.RulesRecord = {
   'unused-imports/no-unused-imports': 'error',
   'unused-imports/no-unused-vars': 'off',
 }
-// `detect-object-injection` is deliberately absent: it predates TS narrowing and fires on every `obj[key]`, including a key already narrowed to a literal union and a plain array index inside `.map()`. It was 33 of the 35 findings across the reference consumer, all false. `noUncheckedIndexedAccess` plus the `objectHas` own-key guard cover the real case with types instead of a heuristic.
+// `detect-object-injection` is deliberately absent: it predates TS narrowing and fires on every `obj[key]`, including a key already narrowed to a literal union and a plain array index. `noUncheckedIndexedAccess` plus an `Object.hasOwn` guard cover the real case with types instead of a heuristic.
 const securityRules: Linter.RulesRecord = {
   'security/detect-non-literal-regexp': 'error',
   'security/detect-unsafe-regex': 'error',
@@ -102,7 +102,7 @@ const generalRules: Linter.RulesRecord = {
   'no-eval': 'error',
   'no-implied-eval': 'error',
   'no-script-url': 'error',
-  // Blank lines between statements are stripped, not required, with no exceptions. The reader that matters here is an agent, and padding cost 13.7% of the lines in the reference consumer while carrying nothing a parser or a reader needs: it inflates every file read, every `file:line` reference and every diff. Import-group separators go too, so `import-helpers/order-imports` runs with `newlinesBetween: 'never'` and `import-x/newline-after-import` is off; grouping and order still hold, they are just not spelled with whitespace.
+  // Blank lines between statements are stripped, not required, with no exceptions. Import-group separators go too, so `import-helpers/order-imports` runs with `newlinesBetween: 'never'` and `import-x/newline-after-import` is off; grouping and order still hold, they are just not spelled with whitespace.
   'padding-line-between-statements': ['error', { blankLine: 'never', prev: '*', next: '*' }],
 }
 const restrictedSyntaxRule: Linter.RulesRecord = {
@@ -269,7 +269,7 @@ const buildConfig = ({
     {
       files: ['**/*.{js,jsx,ts,tsx}'],
       plugins,
-      // Every rule here is an error, never a warning. A warning is a finding nobody has to act on, so it survives indefinitely and an agent re-reads and re-dismisses the same pile on every run, unable to tell old noise from what it just broke. A rule worth keeping is worth failing on; a deliberate exception is an `eslint-disable` comment, which records the decision where the code is. `reportUnusedDisableDirectives` closes the loop by failing on a disable comment that suppresses nothing.
+      // Every rule here is an error, never a warning: a rule worth keeping is worth failing on, and a deliberate exception is an `eslint-disable` comment, which records the decision where the code is. `reportUnusedDisableDirectives` closes the loop by failing on a disable comment that suppresses nothing.
       linterOptions: { reportUnusedDisableDirectives: 'error' },
       languageOptions: {
         parserOptions: {
