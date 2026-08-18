@@ -18,6 +18,10 @@ Monorepo for the shared `@soujvnunes/*` packages.
 
 Separate packages when deps are bundled (the configs); subpaths in one package when deps are peer or zero (`util`, `lib`, `react`, `nextjs`).
 
+## Convention: the style is tuned for agents
+
+This code is read far more often by an agent than by a person scrolling a file, so `@soujvnunes/eslint-config` optimises for that reader: no blank lines between statements (they were 13.7% of the lines in the reference consumer and stripping them took 19.6% off this monorepo), no warning severity anywhere (a warning is a finding nobody has to act on, so it accumulates until an agent cannot tell old noise from a fresh break), and type-aware rules for the mistakes review misses, such as an un-awaited promise or an API that was current in a model's training data and is deprecated now. The reasoning and the measurements are in [the config's README](./eslint-config#the-house-style-is-tuned-for-agents-not-for-skimming).
+
 ## Convention: every package is a customizable factory
 
 Each package exposes a factory that takes an overrides object, so a consumer customizes without forking:
