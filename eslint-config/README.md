@@ -49,18 +49,16 @@ export default createBaseConfig()
 
 Type-aware rules use typescript-eslint's **project service**, so no `parserOptions.project` wiring is needed. It discovers the nearest `tsconfig.json` per file.
 
-## The house style is tuned for agents, not for skimming
+## Style rules worth knowing before you adopt
 
-Most of what is opinionated here follows from one assumption: the code is read far more often by an agent than by a person scrolling a file. Three consequences, each measured on real repos rather than argued from taste.
+These are the opinions most likely to surprise an existing codebase. All of them autofix except where noted.
 
-**No blank lines between statements.** `padding-line-between-statements` is `{ blankLine: 'never', prev: '*', next: '*' }` with no exceptions, so padding is an error and `--fix` removes it. That includes the import block: `import-helpers/order-imports` runs `newlinesBetween: 'never'` and `import-x/newline-after-import` is off, so groups stay ordered without being spaced. Padding was 13.7% of the lines in the reference consumer while carrying nothing a parser or a reader needs, and it inflates every file read, every `file:line` reference and every diff. Running this over the monorepo removed 19.6% of its lines in one pass, tests unchanged.
+**No blank lines between statements.** `padding-line-between-statements` is `{ blankLine: 'never', prev: '*', next: '*' }` with no exceptions, so a blank line between two statements is an error and `--fix` removes it. This covers the import block too: `import-helpers/order-imports` runs with `newlinesBetween: 'never'` and `import-x/newline-after-import` is off, so groups stay ordered without being separated by whitespace. Blank lines inside a template literal are content and are left alone.
 
-This is a rule about whitespace, not about structure. Separation between two ideas is expressed by extracting a function or a module, which is what the blank line was only ever hinting at. Blank lines inside a template literal are content and are untouched.
+**No warning severity.** Every rule either fails or is not present. A deliberate exception is an `eslint-disable` comment rather than a warning, and `reportUnusedDisableDirectives` is on, so a disable comment that suppresses nothing is itself an error.
 
-**No warnings, only errors.** A warning is a finding nobody has to act on, so it accumulates: an agent re-reads and re-dismisses the same pile on every run and cannot tell old noise from what it just broke. Every rule here either fails the build or is not present. A deliberate exception is an `eslint-disable` comment, which records the decision next to the code, and `reportUnusedDisableDirectives` fails on a disable comment that suppresses nothing.
+**Type-aware rules are enabled**, including `no-floating-promises`, `no-misused-promises`, `await-thenable`, `no-deprecated` and `no-unnecessary-type-assertion`. These need the project service, which is wired by default (see above). They are the rules most likely to surface real findings in a codebase adopting this config, and most are not autofixable.
 
-**Type-aware rules for the mistakes review misses.** `no-floating-promises`, `no-misused-promises`, `await-thenable`, `no-deprecated` and `no-unnecessary-type-assertion` are on. A promise nobody awaited and an API that was current in a model's training data but is deprecated today are both invisible in review and both caught here.
+**`security/detect-object-injection` is not included.** It predates TypeScript narrowing and reports every `obj[key]`, including keys already narrowed to a literal union and plain array indexes. Use `noUncheckedIndexedAccess` and an own-key (`Object.hasOwn`) guard instead.
 
-Two rules are deliberately absent. `security/detect-object-injection` predates TypeScript narrowing and fires on every `obj[key]`, including keys already narrowed to a literal union and plain array indexes inside `.map()`; it produced 33 of 35 findings on the reference consumer, all false, and `noUncheckedIndexedAccess` plus an own-key guard cover the real case with types. `@typescript-eslint/no-unnecessary-condition` looks like a good fit and is not: it flags guards whose types lie about runtime, such as `if (!navigator.clipboard)` (absent on non-HTTPS) and the `models.X || getModelForClass(X)` hot-reload guard, so following it deletes code that is load-bearing.
-
-Adopting this in an existing repo is one `eslint --fix` plus a short list of real fixes. On the reference consumer: 1746 findings, 1735 autofixable, 11 by hand, every one a genuine bug.
+Adopting this in an existing repo is usually one `eslint --fix` pass plus a short list of genuine fixes from the type-aware rules.
