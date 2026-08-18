@@ -13,7 +13,6 @@ import security from 'eslint-plugin-security'
 import unusedImports from 'eslint-plugin-unused-imports'
 import globals from 'globals'
 import tseslint from 'typescript-eslint'
-
 const DEFAULT_IGNORES: string[] = [
   '**/node_modules/**',
   '**/.next/**',
@@ -24,7 +23,6 @@ const DEFAULT_IGNORES: string[] = [
   '*.config.mjs',
   'next-env.d.ts',
 ]
-
 // Generic skeleton, no project paths. Consumers pass their own `@/...` groups between `module` and `parent` via the `importGroups` option.
 const DEFAULT_IMPORT_GROUPS: (string | string[])[] = [
   '/^react/',
@@ -34,7 +32,6 @@ const DEFAULT_IMPORT_GROUPS: (string | string[])[] = [
   'sibling',
   'index',
 ]
-
 const typescriptRules: Linter.RulesRecord = {
   '@typescript-eslint/no-unused-vars': [
     'error',
@@ -48,20 +45,24 @@ const typescriptRules: Linter.RulesRecord = {
       destructuredArrayIgnorePattern: '^_',
     },
   ],
-  '@typescript-eslint/no-explicit-any': 'warn',
-  '@typescript-eslint/no-floating-promises': 'off',
+  '@typescript-eslint/no-explicit-any': 'error',
   '@typescript-eslint/consistent-type-imports': [
     'error',
     { prefer: 'type-imports', fixStyle: 'separate-type-imports' },
   ],
   '@typescript-eslint/no-empty-interface': 'error',
-  '@typescript-eslint/no-non-null-assertion': 'warn',
+  '@typescript-eslint/no-non-null-assertion': 'error',
   '@typescript-eslint/prefer-optional-chain': 'error',
   '@typescript-eslint/prefer-nullish-coalescing': 'error',
   'no-shadow': 'off',
   '@typescript-eslint/no-shadow': 'error',
+  // Type-aware rules, on because they catch what a generated diff gets wrong and a reviewer does not: a promise nobody awaited, an API that was current in a model's training data and is deprecated now, an assertion the types already prove. `projectService` below is what makes them available.
+  '@typescript-eslint/no-floating-promises': 'error',
+  '@typescript-eslint/no-misused-promises': 'error',
+  '@typescript-eslint/await-thenable': 'error',
+  '@typescript-eslint/no-deprecated': 'error',
+  '@typescript-eslint/no-unnecessary-type-assertion': 'error',
 }
-
 const importRules: Linter.RulesRecord = {
   'import-x/no-default-export': 'error',
   'import-x/no-named-default': 'error',
@@ -69,26 +70,23 @@ const importRules: Linter.RulesRecord = {
   'import-x/no-duplicates': 'error',
   'import-x/no-cycle': 'error',
   'import-x/no-self-import': 'error',
-  'import-x/newline-after-import': 'error',
   'unused-imports/no-unused-imports': 'error',
   'unused-imports/no-unused-vars': 'off',
 }
-
+// `detect-object-injection` is deliberately absent: it predates TS narrowing and fires on every `obj[key]`, including a key already narrowed to a literal union and a plain array index inside `.map()`. It was 33 of the 35 findings across the reference consumer, all false. `noUncheckedIndexedAccess` plus the `objectHas` own-key guard cover the real case with types instead of a heuristic.
 const securityRules: Linter.RulesRecord = {
-  'security/detect-object-injection': 'warn',
-  'security/detect-non-literal-regexp': 'warn',
+  'security/detect-non-literal-regexp': 'error',
   'security/detect-unsafe-regex': 'error',
   'security/detect-eval-with-expression': 'error',
 }
-
 const generalRules: Linter.RulesRecord = {
-  'no-console': ['warn', { allow: ['warn', 'error'] }],
+  'no-console': ['error', { allow: ['warn', 'error'] }],
   'no-debugger': 'error',
   'no-alert': 'error',
   'no-var': 'error',
   'prefer-const': 'error',
   'prefer-template': 'error',
-  'no-nested-ternary': 'warn',
+  'no-nested-ternary': 'error',
   'no-unneeded-ternary': 'error',
   'no-param-reassign': ['error', { props: false }],
   'no-return-await': 'error',
@@ -104,47 +102,9 @@ const generalRules: Linter.RulesRecord = {
   'no-eval': 'error',
   'no-implied-eval': 'error',
   'no-script-url': 'error',
-  'lines-around-comment': [
-    'error',
-    {
-      beforeBlockComment: true,
-      afterBlockComment: false,
-      beforeLineComment: true,
-      afterLineComment: false,
-      allowBlockStart: true,
-      allowBlockEnd: false,
-      allowObjectStart: true,
-      allowArrayStart: true,
-    },
-  ],
-  'newline-before-return': 'error',
-  'padding-line-between-statements': [
-    'error',
-    { blankLine: 'always', prev: '*', next: 'return' },
-    { blankLine: 'always', prev: '*', next: 'if' },
-    { blankLine: 'always', prev: 'if', next: '*' },
-    { blankLine: 'always', prev: ['const', 'let', 'var'], next: '*' },
-    { blankLine: 'any', prev: ['const', 'let', 'var'], next: ['const', 'let', 'var'] },
-    { blankLine: 'always', prev: 'directive', next: '*' },
-    { blankLine: 'any', prev: 'directive', next: 'directive' },
-    { blankLine: 'always', prev: 'import', next: '*' },
-    { blankLine: 'any', prev: 'import', next: 'import' },
-    { blankLine: 'always', prev: '*', next: 'export' },
-    { blankLine: 'always', prev: 'export', next: '*' },
-    { blankLine: 'any', prev: 'export', next: 'export' },
-    { blankLine: 'always', prev: ['function', 'class'], next: '*' },
-    { blankLine: 'always', prev: '*', next: ['function', 'class'] },
-    { blankLine: 'always', prev: 'switch', next: '*' },
-    { blankLine: 'always', prev: '*', next: 'switch' },
-    { blankLine: 'always', prev: 'try', next: '*' },
-    { blankLine: 'always', prev: '*', next: 'try' },
-    { blankLine: 'always', prev: 'while', next: '*' },
-    { blankLine: 'always', prev: '*', next: 'while' },
-    { blankLine: 'always', prev: 'for', next: '*' },
-    { blankLine: 'always', prev: '*', next: 'for' },
-  ],
+  // Blank lines between statements are stripped, not required, with no exceptions. The reader that matters here is an agent, and padding cost 13.7% of the lines in the reference consumer while carrying nothing a parser or a reader needs: it inflates every file read, every `file:line` reference and every diff. Import-group separators go too, so `import-helpers/order-imports` runs with `newlinesBetween: 'never'` and `import-x/newline-after-import` is off; grouping and order still hold, they are just not spelled with whitespace.
+  'padding-line-between-statements': ['error', { blankLine: 'never', prev: '*', next: '*' }],
 }
-
 const restrictedSyntaxRule: Linter.RulesRecord = {
   'no-restricted-syntax': [
     'error',
@@ -182,17 +142,16 @@ const restrictedSyntaxRule: Linter.RulesRecord = {
     },
   ],
 }
-
 const reactRules: Linter.RulesRecord = {
   'react/prop-types': 'off',
   'react/react-in-jsx-scope': 'off',
-  'react/display-name': 'warn',
+  'react/display-name': 'error',
   'react/jsx-no-target-blank': 'error',
   'react/jsx-no-duplicate-props': 'error',
   'react/jsx-key': 'error',
-  'react/no-array-index-key': 'warn',
+  'react/no-array-index-key': 'error',
   'react/no-children-prop': 'error',
-  'react/no-danger': 'warn',
+  'react/no-danger': 'error',
   'react/no-deprecated': 'error',
   'react/no-direct-mutation-state': 'error',
   'react/no-unescaped-entities': 'error',
@@ -200,21 +159,18 @@ const reactRules: Linter.RulesRecord = {
   'react/jsx-boolean-value': ['error', 'never'],
   'react/jsx-curly-brace-presence': ['error', { props: 'never', children: 'never' }],
   'react-hooks/rules-of-hooks': 'error',
-  'react-hooks/exhaustive-deps': 'warn',
+  'react-hooks/exhaustive-deps': 'error',
 }
-
 const nextRules: Linter.RulesRecord = {
   '@next/next/no-html-link-for-pages': 'error',
   '@next/next/no-img-element': 'error',
 }
-
 const importOrderRule = (groups: (string | string[])[]): Linter.RulesRecord => ({
   'import-helpers/order-imports': [
-    'warn',
-    { newlinesBetween: 'always', groups, alphabetize: { order: 'asc', ignoreCase: true } },
+    'error',
+    { newlinesBetween: 'never', groups, alphabetize: { order: 'asc', ignoreCase: true } },
   ],
 })
-
 export interface ConfigOptions {
   /** Extra ignore globs, merged after the defaults. */
   ignores?: string[]
@@ -234,7 +190,6 @@ export interface ConfigOptions {
   /** Extra flat-config objects appended at the end. */
   extend?: Linter.Config[]
 }
-
 const buildConfig = ({
   next = false,
   ignores = [],
@@ -260,7 +215,6 @@ const buildConfig = ({
   const languageGlobals: Record<string, unknown> = { ...globals.node, ...globals.es2021 }
   // Base (pure TS libs) stays on import-x's built-in node resolver. Next apps get the TS resolver wired below: this package bundles `eslint-import-resolver-typescript` and passes the resolver object via `resolver-next`, so consumers resolve `@/...` aliases + `.d.ts` types out of the box with no install and no `extend` (the object form sidesteps pnpm's bare-name resolution).
   const settings: Record<string, unknown> = {}
-
   if (next) {
     Object.assign(plugins, {
       '@next/next': nextPlugin,
@@ -277,7 +231,6 @@ const buildConfig = ({
     settings.react = { version: 'detect' }
     // `alwaysTryTypes` resolves `@types/*` for value imports; the resolver finds tsconfig.json from cwd. A consumer with a non-standard tsconfig path can still append its own via `extend`.
     settings['import-x/resolver-next'] = [createTypeScriptImportResolver({ alwaysTryTypes: true })]
-
     // Opt-in, and only when the Tailwind v4 CSS entry is set so the rule can resolve the theme. Just the
     // correctness rules run here. The stylistic ones (class order, whitespace) would fight
     // `prettier-plugin-tailwindcss`, which already owns ordering.
@@ -291,7 +244,6 @@ const buildConfig = ({
       settings['better-tailwindcss'] = { entryPoint: tailwindEntryPoint }
     }
   }
-
   // Root config files + scripts legitimately default-export, so always exempt them (a base TS lib has e.g. `vitest.config.ts` / `tsup.config.ts`, which aren't in DEFAULT_IGNORES).
   const rootConfigOverride: Linter.Config = {
     files: ['*.{mjs,js,ts,mts,cts}'],
@@ -310,7 +262,6 @@ const buildConfig = ({
     languageOptions: { globals: { ...globals.node } },
     rules: { 'no-console': 'off' },
   }
-
   return [
     { ignores: [...DEFAULT_IGNORES, ...ignores] },
     js.configs.recommended,
@@ -318,6 +269,8 @@ const buildConfig = ({
     {
       files: ['**/*.{js,jsx,ts,tsx}'],
       plugins,
+      // Every rule here is an error, never a warning. A warning is a finding nobody has to act on, so it survives indefinitely and an agent re-reads and re-dismisses the same pile on every run, unable to tell old noise from what it just broke. A rule worth keeping is worth failing on; a deliberate exception is an `eslint-disable` comment, which records the decision where the code is. `reportUnusedDisableDirectives` closes the loop by failing on a disable comment that suppresses nothing.
+      linterOptions: { reportUnusedDisableDirectives: 'error' },
       languageOptions: {
         parserOptions: {
           ecmaVersion: 'latest',
@@ -338,9 +291,7 @@ const buildConfig = ({
     ...extend,
   ]
 }
-
 /** Base config for TypeScript libraries (no React/Next layers). */
 export const createBaseConfig = (options?: ConfigOptions) => buildConfig({ ...options, next: false })
-
 /** Full config for Next.js apps: base plus React, React Hooks, jsx-a11y and Next plugins. */
 export const createNextConfig = (options?: ConfigOptions) => buildConfig({ ...options, next: true })
