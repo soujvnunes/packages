@@ -1,5 +1,4 @@
 import { defineConfig } from 'vitest/config'
-
 // One project per package, rooted at the package, so each flat layout and its tsconfig `include` keep working untouched.
 export default defineConfig({
   test: {

@@ -1,8 +1,6 @@
 import { createRequire } from 'node:module'
 import type { Config } from 'stylelint'
-
 const require = createRequire(import.meta.url)
-
 // Base: `stylelint-config-standard` plus this house's deviations. Resolve the shared config to an absolute path from THIS package (where it's a bundled dependency), so consumers load it regardless of their package manager's hoisting. pnpm keeps it out of the app root, and stylelint would otherwise resolve the bare `extends` string against the consumer and fail.
 const base: Config = {
   extends: [require.resolve('stylelint-config-standard')],
@@ -38,7 +36,6 @@ const base: Config = {
     'custom-property-pattern': null,
   },
 }
-
 /**
  * Shared Stylelint config. Pass any Stylelint option to override the base; `rules` merge onto the
  * base rules while other keys replace. The common override is `ignoreFiles` (e.g. a Tailwind theme
