@@ -249,10 +249,10 @@ const buildConfig = ({
     files: ['*.{mjs,js,ts,mts,cts}'],
     rules: { 'import-x/no-default-export': 'off', 'no-restricted-syntax': 'off' },
   }
-  // Next.js framework file conventions (page, layout, error, and so on) must default-export. Next only.
+  // Next.js framework file conventions (page, layout, error, and so on) must default-export. Next only. Both `proxy` (Next 16, Node runtime) and `middleware` (the earlier name, still valid on the edge runtime) are listed, since a repo can be on either.
   const nextFileConventionsOverride: Linter.Config = {
     files: [
-      '**/{default,page,layout,error,loading,forbidden,not-found,template,unauthorized,icon,apple-icon,manifest,opengraph-image,twitter-image,global-error,middleware,sitemap,robots}.{ts,tsx}',
+      '**/{default,page,layout,error,loading,forbidden,not-found,template,unauthorized,icon,apple-icon,manifest,opengraph-image,twitter-image,global-error,proxy,middleware,sitemap,robots}.{ts,tsx}',
     ],
     rules: { 'import-x/no-default-export': 'off', 'no-restricted-syntax': 'off' },
   }
