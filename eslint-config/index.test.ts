@@ -127,6 +127,12 @@ describe('createNextConfig', () => {
       'no-restricted-syntax': 'off',
     })
   })
+  it.each(['proxy', 'middleware'])('exempts %s, since a repo can be on either name', (name) => {
+    const override = createNextConfig().find((entry) =>
+      entry.files?.[0]?.includes('{default,page,layout'),
+    )
+    expect(override?.files?.[0]).toContain(`,${name},`)
+  })
   it('bans the React default and namespace imports in favour of the ambient namespace', () => {
     const rule = mainBlock(createNextConfig()).rules?.['no-restricted-syntax'] as [
       string,
