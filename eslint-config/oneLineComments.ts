@@ -4,10 +4,13 @@ type Comment = ReturnType<SourceCode['getAllComments']>[number]
 type Commented = Parameters<SourceCode['getText']>[0]
 // A comment carrying machine semantics is exempt, run and all: joining puts prose in front of the keyword and the tool stops seeing the directive. There is no correct one-line form for a mixed run either, since TypeScript skips intervening comment lines when matching `@ts-expect-error` and ESLint does not, so both would have to be first.
 const DIRECTIVE =
-  /^\s*(?:eslint\b|eslint-disable\b|eslint-disable-line\b|eslint-disable-next-line\b|eslint-enable\b|eslint-env\b|global\b|globals\b|exported\b|@ts-expect-error|@ts-ignore|@ts-nocheck|\/\s*<reference|prettier-ignore|biome-ignore|(?:istanbul|c8|v8|node:coverage)\s+ignore|@jsx\b|@jsxImportSource\b|@vitest-environment\b|vitest-environment\b|@vite-ignore\b|webpack[A-Z]|@license\b|@preserve\b|#__PURE__|sourceMappingURL=|sourceURL=)/u
+  /^\s*(?:eslint-disable\b|eslint-enable\b|@ts-expect-error|@ts-ignore|@ts-nocheck|@ts-check\b|\/\s*<reference|prettier-ignore|biome-ignore|(?:istanbul|c8|v8|node:coverage)\s+ignore\b|@jsx\b|@jsxImportSource\b|@jsxRuntime\b|@vitest-environment\b|vitest-environment\b|@vite-ignore\b|webpack[A-Z]|@license\b|@preserve\b|@__PURE__|#__PURE__|#__NO_SIDE_EFFECTS__|sourceMappingURL=|sourceURL=)/u
+// `global`, `globals`, `exported`, `eslint` and `eslint-env` are directives ONLY in a block comment, so matching them on a line comment would exempt ordinary prose: `// global state lives here` is not a directive.
+const BLOCK_DIRECTIVE = /^\s*(?:eslint\s|eslint-env\b|global\s|globals\s|exported\s)/u
 // Only what a person typed as a comment. The interpreter line is spelled `Shebang` from SourceCode and `Hashbang` from the tokenizer, so an allow-list catches both where a deny-list on one spelling rots.
 const isComment = (comment: Comment) => comment.type === 'Line' || comment.type === 'Block'
-const isDirective = (comment: Comment) => DIRECTIVE.test(comment.value)
+const isDirective = (comment: Comment) =>
+  DIRECTIVE.test(comment.value) || (comment.type === 'Block' && BLOCK_DIRECTIVE.test(comment.value))
 const spansLines = (comment: Comment) => (comment.loc?.start.line ?? 0) !== (comment.loc?.end.line ?? 0)
 // A line terminator reaching the output would leave the comment multi-line while the rule considered it fixed, so every fix asserts on its finished text rather than trusting how the pieces were split.
 const isOneLine = (text: string) => !/[\r\n\u2028\u2029]/u.test(text)
@@ -60,7 +63,7 @@ export const oneLineComments: Rule.RuleModule = {
   meta: {
     type: 'layout',
     docs: { description: 'Require a comment to occupy exactly one line, however long it runs.' },
-    fixable: 'whitespace',
+    fixable: 'code',
     schema: [],
     messages: {
       adjacent:
@@ -96,6 +99,8 @@ export const oneLineComments: Rule.RuleModule = {
           // One directive anywhere exempts the whole run, since joining is a whole-run operation.
           if (current.some(isDirective)) return
           const jsx = current.some((comment) => enclosingJsxComment(sourceCode, comment))
+          // A block comment in the run reports without a fix: rebuilding it as `//` from its value keeps the JSDoc star as content (`// note * @deprecated`), which stops the symbol carrying documentation and silently disables `no-deprecated`, and it would flatten a `/*!` banner a minifier is meant to keep.
+          const block = current.some((comment) => comment.type === 'Block')
           const body = collapse(current.map((comment) => comment.value.trim()).join(' '))
           const text = `// ${body}`
           const first = current[0]
@@ -106,7 +111,7 @@ export const oneLineComments: Rule.RuleModule = {
             messageId: 'adjacent',
             // A JSX run reports without a fix: merging `{/* a */}` with `{/* b */}` means editing sibling containers, and raw range surgery there can swallow a value-bearing expression.
             fix:
-              jsx || !body || !isOneLine(text)
+              jsx || block || !body || !isOneLine(text)
                 ? null
                 : (fixer) =>
                     fixer.replaceTextRange([first.range?.[0] ?? 0, last.range?.[1] ?? 0], text),
@@ -125,6 +130,7 @@ export const oneLineComments: Rule.RuleModule = {
   },
 }
 export const oneLineCommentsPlugin = {
-  meta: { name: '@soujvnunes/eslint-config', version: '0.6.0' },
+  // No `version`: it feeds ESLint's cache key, and a hardcoded one drifts from package.json and serves stale cached results after a behaviour change.
+  meta: { name: '@soujvnunes/eslint-config' },
   rules: { 'one-line-comments': oneLineComments },
 }
