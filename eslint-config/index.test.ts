@@ -256,6 +256,30 @@ describe('one-line-comments', () => {
     expect(report[0]?.messageId).toBe('adjacent')
     expect(report[0]?.fix).toBeUndefined()
   })
+  it('reports a run holding a block comment without fixing it, so a JSDoc marker survives', () => {
+    const report = new Linter().verify('// note\n/** @deprecated use next */\nexport const a = 1', {
+      plugins: { soujvnunes: oneLineCommentsPlugin },
+      rules: { 'soujvnunes/one-line-comments': 'error' },
+    })
+    expect(report).toHaveLength(1)
+    expect(report[0]?.messageId).toBe('adjacent')
+    expect(report[0]?.fix).toBeUndefined()
+  })
+  it('treats @ts-check as a directive, since the pragma only counts when it stands alone', () => {
+    const report = new Linter().verify('// @ts-check\n// prose under it\nconst a = 1', {
+      plugins: { soujvnunes: oneLineCommentsPlugin },
+      rules: { 'soujvnunes/one-line-comments': 'error' },
+    })
+    expect(report).toHaveLength(0)
+  })
+  it('does not mistake prose for a line directive, which would exempt it silently', () => {
+    const report = new Linter().verify('// global state lives here\n// and it is shared\nconst a = 1', {
+      plugins: { soujvnunes: oneLineCommentsPlugin },
+      rules: { 'soujvnunes/one-line-comments': 'error' },
+    })
+    expect(report).toHaveLength(1)
+    expect(report[0]?.messageId).toBe('adjacent')
+  })
   it('is wired into the shared config at error, on a glob that reaches .mjs and .cjs', () => {
     const block = createBaseConfig().find((entry) => entry.rules?.['soujvnunes/one-line-comments'])
     expect(block?.rules?.['soujvnunes/one-line-comments']).toBe('error')
