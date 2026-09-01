@@ -36,11 +36,7 @@ const base: Config = {
     'custom-property-pattern': null,
   },
 }
-/**
- * Shared Stylelint config. Pass any Stylelint option to override the base; `rules` merge onto the
- * base rules while other keys replace. The common override is `ignoreFiles` (e.g. a Tailwind theme
- * file whose generated custom properties trip the standard rules).
- */
+/** Shared Stylelint config. Pass any Stylelint option to override the base; `rules` merge onto the base rules while other keys replace. The common override is `ignoreFiles` (e.g. a Tailwind theme file whose generated custom properties trip the standard rules). */
 export const createConfig = (overrides: Config = {}): Config => ({
   ...base,
   ...overrides,
