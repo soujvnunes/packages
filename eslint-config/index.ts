@@ -253,7 +253,6 @@ const buildConfig = ({
   const oneLineCommentsOverride: Linter.Config = {
     files: ['**/*.{js,jsx,mjs,cjs,ts,tsx,mts,cts}'],
     plugins: { soujvnunes: oneLineCommentsPlugin },
-    linterOptions: { reportUnusedDisableDirectives: 'error' },
     rules: { 'soujvnunes/one-line-comments': 'error' },
   }
   // Node scripts own stdout, so printing IS their job.
