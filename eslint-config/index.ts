@@ -13,6 +13,8 @@ import security from 'eslint-plugin-security'
 import unusedImports from 'eslint-plugin-unused-imports'
 import globals from 'globals'
 import tseslint from 'typescript-eslint'
+import { oneLineCommentsPlugin } from './oneLineComments'
+export { oneLineComments, oneLineCommentsPlugin } from './oneLineComments'
 const DEFAULT_IGNORES: string[] = [
   '**/node_modules/**',
   '**/.next/**',
@@ -178,14 +180,7 @@ export interface ConfigOptions {
   importGroups?: (string | string[])[]
   /** Root for typescript-eslint's project service. Defaults to cwd. */
   tsconfigRootDir?: string
-  /**
-   * Path to the Tailwind v4 CSS entry (the file with `@import "tailwindcss"` + `@theme`, e.g.
-   * `./app/tailwind.config.css`). When set on the Next preset, it wires the bundled
-   * `eslint-plugin-better-tailwindcss` correctness rules, chiefly `no-unknown-classes`, which flags a
-   * class not registered in the theme (a dead token `tsc`/build cannot see; see DESIGN-TOKENS). Leave it
-   * unset and the plugin stays off, since without the entry the rule cannot resolve the theme and would
-   * flag every class.
-   */
+  /** Path to the Tailwind v4 CSS entry (the file with `@import "tailwindcss"` + `@theme`, e.g. `./app/tailwind.config.css`). When set on the Next preset, it wires the bundled `eslint-plugin-better-tailwindcss` correctness rules, chiefly `no-unknown-classes`, which flags a class not registered in the theme (a dead token `tsc`/build cannot see; see DESIGN-TOKENS). Leave it unset and the plugin stays off, since without the entry the rule cannot resolve the theme and would flag every class. */
   tailwindEntryPoint?: string
   /** Extra flat-config objects appended at the end. */
   extend?: Linter.Config[]
@@ -231,9 +226,7 @@ const buildConfig = ({
     settings.react = { version: 'detect' }
     // `alwaysTryTypes` resolves `@types/*` for value imports; the resolver finds tsconfig.json from cwd. A consumer with a non-standard tsconfig path can still append its own via `extend`.
     settings['import-x/resolver-next'] = [createTypeScriptImportResolver({ alwaysTryTypes: true })]
-    // Opt-in, and only when the Tailwind v4 CSS entry is set so the rule can resolve the theme. Just the
-    // correctness rules run here. The stylistic ones (class order, whitespace) would fight
-    // `prettier-plugin-tailwindcss`, which already owns ordering.
+    // Opt-in, and only when the Tailwind v4 CSS entry is set so the rule can resolve the theme. Just the correctness rules run here. The stylistic ones (class order, whitespace) would fight `prettier-plugin-tailwindcss`, which already owns ordering.
     if (tailwindEntryPoint) {
       plugins['better-tailwindcss'] = betterTailwind
       Object.assign(rules, {
@@ -255,6 +248,13 @@ const buildConfig = ({
       '**/{default,page,layout,error,loading,forbidden,not-found,template,unauthorized,icon,apple-icon,manifest,opengraph-image,twitter-image,global-error,proxy,middleware,sitemap,robots}.{ts,tsx}',
     ],
     rules: { 'import-x/no-default-export': 'off', 'no-restricted-syntax': 'off' },
+  }
+  // Its own block, with a wider glob: the main block above is `**/*.{js,jsx,ts,tsx}`, so a rule placed there never reaches a `.mjs`, `.cjs`, `.mts` or `.cts` file. It carries its own `plugins` and `linterOptions` for the same reason, since neither reaches those files either.
+  const oneLineCommentsOverride: Linter.Config = {
+    files: ['**/*.{js,jsx,mjs,cjs,ts,tsx,mts,cts}'],
+    plugins: { soujvnunes: oneLineCommentsPlugin },
+    linterOptions: { reportUnusedDisableDirectives: 'error' },
+    rules: { 'soujvnunes/one-line-comments': 'error' },
   }
   // Node scripts own stdout, so printing IS their job.
   const scriptsOverride: Linter.Config = {
@@ -285,6 +285,7 @@ const buildConfig = ({
       rules,
     },
     prettier,
+    oneLineCommentsOverride,
     rootConfigOverride,
     ...(next ? [nextFileConventionsOverride] : []),
     scriptsOverride,
