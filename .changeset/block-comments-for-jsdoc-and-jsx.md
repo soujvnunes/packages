@@ -1,5 +1,0 @@
----
-'@soujvnunes/eslint-config': minor
----
-
-`one-line-comments` now reserves block comments for JSDoc, JSX and `/*!` banners. A single-line `/**` ends the run above it, so a `//` on the line before a JSDoc is legal; a JSDoc is out of place only when a prose comment sits directly under it, or when a prose doc is stacked on another doc, and that reports without a fix so its tags are never dropped. A directive line between a JSDoc and its code, and a tag-only doc stacked on another (`@typedef`, `@jsx` and `@jsxFrag`), stay legal. A plain `/* … */` outside JSX is an error, rewritten as `//` when nothing follows it on its line; a multi-line one collapses to `//` the same way, and a `/*!` banner collapses with its opener kept. A run of comment lines holding a bare `//` between two texts is a paragraph set: it reports without a fix and names the two remedies, one line per fact beside the code it describes, or moving the rationale out of the source. Machine-read annotations are exempt by shape rather than by list: a body opening with `@` or `#`, a block opening with a `tool:` prefix such as `node:coverage`, and every triple-slash directive.
