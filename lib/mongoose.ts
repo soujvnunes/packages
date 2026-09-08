@@ -11,12 +11,7 @@ const cache = {
 declare global {
   var mongoose: typeof cache | undefined
 }
-/**
- * Builds a serverless-safe Mongoose connection bound to `mongoDbURI` and returns the access
- * boundaries. The connection is cached on `globalThis` so it survives lambda reuse and dev
- * hot-reload. Any Mongoose `ConnectOptions` may be passed; the four below are defaulted. Call
- * once per app (e.g. `shared/lib/mongodb.ts`) and destructure the helpers.
- */
+/** Builds a serverless-safe Mongoose connection bound to `mongoDbURI` and returns the access boundaries. The connection is cached on `globalThis` so it survives lambda reuse and dev hot-reload. Any Mongoose `ConnectOptions` may be passed; the four below are defaulted. Call once per app (e.g. `shared/lib/mongodb.ts`) and destructure the helpers. */
 export const createMongooseConnection = ({
   mongoDbURI,
   bufferCommands = false,

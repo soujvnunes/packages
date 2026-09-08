@@ -7,8 +7,7 @@ interface PersistedToggleOptions<T extends string> {
   name: string
   // Cookie key the value persists to; the consumer's server seed-leaf reads it to seed `defaultValue`.
   cookie: string
-  // Allowed values, non-empty. The first is the fallback when the cookie is absent/invalid, and
-  // omitting the dispatch argument cycles to the next value in this order (the "toggle").
+  // Allowed values, non-empty. The first is the fallback when the cookie is absent/invalid, and omitting the dispatch argument cycles to the next value in this order (the "toggle").
   values: readonly [T, ...T[]]
   // Cookie lifetime in seconds (default one year).
   maxAge?: number

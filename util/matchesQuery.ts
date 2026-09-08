@@ -5,9 +5,7 @@ const matchesParam = <const K extends string>(
   allowed: readonly K[],
 ): value is K | undefined =>
   value === undefined || (typeof value === 'string' && (allowed as readonly string[]).includes(value))
-// Validates a whole searchParams object against a schema (each param → its allowed values), and narrows every param to its literal union.
-//
-// Dependency convention: a value that names another schema key marks a dependency, so the named (dependent) param is valid ONLY when its parent holds that value, and is REQUIRED when it does. e.g. `{ action: ['review', 'export'], export: ['csv', 'pdf'] }`: `export` is a key that also appears as a value under `action`, so `?export` is valid only alongside `?action=export`, and `?action=export` without a valid `?export` is rejected.
+// Validates a whole searchParams object against a schema (each param → its allowed values), and narrows every param to its literal union. Dependency convention: a value that names another schema key marks a dependency, so the named (dependent) param is valid ONLY when its parent holds that value, and is REQUIRED when it does. e.g. `{ action: ['review', 'export'], export: ['csv', 'pdf'] }`: `export` is a key that also appears as a value under `action`, so `?export` is valid only alongside `?action=export`, and `?action=export` without a valid `?export` is rejected.
 export const matchesQuery = <const S extends SearchParamSchema>(
   query: Record<string, string | string[] | undefined>,
   schema: S,

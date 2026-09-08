@@ -23,8 +23,5 @@ const tailwind = {
   // Resolve to an absolute path from THIS package (where the plugin is a bundled dependency), so consumers load it regardless of their package manager's hoisting. pnpm keeps it out of the app root, and prettier would otherwise resolve the bare string against the consumer and fail.
   plugins: [require.resolve('prettier-plugin-tailwindcss')],
 }
-/**
- * Shared Prettier config. Pass any Prettier option to override the base; the common one is
- * `tailwindStylesheet` (its path differs between `app/` and `src/app/` layouts).
- */
+/** Shared Prettier config. Pass any Prettier option to override the base; the common one is `tailwindStylesheet` (its path differs between `app/` and `src/app/` layouts). */
 export const createConfig = (overrides: Config = {}): Config => ({ ...base, ...tailwind, ...overrides })
