@@ -179,19 +179,39 @@ describe('one-line-comments', () => {
   const ruleTester = new RuleTester({
     languageOptions: { ecmaVersion: 'latest', sourceType: 'module' },
   })
+  const lint = (code: string, filename?: string) =>
+    new Linter().verify(
+      code,
+      {
+        files: ['**/*.{js,jsx}'],
+        plugins: { soujvnunes: oneLineCommentsPlugin },
+        languageOptions: { parserOptions: { ecmaFeatures: { jsx: true } } },
+        rules: { 'soujvnunes/one-line-comments': 'error' },
+      },
+      filename ?? 'a.js',
+    )
+  const fix = (code: string) =>
+    new Linter().verifyAndFix(code, {
+      plugins: { soujvnunes: oneLineCommentsPlugin },
+      rules: { 'soujvnunes/one-line-comments': 'error' },
+    }).output
   it('passes its own RuleTester suite', () => {
     ruleTester.run('one-line-comments', oneLineComments, {
       valid: [
         '// One line, however long it runs, which is the whole point and stays legal at any length.',
         'const a = 1\n// A comment separated from another by code.\nconst b = 2\n// Another one.',
-        '/** Single-line JSDoc is fine. */\nconst a = 1',
-        '/* Single-line block. */\nconst a = 1',
+        '/** Single-line JSDoc above the symbol it documents. */\nconst a = 1',
+        '// A module preamble, which is a different comment from the JSDoc under it.\n/** Doc for a. */\nconst a = 1',
+        'const f = (/** the id */ id) => id',
         'const a = 1 // trailing\nconst b = 2 // trailing on the next line',
         'const a = 1 // trailing\n// own-line under a trailing one',
         'const a = `\n// not a comment, it is template text\n// neither is this\n`',
         '// eslint-disable-next-line no-console\n// prose under a directive is exempt, joining would bury it\nconsole.log(1)',
         '// @ts-expect-error the types are wrong here\n// eslint-disable-next-line no-console\nconsole.log(1)',
         '// prettier-ignore\n// prose under prettier-ignore, which tolerates no trailing text\nconst m = [1, 2]',
+        '/* eslint-disable no-console */\nconsole.log(1)',
+        '/* global window */\nwindow.a = 1',
+        '/*! Preserved banner, which has no line form. */\nconst a = 1',
         '#!/usr/bin/env node\n// the interpreter line is not a comment line\nconst a = 1',
       ],
       invalid: [
@@ -201,9 +221,14 @@ describe('one-line-comments', () => {
           errors: [{ messageId: 'adjacent' }],
         },
         {
-          code: '// First line.\n//\n// Second line.\nconst a = 1',
-          output: '// First line. Second line.\nconst a = 1',
+          code: '// One.\n// Two.\n// Three.\nconst a = 1',
+          output: '// One. Two. Three.\nconst a = 1',
           errors: [{ messageId: 'adjacent' }],
+        },
+        {
+          code: '// First paragraph.\n//\n// Second paragraph.\nconst a = 1',
+          output: null,
+          errors: [{ messageId: 'paragraphs' }],
         },
         {
           code: '/**\n * Shared Prettier config.\n */\nconst a = 1',
@@ -212,71 +237,81 @@ describe('one-line-comments', () => {
         },
         {
           code: '/*\n  Plain block.\n*/\nconst a = 1',
-          output: '/* Plain block. */\nconst a = 1',
+          output: '// Plain block.\nconst a = 1',
           errors: [{ messageId: 'block' }],
         },
         {
-          code: '// One.\n// Two.\n// Three.\nconst a = 1',
-          output: '// One. Two. Three.\nconst a = 1',
-          errors: [{ messageId: 'adjacent' }],
+          code: 'foo() /* one\n  two */\nbar()',
+          output: 'foo() // one two\nbar()',
+          errors: [{ messageId: 'block' }],
+        },
+        {
+          code: '/* one\n  two */ foo()',
+          output: '/* one two */ foo()',
+          errors: [{ messageId: 'block' }],
+        },
+        {
+          code: '/* Plain block. */\nconst a = 1',
+          output: '// Plain block.\nconst a = 1',
+          errors: [{ messageId: 'notDoc' }],
+        },
+        {
+          code: 'const a = 1 /* trailing */\nconst b = 2',
+          output: 'const a = 1 // trailing\nconst b = 2',
+          errors: [{ messageId: 'notDoc' }],
+        },
+        { code: 'const a = /* inline */ 1', output: null, errors: [{ messageId: 'notDoc' }] },
+        {
+          code: '/** Orphan doc. */\n// note\nconst a = 1',
+          output: null,
+          errors: [{ messageId: 'orphanDoc' }, { messageId: 'adjacent' }],
+        },
+        {
+          code: 'const a = 1\n/** Nothing under it. */',
+          output: null,
+          errors: [{ messageId: 'orphanDoc' }],
         },
       ],
     })
   })
   it('keeps the JSDoc marker, so a collapsed doc comment still carries its tags', () => {
-    const [result] = new Linter()
-      .verifyAndFix('/**\n * Old.\n * @deprecated use next\n */\nexport const a = 1', {
-        plugins: { soujvnunes: oneLineCommentsPlugin },
-        rules: { 'soujvnunes/one-line-comments': 'error' },
-      })
-      .output.split('\n')
+    const [result] = fix('/**\n * Old.\n * @deprecated use next\n */\nexport const a = 1').split('\n')
     expect(result).toBe('/** Old. @deprecated use next */')
   })
+  it('rewrites a plain block as a line comment, then joins it with its neighbour on the next pass', () => {
+    expect(fix('// one\n/* two */\nconst a = 1')).toBe('// one two\nconst a = 1')
+  })
   it('refuses to collapse a block that is the only line break before a return value', () => {
-    const source = 'function f() {\n  return /* one\n  two */ 42\n}'
-    const report = new Linter().verify(source, {
-      plugins: { soujvnunes: oneLineCommentsPlugin },
-      rules: { 'soujvnunes/one-line-comments': 'error' },
-    })
+    const report = lint('function f() {\n  return /* one\n  two */ 42\n}')
     expect(report).toHaveLength(1)
     expect(report[0]?.fix).toBeUndefined()
   })
-  it('reports adjacent JSX comment containers without fixing them', () => {
-    const report = new Linter().verify(
-      'const a = (\n  <p>\n    {/* one */}\n    {/* two */}\n  </p>\n)',
-      {
-        files: ['**/*.jsx'],
-        plugins: { soujvnunes: oneLineCommentsPlugin },
-        languageOptions: { parserOptions: { ecmaFeatures: { jsx: true } } },
-        rules: { 'soujvnunes/one-line-comments': 'error' },
-      },
+  it('leaves JSX block comments alone, since JSX has no line form', () => {
+    const report = lint(
+      'const a = (\n  <p /* on the tag */ id="x">\n    {/* one */}\n    text\n    {/** two */}\n  </p>\n)',
       'a.jsx',
     )
-    expect(report).toHaveLength(1)
-    expect(report[0]?.messageId).toBe('adjacent')
-    expect(report[0]?.fix).toBeUndefined()
-  })
-  it('reports a run holding a block comment without fixing it, so a JSDoc marker survives', () => {
-    const report = new Linter().verify('// note\n/** @deprecated use next */\nexport const a = 1', {
-      plugins: { soujvnunes: oneLineCommentsPlugin },
-      rules: { 'soujvnunes/one-line-comments': 'error' },
-    })
-    expect(report).toHaveLength(1)
-    expect(report[0]?.messageId).toBe('adjacent')
-    expect(report[0]?.fix).toBeUndefined()
-  })
-  it('treats @ts-check as a directive, since the pragma only counts when it stands alone', () => {
-    const report = new Linter().verify('// @ts-check\n// prose under it\nconst a = 1', {
-      plugins: { soujvnunes: oneLineCommentsPlugin },
-      rules: { 'soujvnunes/one-line-comments': 'error' },
-    })
     expect(report).toHaveLength(0)
   })
+  it('reports adjacent JSX comment containers without fixing them', () => {
+    const report = lint('const a = (\n  <p>\n    {/* one */}\n    {/* two */}\n  </p>\n)', 'a.jsx')
+    expect(report).toHaveLength(1)
+    expect(report[0]?.messageId).toBe('adjacent')
+    expect(report[0]?.fix).toBeUndefined()
+  })
+  it('lets a line comment sit above a JSDoc, which binds to the symbol below it', () => {
+    expect(lint('// note\n/** @deprecated use next */\nexport const a = 1')).toHaveLength(0)
+  })
+  it('reports a JSDoc with another comment under it without fixing it, so its tags survive', () => {
+    const report = lint('/** @deprecated use next */\n// note\nexport const a = 1')
+    expect(report.map((message) => message.messageId)).toEqual(['orphanDoc', 'adjacent'])
+    expect(report.every((message) => message.fix === undefined)).toBe(true)
+  })
+  it('treats @ts-check as a directive, since the pragma only counts when it stands alone', () => {
+    expect(lint('// @ts-check\n// prose under it\nconst a = 1')).toHaveLength(0)
+  })
   it('does not mistake prose for a line directive, which would exempt it silently', () => {
-    const report = new Linter().verify('// global state lives here\n// and it is shared\nconst a = 1', {
-      plugins: { soujvnunes: oneLineCommentsPlugin },
-      rules: { 'soujvnunes/one-line-comments': 'error' },
-    })
+    const report = lint('// global state lives here\n// and it is shared\nconst a = 1')
     expect(report).toHaveLength(1)
     expect(report[0]?.messageId).toBe('adjacent')
   })
