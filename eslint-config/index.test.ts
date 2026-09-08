@@ -264,6 +264,21 @@ describe('one-line-comments', () => {
           errors: [{ messageId: 'block' }],
         },
         {
+          code: '/**\n * First paragraph.\n *\n * Second paragraph.\n */\nconst a = 1',
+          output: null,
+          errors: [{ messageId: 'paragraphs' }],
+        },
+        {
+          code: '/*\n  First paragraph.\n\n  Second paragraph.\n*/\nconst a = 1',
+          output: null,
+          errors: [{ messageId: 'paragraphs' }],
+        },
+        {
+          code: '/**\n *\n * One paragraph with stray empty lines at both edges.\n *\n */\nconst a = 1',
+          output: '/** One paragraph with stray empty lines at both edges. */\nconst a = 1',
+          errors: [{ messageId: 'block' }],
+        },
+        {
           code: '/*!\n * Banner\n * (c) 2026\n */\nconst a = 1',
           output: '/*! Banner (c) 2026 */\nconst a = 1',
           errors: [{ messageId: 'block' }],
@@ -314,7 +329,7 @@ describe('one-line-comments', () => {
         {
           code: '// a\n/* */\n// b\nconst a = 1',
           output: null,
-          errors: [{ messageId: 'adjacent' }, { messageId: 'notDoc' }],
+          errors: [{ messageId: 'paragraphs' }, { messageId: 'notDoc' }],
         },
         {
           code: '/** Orphan doc. */\n// note\nconst a = 1',
