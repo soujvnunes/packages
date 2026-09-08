@@ -26,8 +26,6 @@ const isDirective = (comment: Comment) =>
     (BLOCK_DIRECTIVE.test(comment.value) ||
       (!isDocShaped(comment) && BLOCK_ANNOTATION.test(comment.value))))
 const spansLines = (comment: Comment) => (comment.loc?.start.line ?? 0) !== (comment.loc?.end.line ?? 0)
-// A bare `//` is a paragraph break, and a paragraph break means the lines around it are different comments.
-const isBare = (comment: Comment) => comment.type === 'Line' && comment.value.trim() === ''
 // `\s` covers every LineTerminator, U+2028 and U+2029 included, so a collapsed body is one line by construction and no fix needs a second check.
 const collapse = (text: string) => text.replace(/\s+/gu, ' ').trim()
 // An empty body has no `//` form either: a bare `//` is the paragraph break this rule refuses to fix, so an empty block is reported for the author to delete.
@@ -35,16 +33,31 @@ const asLine = (body: string) => (body ? `// ${body}` : null)
 // A `//` runs to the end of its line, so a block comment followed by anything on that line, code or another comment, has no line form.
 const followedOnLine = (comment: Comment, after: Neighbour) =>
   !!after?.loc && !!comment.loc && after.loc.start.line === comment.loc.end.line
-// The interior of a block on one line. The JSDoc star is CONTENT inside `comment.value`, so the gutter star is stripped per line and the opener is restored from the comment's shape, never rebuilt from the value: `/* *` in place of `/**` would stop the symbol carrying documentation, which is what `no-deprecated` reads. Only a lone star followed by a space or the line end is a gutter, so `**bold**` and `*.test.ts` keep their characters.
-const blockBody = (comment: Comment) =>
-  collapse(
-    comment.value
-      .replace(/^!/u, '')
-      .split(/\r\n|[\r\n\u2028\u2029]/u)
-      .map((line) => line.trim().replace(/^\*(?= |$)/u, ''))
-      .filter(Boolean)
-      .join(' '),
-  )
+// The lines of a block, gutter stripped. The JSDoc star is CONTENT inside `comment.value`, so it is stripped per line and the opener is restored from the comment's shape, never rebuilt from the value: `/* *` in place of `/**` would stop the symbol carrying documentation, which is what `no-deprecated` reads. Only a lone star followed by a space or the line end is a gutter, so `**bold**` and `*.test.ts` keep their characters.
+const blockLines = (comment: Comment) =>
+  comment.value
+    .replace(/^!/u, '')
+    .split(/\r\n|[\r\n\u2028\u2029]/u)
+    .map((line) =>
+      line
+        .trim()
+        .replace(/^\*(?= |$)/u, '')
+        .trim(),
+    )
+const blockBody = (comment: Comment) => collapse(blockLines(comment).filter(Boolean).join(' '))
+// A paragraph set is several comments, and welding them into one line satisfies the letter of the rule while burying every fact but the first. Only a break BETWEEN two texts separates anything; an empty line at either edge is a stray and vanishes in the join.
+const hasParagraphs = (texts: string[]) => {
+  let segments = 0
+  let inText = false
+  for (const text of texts) {
+    if (text === '') inText = false
+    else if (!inText) {
+      inText = true
+      segments += 1
+    }
+  }
+  return segments > 1
+}
 const opener = (comment: Comment) => {
   if (isDocShaped(comment)) return '/**'
   return isBanner(comment) ? '/*!' : '/*'
@@ -75,7 +88,7 @@ export const oneLineComments: Rule.RuleModule = {
       adjacent:
         'Two comment lines are touching. A comment is one line, however long it runs: join them, or write one line per fact beside the code it describes.',
       paragraphs:
-        'A bare `//` between comment lines marks a paragraph break, so this is a set of comments rather than one wrapped line, and joining it would bury every fact but the first. Write one line per fact beside the code it describes, or move the rationale to the README or the project MANIFEST.',
+        'A paragraph break inside a comment, a bare `//` between comment lines or an empty line inside a block, makes it a set of comments rather than one wrapped line, and joining it would bury every fact but the first. Write one line per fact beside the code it describes, or move the rationale to the README or the project MANIFEST.',
       block:
         'This block comment spans lines. A comment is one line, however long it runs: collapse it to one `//` line, or to one `/** … */` line when it is JSDoc, or move the rationale to the README or the project MANIFEST.',
       notDoc:
@@ -139,6 +152,11 @@ export const oneLineComments: Rule.RuleModule = {
           if (comment.type !== 'Block' || isDirective(comment)) continue
           const after = sourceCode.getTokenAfter(comment, { includeComments: true })
           if (spansLines(comment)) {
+            // An empty line inside the block is the bare `//` of a wrapped run: a paragraph set, reported and never welded.
+            if (hasParagraphs(blockLines(comment))) {
+              context.report({ loc: comment.loc as AST.SourceLocation, messageId: 'paragraphs' })
+              continue
+            }
             const text = oneLineForm(comment, after)
             context.report({
               loc: comment.loc as AST.SourceLocation,
@@ -178,17 +196,7 @@ export const oneLineComments: Rule.RuleModule = {
           if (!first?.loc || !last?.loc) return
           // A block comment in the run reports without a fix. Merging `{/* a */}` with `{/* b */}` means editing sibling JSX containers, where raw range surgery can swallow a value-bearing expression; a plain `/* … */` is rewritten as `//` by its own report and joins on the next pass; a misplaced `/**` keeps its opener, since TypeScript reads its tags across an intervening `//` and a `//` rewrite would silently disable `no-deprecated`.
           const block = current.some((comment) => comment.type === 'Block')
-          // A paragraph set is several comments, and welding them into one line satisfies the letter of the rule while burying every fact but the first, so it reports and names the two remedies instead. Only a bare `//` BETWEEN two texts separates anything; one at either edge of the run is a stray and vanishes in the join.
-          let segments = 0
-          let inText = false
-          for (const comment of current) {
-            if (isBare(comment)) inText = false
-            else if (!inText) {
-              inText = true
-              segments += 1
-            }
-          }
-          const paragraphs = segments > 1
+          const paragraphs = hasParagraphs(current.map((comment) => comment.value.trim()))
           const body = collapse(current.map((comment) => comment.value.trim()).join(' '))
           const text = asLine(body)
           context.report({
