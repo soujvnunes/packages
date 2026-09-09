@@ -264,9 +264,25 @@ describe('one-line-comments', () => {
           errors: [{ messageId: 'block' }],
         },
         {
+          code: '/**\n * Does a thing.\n *\n * @param a the id\n * @returns the thing\n */\nexport const f = (a) => a',
+          output: '/** Does a thing. @param a the id @returns the thing */\nexport const f = (a) => a',
+          errors: [{ messageId: 'block' }],
+        },
+        {
           code: '/**\n * First paragraph.\n *\n * Second paragraph.\n */\nconst a = 1',
           output: null,
           errors: [{ messageId: 'paragraphs' }],
+        },
+        {
+          code: '/*!\n * MIT License\n *\n * (c) 2026 Someone\n */\nconst a = 1',
+          output: '/*! MIT License (c) 2026 Someone */\nconst a = 1',
+          errors: [{ messageId: 'block' }],
+        },
+        {
+          code: 'const a = (\n  <p>\n    {/* one\n\n      two */}\n  </p>\n)',
+          output: 'const a = (\n  <p>\n    {/* one two */}\n  </p>\n)',
+          languageOptions: jsx,
+          errors: [{ messageId: 'block' }],
         },
         {
           code: '/*\n  First paragraph.\n\n  Second paragraph.\n*/\nconst a = 1',
@@ -329,7 +345,7 @@ describe('one-line-comments', () => {
         {
           code: '// a\n/* */\n// b\nconst a = 1',
           output: null,
-          errors: [{ messageId: 'paragraphs' }, { messageId: 'notDoc' }],
+          errors: [{ messageId: 'adjacent' }, { messageId: 'notDoc' }],
         },
         {
           code: '/** Orphan doc. */\n// note\nconst a = 1',
