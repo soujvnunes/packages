@@ -26,9 +26,9 @@ const isDirective = (comment: Comment) =>
     (BLOCK_DIRECTIVE.test(comment.value) ||
       (!isDocShaped(comment) && BLOCK_ANNOTATION.test(comment.value))))
 const spansLines = (comment: Comment) => (comment.loc?.start.line ?? 0) !== (comment.loc?.end.line ?? 0)
-// `\s` covers every LineTerminator, U+2028 and U+2029 included, so a collapsed body is one line by construction and no fix needs a second check.
 // A bare `//` is a paragraph break, and a paragraph break means the lines around it are different comments.
 const isBare = (comment: Comment) => comment.type === 'Line' && comment.value.trim() === ''
+// `\s` covers every LineTerminator, U+2028 and U+2029 included, so a collapsed body is one line by construction and no fix needs a second check.
 const collapse = (text: string) => text.replace(/\s+/gu, ' ').trim()
 // An empty body has no `//` form either: a bare `//` is the paragraph break this rule refuses to fix, so an empty block is reported for the author to delete.
 const asLine = (body: string) => (body ? `// ${body}` : null)
