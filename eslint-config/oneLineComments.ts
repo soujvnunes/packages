@@ -27,6 +27,8 @@ const isDirective = (comment: Comment) =>
       (!isDocShaped(comment) && BLOCK_ANNOTATION.test(comment.value))))
 const spansLines = (comment: Comment) => (comment.loc?.start.line ?? 0) !== (comment.loc?.end.line ?? 0)
 // `\s` covers every LineTerminator, U+2028 and U+2029 included, so a collapsed body is one line by construction and no fix needs a second check.
+// A bare `//` is a paragraph break, and a paragraph break means the lines around it are different comments.
+const isBare = (comment: Comment) => comment.type === 'Line' && comment.value.trim() === ''
 const collapse = (text: string) => text.replace(/\s+/gu, ' ').trim()
 // An empty body has no `//` form either: a bare `//` is the paragraph break this rule refuses to fix, so an empty block is reported for the author to delete.
 const asLine = (body: string) => (body ? `// ${body}` : null)
@@ -44,27 +46,29 @@ const blockLines = (comment: Comment) =>
         .replace(/^\*(?= |$)/u, '')
         .trim(),
     )
-const blockBody = (comment: Comment) => collapse(blockLines(comment).filter(Boolean).join(' '))
-// A paragraph set is several comments, and welding them into one line satisfies the letter of the rule while burying every fact but the first. Only a break BETWEEN two texts separates anything; an empty line at either edge is a stray and vanishes in the join.
-const hasParagraphs = (texts: string[]) => {
-  let segments = 0
-  let inText = false
-  for (const text of texts) {
-    if (text === '') inText = false
-    else if (!inText) {
-      inText = true
-      segments += 1
+const blockBody = (lines: string[]) => collapse(lines.filter(Boolean).join(' '))
+// How many PROSE paragraphs a comment holds. Welding several into one line satisfies the letter of the rule while burying every fact but the first, so two or more is a paragraph set. A break at either edge separates nothing and vanishes in the join. In a JSDoc the blank line before a tag block is the format's own layout rather than a second paragraph, so a segment opening with `@` does not count: `description`, blank, `@param` is one paragraph and still collapses.
+const proseParagraphs = (lines: string[], skipTags: boolean) => {
+  let count = 0
+  let inSegment = false
+  for (const line of lines) {
+    if (line === '') {
+      inSegment = false
+      continue
     }
+    if (inSegment) continue
+    inSegment = true
+    if (!(skipTags && line.startsWith('@'))) count += 1
   }
-  return segments > 1
+  return count
 }
 const opener = (comment: Comment) => {
   if (isDocShaped(comment)) return '/**'
   return isBanner(comment) ? '/*!' : '/*'
 }
-const collapsedBlock = (comment: Comment) => {
+const collapsedBlock = (comment: Comment, lines: string[]) => {
   const open = opener(comment)
-  const body = blockBody(comment)
+  const body = blockBody(lines)
   const text = body ? `${open} ${body} */` : `${open} */`
   // A space at every seam, then one terminator only: stripping ` * ` can butt a line ending in `*` against one starting with `/`, manufacturing an early `*/` that ends the comment and leaves the rest as code.
   return text.indexOf('*/') === text.length - 2 ? text : null
@@ -134,15 +138,24 @@ export const oneLineComments: Rule.RuleModule = {
         followedOnLine(comment, after)
       )
     }
-    // The one legal one-line spelling of a block comment, or null when there is none. Decided in one place so the multi-line fix can never produce a shape the single-line check then forbids: a block stays a block for JSX, JSDoc and a banner; anything else becomes `//`, which needs the rest of its line to itself.
-    const oneLineForm = (comment: Comment, after: Neighbour) => {
-      if (insideJsx(comment) || isDocShaped(comment) || isBanner(comment)) {
-        return collapsedBlock(comment)
+    // What to say about a block comment and how to spell it on one line, decided in one place so the multi-line fix can never produce a shape the single-line check then forbids. A block stays a block for JSX, JSDoc and a banner; anything else becomes `//`, which needs the rest of its line to itself. A paragraph set has no one-line spelling at all, and that verdict lives here rather than above this call, or it would run before the three keep-block forms are considered.
+    const blockVerdict = (comment: Comment, after: Neighbour) => {
+      const lines = blockLines(comment)
+      const keepBlock = insideJsx(comment) || isDocShaped(comment) || isBanner(comment)
+      const messageId = spansLines(comment) ? 'block' : 'notDoc'
+      // A banner is licence text, whose paragraphs are the licence's own and are read by a tool rather than by whoever maintains this file, and a JSX comment has no second form to move a paragraph into.
+      if (
+        !insideJsx(comment) &&
+        !isBanner(comment) &&
+        proseParagraphs(lines, isDocShaped(comment)) > 1
+      ) {
+        return { messageId: 'paragraphs' as const, text: null }
       }
-      const body = blockBody(comment)
+      if (keepBlock) return { messageId, text: collapsedBlock(comment, lines) }
+      const body = blockBody(lines)
       // A gutter star hid the sigil from isDirective, so `/*\n * @ts-ignore is what we avoid\n */` would come out as a live `// @ts-ignore`. A body that reads as a directive once flattened is left for the author.
-      if (followedOnLine(comment, after) || isDirectiveText(body)) return null
-      return asLine(body)
+      const text = followedOnLine(comment, after) || isDirectiveText(body) ? null : asLine(body)
+      return { messageId, text }
     }
     return {
       'Program:exit'() {
@@ -152,15 +165,10 @@ export const oneLineComments: Rule.RuleModule = {
           if (comment.type !== 'Block' || isDirective(comment)) continue
           const after = sourceCode.getTokenAfter(comment, { includeComments: true })
           if (spansLines(comment)) {
-            // An empty line inside the block is the bare `//` of a wrapped run: a paragraph set, reported and never welded.
-            if (hasParagraphs(blockLines(comment))) {
-              context.report({ loc: comment.loc as AST.SourceLocation, messageId: 'paragraphs' })
-              continue
-            }
-            const text = oneLineForm(comment, after)
+            const { messageId, text } = blockVerdict(comment, after)
             context.report({
               loc: comment.loc as AST.SourceLocation,
-              messageId: 'block',
+              messageId,
               fix:
                 text && !breaksSemicolonInsertion(comment, after)
                   ? (fixer) => fixer.replaceText(comment, text)
@@ -174,10 +182,10 @@ export const oneLineComments: Rule.RuleModule = {
             else context.report({ loc: comment.loc as AST.SourceLocation, messageId: 'orphanDoc' })
             continue
           }
-          const text = oneLineForm(comment, after)
+          const { messageId, text } = blockVerdict(comment, after)
           context.report({
             loc: comment.loc as AST.SourceLocation,
-            messageId: 'notDoc',
+            messageId,
             fix: text ? (fixer) => fixer.replaceText(comment, text) : null,
           })
         }
@@ -196,9 +204,10 @@ export const oneLineComments: Rule.RuleModule = {
           if (!first?.loc || !last?.loc) return
           // A block comment in the run reports without a fix. Merging `{/* a */}` with `{/* b */}` means editing sibling JSX containers, where raw range surgery can swallow a value-bearing expression; a plain `/* … */` is rewritten as `//` by its own report and joins on the next pass; a misplaced `/**` keeps its opener, since TypeScript reads its tags across an intervening `//` and a `//` rewrite would silently disable `no-deprecated`.
           const block = current.some((comment) => comment.type === 'Block')
-          const paragraphs = hasParagraphs(current.map((comment) => comment.value.trim()))
-          const body = collapse(current.map((comment) => comment.value.trim()).join(' '))
-          const text = asLine(body)
+          // Only a bare `//` breaks a run. An empty `/* */` is reported on its own as a block that should not be one, so counting it here would name a paragraph break the author cannot see.
+          const texts = current.map((comment) => (isBare(comment) ? '' : comment.value.trim() || ' '))
+          const paragraphs = proseParagraphs(texts, false) > 1
+          const text = asLine(collapse(texts.join(' ')))
           context.report({
             loc: { start: first.loc.start, end: last.loc.end },
             messageId: paragraphs ? 'paragraphs' : 'adjacent',
