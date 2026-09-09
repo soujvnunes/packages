@@ -264,6 +264,37 @@ describe('one-line-comments', () => {
           errors: [{ messageId: 'block' }],
         },
         {
+          code: '/**\n * Does a thing.\n *\n * @param a the id\n * @returns the thing\n */\nexport const f = (a) => a',
+          output: '/** Does a thing. @param a the id @returns the thing */\nexport const f = (a) => a',
+          errors: [{ messageId: 'block' }],
+        },
+        {
+          code: '/**\n * First paragraph.\n *\n * Second paragraph.\n */\nconst a = 1',
+          output: null,
+          errors: [{ messageId: 'paragraphs' }],
+        },
+        {
+          code: '/*!\n * MIT License\n *\n * (c) 2026 Someone\n */\nconst a = 1',
+          output: '/*! MIT License (c) 2026 Someone */\nconst a = 1',
+          errors: [{ messageId: 'block' }],
+        },
+        {
+          code: 'const a = (\n  <p>\n    {/* one\n\n      two */}\n  </p>\n)',
+          output: 'const a = (\n  <p>\n    {/* one two */}\n  </p>\n)',
+          languageOptions: jsx,
+          errors: [{ messageId: 'block' }],
+        },
+        {
+          code: '/*\n  First paragraph.\n\n  Second paragraph.\n*/\nconst a = 1',
+          output: null,
+          errors: [{ messageId: 'paragraphs' }],
+        },
+        {
+          code: '/**\n *\n * One paragraph with stray empty lines at both edges.\n *\n */\nconst a = 1',
+          output: '/** One paragraph with stray empty lines at both edges. */\nconst a = 1',
+          errors: [{ messageId: 'block' }],
+        },
+        {
           code: '/*!\n * Banner\n * (c) 2026\n */\nconst a = 1',
           output: '/*! Banner (c) 2026 */\nconst a = 1',
           errors: [{ messageId: 'block' }],
