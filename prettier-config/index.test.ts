@@ -18,10 +18,9 @@ describe('createConfig', () => {
     })
   })
   it('keeps a short multi-attribute element on one line, and breaks one past the width per attribute', async () => {
-    const config = { ...createConfig({ plugins: [], tailwindFunctions: [] }), parser: 'typescript' }
-    expect(await format('const a = <div id="x" className="y" />\n', config)).toBe(
-      'const a = <div id="x" className="y" />\n',
-    )
+    const config = createConfig({ plugins: [], tailwindFunctions: [], parser: 'typescript' })
+    const short = 'const a = <div id="x" className="y" />\n'
+    expect(await format(short, config)).toBe(short)
     const long = await format(
       `const b = <C a="${'a'.repeat(40)}" b="${'b'.repeat(40)}" c="${'c'.repeat(40)}" />\n`,
       config,
