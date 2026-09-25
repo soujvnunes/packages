@@ -1,4 +1,5 @@
 import { existsSync } from 'node:fs'
+import { format } from 'prettier'
 import { describe, expect, it } from 'vitest'
 import { createConfig } from './index'
 describe('createConfig', () => {
@@ -15,6 +16,17 @@ describe('createConfig', () => {
       objectWrap: 'collapse',
       proseWrap: 'never',
     })
+  })
+  it('keeps a short multi-attribute element on one line, and breaks one past the width per attribute', async () => {
+    const config = { ...createConfig({ plugins: [], tailwindFunctions: [] }), parser: 'typescript' }
+    expect(await format('const a = <div id="x" className="y" />\n', config)).toBe(
+      'const a = <div id="x" className="y" />\n',
+    )
+    const long = await format(
+      `const b = <C a="${'a'.repeat(40)}" b="${'b'.repeat(40)}" c="${'c'.repeat(40)}" />\n`,
+      config,
+    )
+    expect(long.split('\n').filter((line) => /^\s+[abc]="/.test(line))).toHaveLength(3)
   })
   it('resolves the Tailwind plugin to a path that exists, so a pnpm consumer can load it', () => {
     const [plugin = ''] = createConfig().plugins as string[]
