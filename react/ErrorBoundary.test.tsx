@@ -89,6 +89,7 @@ describe('ErrorBoundary', () => {
       },
       'A non-Error value was thrown',
     ],
+    ['NaN', Number.NaN, 'NaN'],
     ['a plain object tagged Error', { [Symbol.toStringTag]: 'Error', code: 'X' }, '[object Error]'],
     [
       'an object whose digest getter throws',
@@ -189,6 +190,7 @@ describe('ErrorBoundary', () => {
       </ErrorBoundary>,
     )
     expect(onError.mock.calls.map(([error]) => error.message)).toEqual(['A', 'B'])
+    expect(screen.getByText('B')).toBeDefined()
   })
   it("passes Next's digest through to the Fallback", () => {
     const digested = Object.assign(new Error('Server error'), { digest: 'abc123' })

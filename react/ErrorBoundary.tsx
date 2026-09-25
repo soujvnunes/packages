@@ -12,7 +12,7 @@ interface ErrorBoundaryProps {
   Fallback: React.ComponentType<ErrorBoundaryFallbackProps>
   onError?: (error: Error, errorInfo: React.ErrorInfo) => void
 }
-// The internal-slot check accepts an Error from another realm (an iframe, `node:vm`), which `instanceof` misses; a real Error carries no own or inherited `Symbol.toStringTag`, so a plain object tagged 'Error' cannot pass, and the `try` covers a Proxy whose traps throw.
+// The internal-slot check accepts an Error from another realm (an iframe, `node:vm`), which `instanceof` misses; the tag is trusted only when the value sets no `Symbol.toStringTag`, since a plain object can claim 'Error' with one, and the `try` covers a Proxy whose traps throw.
 const isError = (value: unknown): value is Error => {
   try {
     if (value instanceof Error) return true
@@ -76,10 +76,10 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     console.error('ErrorBoundary caught:', { error, errorInfo })
     // React applies every error caught in one commit to state before the first componentDidCatch, so the Fallback's Error is reused only for the value it was made from.
     const { error: shown, thrown } = this.state
-    this.props.onError?.(shown && thrown === error ? shown : toError(error), errorInfo)
+    this.props.onError?.(shown && Object.is(thrown, error) ? shown : toError(error), errorInfo)
   }
 
-  reset = () => this.setState({ error: null })
+  reset = () => this.setState({ error: null, thrown: undefined })
 
   render() {
     if (!this.state.error) return this.props.children
