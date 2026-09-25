@@ -61,4 +61,11 @@ These are the opinions most likely to surprise an existing codebase. All of them
 
 **`security/detect-object-injection` is not included.** It predates TypeScript narrowing and reports every `obj[key]`, including keys already narrowed to a literal union and plain array indexes. Use `noUncheckedIndexedAccess` and an own-key (`Object.hasOwn`) guard instead.
 
+**Two client-boundary rules on the Next preset, neither autofixable.** Both read `.jsx` and `.tsx` files that open with `'use client'`, and skip `error` and `global-error`, which Next requires to be client components.
+
+- `soujvnunes/no-needless-use-client` reports the directive when nothing in the file needs it: no hook call, no event handler, no function handed to JSX, no browser global, no class component, no `createContext`, no `next/dynamic`. A file without the directive still runs on the client when a client component imports it, so the fix is to delete the line. A file that only re-exports from another module keeps its directive, since that is how a boundary goes around a dependency that ships none.
+- `soujvnunes/no-static-jsx-in-client` reports a subtree of three or more elements that reads only literals, imports and module-level constants. That markup ships to the browser and hydrates for nothing. Render it in the server parent and pass it in as `children` or a named `ReactNode` prop; moving it to a file without the directive does not help while the client file imports it. The threshold is the `minElements` option.
+
+Measured before release on a Next app with 76 client files: the first rule found the 3 wrappers around a Radix primitive and `cn()` that were known to be needless, and nothing else once `error` files were exempt; the second found 17 static subtrees in 8 files, every one a block of labels and inputs or a heading a server parent could render. A threshold of two elements doubled the count with pairs that are not worth a refactor.
+
 Adopting this in an existing repo is usually one `eslint --fix` pass plus a short list of genuine fixes from the type-aware rules.
