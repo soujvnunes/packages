@@ -1,105 +1,159 @@
-import { RuleTester } from 'eslint'
-import { describe, it } from 'vitest'
-import { staticJsxInClient } from './staticJsxInClient'
-const ruleTester = new RuleTester({
-  languageOptions: {
-    ecmaVersion: 'latest',
-    sourceType: 'module',
-    parserOptions: { ecmaFeatures: { jsx: true } },
-  },
-})
-const staticMarkup = (count: number) => [{ messageId: 'static', data: { count: String(count) } }]
-describe('no-static-jsx-in-client', () => {
-  it('ignores static markup in a module with no directive, which a server parent can render', () => {
-    ruleTester.run('no-static-jsx-in-client', staticJsxInClient, {
-      valid: ['export const Card = () => <div><h2>Title</h2><p>Body</p></div>'],
-      invalid: [],
-    })
-  })
-  it('passes a client file whose markup reads a prop, state or handler at every level', () => {
-    ruleTester.run('no-static-jsx-in-client', staticJsxInClient, {
-      valid: [
-        "'use client'\nexport const A = ({ title }) => <div><h2>{title}</h2><p className={title}>x</p></div>",
-        "'use client'\nexport const A = ({ go }) => <div onClick={go}><h2>Title</h2><p>Body</p></div>",
-        "'use client'\nexport const A = (props) => <div {...props}><h2>Title</h2><p>Body</p></div>",
-      ],
-      invalid: [],
-    })
-  })
-  it('passes a static subtree below the threshold, the size of an icon inside a button', () => {
-    ruleTester.run('no-static-jsx-in-client', staticJsxInClient, {
-      valid: [
-        "'use client'\nexport const A = ({ go }) => <button onClick={go}><span><Icon /></span></button>",
-      ],
-      invalid: [],
-    })
-  })
-  it('reports a static card once, at its outermost element, with its element count', () => {
-    ruleTester.run('no-static-jsx-in-client', staticJsxInClient, {
-      valid: [],
-      invalid: [
-        {
-          code: "'use client'\nexport const Card = () => <div className=\"card\"><h2>Title</h2><p>Body {'text'}</p></div>",
-          errors: staticMarkup(3),
+import { Linter } from 'eslint'
+import globals from 'globals'
+import tseslint from 'typescript-eslint'
+import { describe, expect, it } from 'vitest'
+import { soujvnunesPlugin } from './plugin'
+// Each case runs twice: once bare, and once under what the Next preset gives a `.tsx` file, since a declared global or a TypeScript lib global resolves differently from an undeclared one.
+const SETUPS: [string, Linter.LanguageOptions][] = [
+  ['espree with no globals', {}],
+  [
+    "the Next preset's TypeScript parser and browser globals",
+    { parser: tseslint.parser, globals: globals.browser, parserOptions: { lib: ['dom', 'esnext'] } },
+  ],
+]
+const COUNT = /: (\d+) elements/u
+// Each finding as its element count, so a case asserts both where the rule reports and how big it says the block is.
+const lint = (languageOptions: Linter.LanguageOptions, code: string, minElements = 3) =>
+  new Linter()
+    .verify(
+      code,
+      {
+        files: ['**/*.tsx'],
+        plugins: { soujvnunes: soujvnunesPlugin },
+        languageOptions: {
+          ecmaVersion: 'latest',
+          sourceType: 'module',
+          ...languageOptions,
+          parserOptions: { ecmaFeatures: { jsx: true }, ...languageOptions.parserOptions },
         },
-      ],
-    })
+        rules: { 'soujvnunes/no-static-jsx-in-client': ['error', { minElements }] },
+      },
+      'component.tsx',
+    )
+    .map(({ fatal, message }) => (fatal ? message : Number(COUNT.exec(message)?.[1])))
+const PASSES: [string, string][] = [
+  [
+    'static markup in a module with no directive, which a server parent can render',
+    'export const Card = () => <div><h2>Title</h2><p>Body</p></div>',
+  ],
+  [
+    'markup that reads a prop at every level',
+    "'use client'\nexport const A = ({ title }) => <div><h2>{title}</h2><p className={title}>x</p></div>",
+  ],
+  [
+    'a handler on the root with two static children',
+    "'use client'\nexport const A = ({ go }) => <div onClick={go}><h2>Title</h2><p>Body</p></div>",
+  ],
+  [
+    'a spread on the root',
+    "'use client'\nexport const A = (props) => <div {...props}><h2>Title</h2><p>Body</p></div>",
+  ],
+  [
+    'a static subtree below the threshold, the size of an icon inside a button',
+    "'use client'\nexport const A = ({ go }) => <button onClick={go}><span><Icon /></span></button>",
+  ],
+  [
+    'a read of an import next to a prop',
+    "'use client'\nimport { copy } from './copy'\nexport const A = ({ title }) => <div><h2>{copy.title}</h2><p>{title}</p></div>",
+  ],
+  [
+    'a module `let`, which may change',
+    "'use client'\nlet label = 'Name'\nexport const A = () => <div><label>{label}</label><input name=\"name\" /></div>",
+  ],
+  ['a static fragment of two', "'use client'\nexport const A = () => <><h2>Title</h2><p>Body</p></>"],
+  [
+    'browser globals, declared or not',
+    "'use client'\nexport const Where = ({ go }) => <section onClick={go}><div><h2>{document.title}</h2><p>{window.location.href}</p></div></section>",
+  ],
+  [
+    'a module constant holding a function, handed to a component',
+    "'use client'\nimport { Chart } from 'chart'\nconst format = (v) => `${v}%`\nexport const Stats = ({ go }) => <section onClick={go}><div><Chart format={format} /><p>Label</p></div></section>",
+  ],
+  [
+    'a module constant read from the browser',
+    "'use client'\nconst PLATFORM = navigator.platform\nexport const A = () => <div><h2>{PLATFORM}</h2><p>a</p><p>b</p></div>",
+  ],
+  [
+    'a tag chosen from state',
+    "'use client'\nimport { useState } from 'react'\nexport const Card = () => { const [open] = useState(false); const Tag = open ? 'section' : 'div'; return <Tag><h2>Title</h2><p>Body</p></Tag> }",
+  ],
+  [
+    'a dot into a named import',
+    "'use client'\nimport { motion } from 'motion/react'\nexport const Fade = () => <motion.div><h2>Title</h2><p>Body</p></motion.div>",
+  ],
+  [
+    'a bare import handed to a component, likely a function',
+    "'use client'\nimport { formatPrice } from './format'\nimport { NumberFlow } from 'number-flow'\nexport const A = () => <div><NumberFlow format={formatPrice} /><p>a</p><p>b</p></div>",
+  ],
+]
+const REPORTS: [string, string, number[]][] = [
+  [
+    'a static card once, at its outermost element',
+    "'use client'\nexport const Card = () => <div className=\"card\"><h2>Title</h2><p>Body {'text'}</p></div>",
+    [3],
+  ],
+  [
+    'a run of static siblings under a dynamic form, as one block',
+    '\'use client\'\nexport const Form = ({ go }) => <form onSubmit={go}><fieldset><label>Name</label><input name="name" required /></fieldset><button>Send</button></form>',
+    [4],
+  ],
+  [
+    'a static branch of a condition',
+    "'use client'\nexport const A = ({ open }) => <div>{open && <section><h3>Help</h3><p>Text</p></section>}</div>",
+    [3],
+  ],
+  [
+    'reads of an import and a static module constant',
+    "'use client'\nimport { copy } from './copy'\nconst FIELD = 'name'\nexport const A = ({ go }) => <form onSubmit={go}><div><label htmlFor={FIELD}>{copy.labels[FIELD]}</label><input id={`${FIELD}-input`} name={FIELD} /></div></form>",
+    [3],
+  ],
+  [
+    'a module constant copy dictionary',
+    "'use client'\nconst COPY = { title: 'Title', body: 'Body' }\nexport const A = () => <div><h2>{COPY.title}</h2><p>{COPY.body}</p></div>",
+    [3],
+  ],
+  [
+    'an imported asset on an intrinsic element',
+    "'use client'\nimport logo from './logo.svg'\nexport const A = () => <div><img src={logo} alt=\"\" /><h2>Title</h2></div>",
+    [3],
+  ],
+  [
+    'the static part of a fragment, without counting the fragment',
+    "'use client'\nexport const A = ({ go }) => <><button onClick={go} /><ul><li>One</li><li>Two</li></ul></>",
+    [3],
+  ],
+  [
+    'a flat run of static siblings under a handler',
+    "'use client'\nexport const A = ({ go }) => <div onClick={go}><h1>T</h1><p>A</p><p>B</p><p>C</p></div>",
+    [4],
+  ],
+  [
+    'a static fragment of four',
+    "'use client'\nexport const A = () => <><h1>T</h1><p>A</p><p>B</p><p>C</p></>",
+    [4],
+  ],
+  [
+    'one level into a namespace import',
+    "'use client'\nimport * as UI from 'ui'\nexport const A = () => <UI.Card><h2>Title</h2><p>Body</p></UI.Card>",
+    [3],
+  ],
+  [
+    'an imported component with literal props',
+    "'use client'\nimport { Card } from './card'\nexport const A = () => <Card title=\"x\"><h2>Title</h2><p>Body</p></Card>",
+    [3],
+  ],
+]
+describe.each(SETUPS)('no-static-jsx-in-client under %s', (_setup, setup) => {
+  it.each(PASSES)('passes %s', (_case, code) => {
+    expect(lint(setup, code)).toEqual([])
   })
-  it('reports the static part of a dynamic tree, and a static branch of a condition', () => {
-    ruleTester.run('no-static-jsx-in-client', staticJsxInClient, {
-      valid: [],
-      invalid: [
-        {
-          code: '\'use client\'\nexport const Form = ({ go }) => <form onSubmit={go}><fieldset><label>Name</label><input name="name" required /></fieldset><button>Send</button></form>',
-          errors: staticMarkup(3),
-        },
-        {
-          code: "'use client'\nexport const A = ({ open }) => <div>{open && <section><h3>Help</h3><p>Text</p></section>}</div>",
-          errors: staticMarkup(3),
-        },
-      ],
-    })
-  })
-  it('counts a read of an import or a module constant as static, since the server holds the same value', () => {
-    ruleTester.run('no-static-jsx-in-client', staticJsxInClient, {
-      valid: [
-        "'use client'\nimport { copy } from './copy'\nexport const A = ({ title }) => <div><h2>{copy.title}</h2><p>{title}</p></div>",
-        "'use client'\nlet label = 'Name'\nexport const A = () => <div><label>{label}</label><input name=\"name\" /></div>",
-      ],
-      invalid: [
-        {
-          code: "'use client'\nimport { copy } from './copy'\nconst FIELD = 'name'\nexport const A = ({ go }) => <form onSubmit={go}><div><label htmlFor={FIELD}>{copy.labels[FIELD]}</label><input id={`${FIELD}-input`} name={FIELD} /></div></form>",
-          errors: staticMarkup(3),
-        },
-      ],
-    })
-  })
-  it('looks through a fragment without counting it', () => {
-    ruleTester.run('no-static-jsx-in-client', staticJsxInClient, {
-      valid: ["'use client'\nexport const A = () => <><h2>Title</h2><p>Body</p></>"],
-      invalid: [
-        {
-          code: "'use client'\nexport const A = ({ go }) => <><button onClick={go} /><ul><li>One</li><li>Two</li></ul></>",
-          errors: staticMarkup(3),
-        },
-      ],
-    })
+  it.each(REPORTS)('reports %s', (_case, code, counts) => {
+    expect(lint(setup, code)).toEqual(counts)
   })
   it('takes the threshold from minElements', () => {
-    ruleTester.run('no-static-jsx-in-client', staticJsxInClient, {
-      valid: [
-        {
-          code: "'use client'\nexport const A = () => <div><h2>Title</h2><p>Body</p></div>",
-          options: [{ minElements: 4 }],
-        },
-      ],
-      invalid: [
-        {
-          code: "'use client'\nexport const A = () => <h1>Hi</h1>",
-          options: [{ minElements: 1 }],
-          errors: staticMarkup(1),
-        },
-      ],
-    })
+    expect(
+      lint(setup, "'use client'\nexport const A = () => <div><h2>Title</h2><p>Body</p></div>", 4),
+    ).toEqual([])
+    expect(lint(setup, "'use client'\nexport const A = () => <h1>Hi</h1>", 1)).toEqual([1])
   })
 })
