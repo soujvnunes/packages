@@ -20,7 +20,7 @@ export const Ring = createHookedContext<RingState>('Ring')
 
 ## `./ErrorBoundary`: class error boundary with a Fallback prop
 
-Catches render errors and renders the `Fallback` you pass (receiving `{ error, reset }`); optional `onError` for logging. `error` carries Next's optional `digest`.
+Catches render errors and renders the `Fallback` you pass (receiving `{ error, reset }`); optional `onError` for logging. `error` carries Next's optional `digest`. A thrown value that is not an `Error` reaches both as an `Error` whose `cause` is the original, and the navigation errors from Next's `redirect()` and `notFound()` family are rethrown to Next's own boundary.
 
 ```tsx
 import { ErrorBoundary, type ErrorBoundaryFallbackProps } from '@soujvnunes/react/ErrorBoundary'
