@@ -11,7 +11,7 @@ describe('createConfig', () => {
       printWidth: 104,
       bracketSameLine: true,
       bracketSpacing: true,
-      singleAttributePerLine: true,
+      singleAttributePerLine: false,
       objectWrap: 'collapse',
       proseWrap: 'never',
     })

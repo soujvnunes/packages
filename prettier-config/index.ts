@@ -5,7 +5,8 @@ const require = createRequire(import.meta.url)
 const base: Config = {
   jsxSingleQuote: false,
   bracketSameLine: true,
-  singleAttributePerLine: true,
+  // Off, as in Prettier's default: on, it breaks every element with two or more attributes into one attribute per line at any width, which cost about 10% of the JSX lines in a real consumer while the width already breaks the long ones.
+  singleAttributePerLine: false,
   singleQuote: true,
   semi: false,
   trailingComma: 'all',
