@@ -9,7 +9,6 @@ const Boom = ({ throws = true }: { throws?: boolean }) => {
   if (throws) throw new Error('Boom.')
   return <span>recovered</span>
 }
-const isErrorConstructor = (value: unknown): value is ErrorConstructor => typeof value === 'function'
 beforeEach(() => {
   // React and componentDidCatch both report a caught render error; silence them so a passing run stays readable.
   vi.spyOn(console, 'error').mockImplementation(() => {})
@@ -134,6 +133,8 @@ describe('ErrorBoundary', () => {
     const frame = document.body.appendChild(document.createElement('iframe'))
     onTestFinished(() => frame.remove())
     const realm = frame.contentWindow
+    const isErrorConstructor = (value: unknown): value is ErrorConstructor =>
+      typeof value === 'function'
     const ForeignError = realm && 'Error' in realm ? realm.Error : undefined
     if (!isErrorConstructor(ForeignError))
       throw new Error('jsdom gave the iframe no Error constructor.')
