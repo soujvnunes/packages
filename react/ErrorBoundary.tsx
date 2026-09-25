@@ -12,6 +12,8 @@ interface ErrorBoundaryProps {
   Fallback: React.ComponentType<ErrorBoundaryFallbackProps>
   onError?: (error: Error, errorInfo: React.ErrorInfo) => void
 }
+// A thrown non-Error (`throw null`, a string) becomes an Error, so a falsy one still shows the Fallback and every reader gets the type it declares.
+const toError = (value: unknown): Error => (value instanceof Error ? value : new Error(String(value)))
 interface ErrorBoundaryState {
   error: Error | null
 }
@@ -21,11 +23,11 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     this.state = { error: null }
   }
 
-  static getDerivedStateFromError = (error: Error) => ({ error })
+  static getDerivedStateFromError = (error: unknown) => ({ error: toError(error) })
 
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+  componentDidCatch(error: unknown, errorInfo: React.ErrorInfo) {
     console.error('ErrorBoundary caught:', { error, errorInfo })
-    this.props.onError?.(error, errorInfo)
+    this.props.onError?.(toError(error), errorInfo)
   }
 
   reset = () => this.setState({ error: null })

@@ -71,6 +71,24 @@ describe('ErrorBoundary', () => {
     fireEvent.click(screen.getByText('Boom.'))
     expect(screen.getByText('recovered')).toBeDefined()
   })
+  it.each([null, 'plain string'])(
+    'shows the Fallback and calls onError with an Error when a child throws %s',
+    (thrown) => {
+      const onError = vi.fn()
+      const Thrower = () => {
+        throw thrown
+      }
+      render(
+        <ErrorBoundary
+          Fallback={Fallback}
+          onError={onError}>
+          <Thrower />
+        </ErrorBoundary>,
+      )
+      expect(screen.getByText(String(thrown))).toBeDefined()
+      expect(onError.mock.calls[0]?.[0]).toBeInstanceOf(Error)
+    },
+  )
   it("passes Next's digest through to the Fallback", () => {
     const digested = Object.assign(new Error('Server error'), { digest: 'abc123' })
     const Thrower = () => {
