@@ -1,7 +1,8 @@
 import { Linter, RuleTester } from 'eslint'
 import type { Linter as LinterTypes } from 'eslint'
 import { describe, expect, it } from 'vitest'
-import { oneLineComments, oneLineCommentsPlugin } from './oneLineComments'
+import { oneLineComments } from './oneLineComments'
+import { soujvnunesPlugin } from './plugin'
 import { createBaseConfig, createNextConfig, type ConfigOptions } from './index'
 const TAILWIND_ENTRY = './app/tailwind.config.css'
 // The one block carrying this package's own plugins, rules and settings, as opposed to the recommended sets it spreads in.
@@ -101,6 +102,11 @@ describe('createBaseConfig', () => {
     )
     expect(override).toBeUndefined()
   })
+  it('leaves out the client-boundary rules, since a plain TypeScript library has no client modules', () => {
+    const rules = createBaseConfig().flatMap((entry) => Object.keys(entry.rules ?? {}))
+    expect(rules).not.toContain('soujvnunes/no-needless-use-client')
+    expect(rules).not.toContain('soujvnunes/no-static-jsx-in-client')
+  })
 })
 describe('createNextConfig', () => {
   it('adds the React, Next and a11y plugins on top of the base set', () => {
@@ -134,6 +140,16 @@ describe('createNextConfig', () => {
       entry.files?.[0]?.includes('{default,page,layout'),
     )
     expect(override?.files?.[0]).toContain(`,${name},`)
+  })
+  it('turns on both client-boundary rules at error, on JSX files only', () => {
+    const block = createNextConfig().find((entry) => entry.rules?.['soujvnunes/no-needless-use-client'])
+    expect(block?.rules).toEqual({
+      'soujvnunes/no-needless-use-client': 'error',
+      'soujvnunes/no-static-jsx-in-client': 'error',
+    })
+    expect(block?.files).toEqual(['**/*.{jsx,tsx}'])
+    expect(block?.ignores).toEqual(['**/{error,global-error}.{jsx,tsx}'])
+    expect(block?.plugins?.soujvnunes).toBe(soujvnunesPlugin)
   })
   it('bans the React default and namespace imports in favour of the ambient namespace', () => {
     const rule = mainBlock(createNextConfig()).rules?.['no-restricted-syntax'] as [
@@ -183,7 +199,7 @@ describe('one-line-comments', () => {
   // RuleTester applies one pass of fixes, so a rewrite that converges over two passes is checked through the Linter.
   const fix = (code: string) =>
     new Linter().verifyAndFix(code, {
-      plugins: { soujvnunes: oneLineCommentsPlugin },
+      plugins: { soujvnunes: soujvnunesPlugin },
       rules: { 'soujvnunes/one-line-comments': 'error' },
     }).output
   it('passes its own RuleTester suite', () => {
