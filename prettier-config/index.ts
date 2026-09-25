@@ -5,7 +5,6 @@ const require = createRequire(import.meta.url)
 const base: Config = {
   jsxSingleQuote: false,
   bracketSameLine: true,
-  // Prettier's default, written out so a change of default upstream cannot reflow every consumer.
   singleAttributePerLine: false,
   singleQuote: true,
   semi: false,
