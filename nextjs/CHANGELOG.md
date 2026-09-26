@@ -1,5 +1,12 @@
 # @soujvnunes/nextjs
 
+## 0.1.1
+
+### Patch Changes
+
+- Updated dependencies [f47d087]
+  - @soujvnunes/react@0.5.1
+
 ## 0.1.0
 
 ### Minor Changes
