@@ -44,35 +44,35 @@ const KEEPS: [string, string][] = [
   ['an event handler', "'use client'\nexport const A = ({ go }) => <button onClick={go}>Go</button>"],
   [
     'an inline function prop',
-    "'use client'\nexport const A = () => <Chart format={(value) => `${value}%`} />",
+    "'use client'\nimport { Chart } from './ui'\nexport const A = () => <Chart format={(value) => `${value}%`} />",
   ],
   [
     'a local function prop',
-    "'use client'\nconst format = (value) => value\nexport const A = () => <Chart format={format} />",
+    "'use client'\nimport { Chart } from './ui'\nconst format = (value) => value\nexport const A = () => <Chart format={format} />",
   ],
   [
     'a function declaration prop',
-    "'use client'\nfunction format(value) { return value }\nexport const A = () => <Chart format={format} />",
+    "'use client'\nimport { Chart } from './ui'\nfunction format(value) { return value }\nexport const A = () => <Chart format={format} />",
   ],
   [
     'a render-prop child',
-    "'use client'\nexport const A = () => <List>{(item) => <li>{item}</li>}</List>",
+    "'use client'\nimport { List } from './ui'\nexport const A = () => <List>{(item) => <li>{item}</li>}</List>",
   ],
   [
     'an imported function prop',
-    "'use client'\nimport { formatPrice } from './format'\nexport const Price = ({ value }) => <NumberFlow format={formatPrice} value={value} />",
+    "'use client'\nimport { NumberFlow } from './ui'\nimport { formatPrice } from './format'\nexport const Price = ({ value }) => <NumberFlow format={formatPrice} value={value} />",
   ],
   [
     'a function inside an object prop',
-    "'use client'\nexport const Stats = ({ data }) => <Chart data={data} options={{ tooltip: { format: (v) => `${v}%` } }} />",
+    "'use client'\nimport { Chart } from './ui'\nexport const Stats = ({ data }) => <Chart data={data} options={{ tooltip: { format: (v) => `${v}%` } }} />",
   ],
   [
     'a class instance prop',
-    "'use client'\nconst client = new QueryClient()\nexport const Providers = ({ children }) => <QueryClientProvider client={client}>{children}</QueryClientProvider>",
+    "'use client'\nimport { QueryClientProvider } from './ui'\nconst client = new QueryClient()\nexport const Providers = ({ children }) => <QueryClientProvider client={client}>{children}</QueryClientProvider>",
   ],
   [
     'a spread of an import',
-    "'use client'\nimport config from './config'\nexport const A = () => <Chart {...config} />",
+    "'use client'\nimport { Chart } from './ui'\nimport config from './config'\nexport const A = () => <Chart {...config} />",
   ],
   [
     'a dot into a named import',
@@ -129,23 +129,23 @@ const KEEPS: [string, string][] = [
   ],
   [
     'a defaulted imported prop',
-    "'use client'\nimport { ChevronIcon } from './icons'\nexport const A = ({ icon = ChevronIcon }) => <Button icon={icon} />",
+    "'use client'\nimport { Button } from './ui'\nimport { ChevronIcon } from './icons'\nexport const A = ({ icon = ChevronIcon }) => <Button icon={icon} />",
   ],
   [
     'a callback argument that holds an imported function',
-    "'use client'\nimport { formatPrice } from './format'\nconst COLUMNS = [{ key: 'price', format: formatPrice }]\nexport const A = () => <ul>{COLUMNS.map((column) => <Cell key={column.key} format={column.format} />)}</ul>",
+    "'use client'\nimport { Cell } from './ui'\nimport { formatPrice } from './format'\nconst COLUMNS = [{ key: 'price', format: formatPrice }]\nexport const A = () => <ul>{COLUMNS.map((column) => <Cell key={column.key} format={column.format} />)}</ul>",
   ],
   [
     'a function child behind a member',
-    "'use client'\nconst renderers = { row: (item) => <li>{item}</li> }\nexport const A = () => <List>{renderers.row}</List>",
+    "'use client'\nimport { List } from './ui'\nconst renderers = { row: (item) => <li>{item}</li> }\nexport const A = () => <List>{renderers.row}</List>",
   ],
   [
     'a function child behind &&',
-    "'use client'\nconst renderRow = (item) => <li>{item}</li>\nexport const A = ({ open }) => <List>{open && renderRow}</List>",
+    "'use client'\nimport { List } from './ui'\nconst renderRow = (item) => <li>{item}</li>\nexport const A = ({ open }) => <List>{open && renderRow}</List>",
   ],
   [
     'an imported function child behind ?:',
-    "'use client'\nimport { renderRow } from './rows'\nexport const A = ({ open }) => <List>{open ? renderRow : null}</List>",
+    "'use client'\nimport { List } from './ui'\nimport { renderRow } from './rows'\nexport const A = ({ open }) => <List>{open ? renderRow : null}</List>",
   ],
   [
     'a context rendered as its own provider',
@@ -175,11 +175,48 @@ const KEEPS: [string, string][] = [
   ],
   [
     'a namespace member handed to a component',
-    "'use client'\nimport * as fmt from './format'\nexport const A = () => <Chart format={fmt.price} />",
+    "'use client'\nimport { Chart } from './ui'\nimport * as fmt from './format'\nexport const A = () => <Chart format={fmt.price} />",
   ],
   [
     'a read through a named import handed to a component',
-    "'use client'\nimport { copy } from './copy'\nexport const A = () => <Input placeholder={copy.email} />",
+    "'use client'\nimport { Input } from './ui'\nimport { copy } from './copy'\nexport const A = () => <Input placeholder={copy.email} />",
+  ],
+  [
+    'an alias of motion.div',
+    "'use client'\nimport { motion } from 'motion/react'\nconst MotionDiv = motion.div\nexport const Fade = ({ children }) => <MotionDiv>{children}</MotionDiv>",
+  ],
+  [
+    'a styled-components tag',
+    "'use client'\nimport styled from 'styled-components'\nconst Title = styled.h1`color: red;`\nexport const Hero = () => <Title>Hi</Title>",
+  ],
+  [
+    'a tag destructured from a namespace object',
+    "'use client'\nimport { Menu } from './ui'\nconst { Item } = Menu\nexport const A = () => <Item>Hi</Item>",
+  ],
+  [
+    'a component a higher-order function returns',
+    "'use client'\nimport { withTheme } from './theme'\nimport { Base } from './ui'\nconst Fancy = withTheme(Base)\nexport const A = () => <Fancy />",
+  ],
+  ['a side-effect import', "'use client'\nimport './init-sentry'\nexport const Init = () => null"],
+  [
+    'a call in a module-level initializer',
+    "'use client'\nimport { init } from './analytics'\nconst analytics = init('key')\nexport const A = () => <p>Hi</p>",
+  ],
+  [
+    'a module-level if',
+    "'use client'\nimport { gsap, ScrollTrigger } from 'gsap'\nif (gsap) gsap.registerPlugin(ScrollTrigger)\nexport const A = () => <p>Hi</p>",
+  ],
+  [
+    'a let that is assigned a function later',
+    "'use client'\nimport { NumberFlow } from './ui'\nlet format = 'currency'\nexport const A = ({ percent }) => { if (percent) format = (v) => v; return <NumberFlow format={format} /> }",
+  ],
+  [
+    'a RegExp prop',
+    "'use client'\nimport { IMaskInput } from './ui'\nexport const A = () => <IMaskInput mask={/^\\d{5}$/} />",
+  ],
+  [
+    'a method read off a data constant',
+    "'use client'\nimport { Field } from './ui'\nconst LABEL = 'name'\nexport const A = () => <Field transform={LABEL.toUpperCase} />",
   ],
 ]
 const REPORTS: [string, string][] = [
@@ -198,7 +235,7 @@ const REPORTS: [string, string][] = [
   ],
   [
     'a module constant of data passed as a prop',
-    "'use client'\nconst label = 'Save'\nexport const A = () => <Tag label={label} />",
+    "'use client'\nimport { Tag } from './ui'\nconst label = 'Save'\nexport const A = () => <Tag label={label} />",
   ],
   [
     'object and array literals of data',
@@ -206,7 +243,7 @@ const REPORTS: [string, string][] = [
   ],
   [
     'a function that only arrives as a prop, since the importer that created it is the client side',
-    "'use client'\nexport const A = ({ format }) => <Chart format={format} />",
+    "'use client'\nimport { Chart } from './ui'\nexport const A = ({ format }) => <Chart format={format} />",
   ],
   [
     'a local component exported by name',
@@ -224,11 +261,27 @@ const REPORTS: [string, string][] = [
     'a default-exported component',
     "'use client'\nexport default function Page() { return <h1>Hi</h1> }",
   ],
+  [
+    'a stylesheet import',
+    "'use client'\nimport './card.css'\nexport const Card = () => <div className=\"card\">Hi</div>",
+  ],
+  [
+    'a module-level cva call',
+    "'use client'\nimport { cva } from 'class-variance-authority'\nimport { cn } from './cn'\nconst variants = cva('rounded')\nexport const Badge = ({ className, ...props }) => <span className={cn(variants(), className)} {...props} />",
+  ],
+  [
+    'a module constant read off another',
+    "'use client'\nconst SIZES = { sm: 'h-8' }\nconst DEFAULT_SIZE = SIZES.sm\nexport const Box = () => <div className={DEFAULT_SIZE} />",
+  ],
 ]
 const TYPESCRIPT_REPORTS: [string, string][] = [
   [
+    'an inline type-only re-export',
+    "'use client'\nexport { type Props } from './types'\nexport const Hero = () => <h1>Hi</h1>",
+  ],
+  [
     'a DOM type named only in a type position',
-    "'use client'\nexport const Card = (props: React.HTMLAttributes<HTMLDivElement>) => <div {...props} />",
+    "'use client'\nimport { HTMLDivElement } from './ui'\nexport const Card = (props: React.HTMLAttributes<HTMLDivElement>) => <div {...props} />",
   ],
   [
     'a forwardRef typed with a DOM element',
