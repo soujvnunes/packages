@@ -1,4 +1,4 @@
-import { AST_NODE_TYPES, ESLintUtils, type TSESTree } from '@typescript-eslint/utils'
+import { AST_NODE_TYPES, AST_TOKEN_TYPES, ESLintUtils, type TSESTree } from '@typescript-eslint/utils'
 import { createClassifier } from './createClassifier'
 import { findUseClientDirective } from './findUseClientDirective'
 import { isComponentFunction } from './isComponentFunction'
@@ -6,10 +6,10 @@ import { isFunctionAttribute } from './isFunctionAttribute'
 import { isFunctionNode } from './isFunctionNode'
 import { needsClient } from './needsClient'
 type Jsx = TSESTree.JSXElement | TSESTree.JSXFragment
-type Verdict = { isStatic: boolean; count: number }
+type Judgement = { isStatic: boolean; count: number }
 type Position = ReturnType<ReturnType<typeof createClassifier>['positionOf']>
 const DISABLE_KEYWORDS = ['eslint-disable-next-line', 'eslint-disable-line', 'eslint-disable']
-const isJsx = (node: TSESTree.Node): node is Jsx =>
+const isJsx = (node: TSESTree.Node) =>
   node.type === AST_NODE_TYPES.JSXElement || node.type === AST_NODE_TYPES.JSXFragment
 const isRenderedByComponent = (node: TSESTree.Node) => {
   let current: TSESTree.Node | undefined = node.parent
@@ -40,25 +40,31 @@ export const staticJsxInClient = ESLintUtils.RuleCreator.withoutDocs({
     const { sourceCode } = context
     const directive = findUseClientDirective(sourceCode.ast)
     if (!directive) return {}
+    const isDirectiveKept = () =>
+      sourceCode.getAllComments().some((comment) => {
+        const text = comment.value.trim()
+        const keyword = DISABLE_KEYWORDS.find(
+          (candidate) => text === candidate || text.startsWith(`${candidate} `),
+        )
+        if (!keyword) return false
+        const list = text.slice(keyword.length)
+        const rules =
+          list
+            .split('--')[0]
+            ?.split(/[\s,]+/u)
+            .filter(Boolean) ?? []
+        const covers =
+          rules.length === 0 || rules.some((rule) => rule.endsWith('no-needless-use-client'))
+        const line = directive.loc.start.line
+        if (keyword === 'eslint-disable-line') return covers && comment.loc.start.line === line
+        if (keyword === 'eslint-disable-next-line') return covers && comment.loc.end.line === line - 1
+        // ESLint honours a file-wide disable only in a block comment.
+        return (
+          covers && comment.type === AST_TOKEN_TYPES.Block && comment.range[1] <= directive.range[0]
+        )
+      })
+    if (!needsClient(sourceCode) && !isDirectiveKept()) return {}
     const { classify, classifyTag, positionOf } = createClassifier(sourceCode, true)
-    const isDirectiveKept = sourceCode.getAllComments().some((comment) => {
-      const text = comment.value.trim()
-      const keyword = DISABLE_KEYWORDS.find(
-        (candidate) => text === candidate || text.startsWith(`${candidate} `),
-      )
-      if (!keyword) return false
-      const list = text.slice(keyword.length)
-      const rules =
-        list
-          .split('--')[0]
-          ?.split(/[\s,]+/u)
-          .filter(Boolean) ?? []
-      const covers = rules.length === 0 || rules.some((rule) => rule.endsWith('no-needless-use-client'))
-      const line = directive.loc.start.line
-      if (keyword === 'eslint-disable-line') return covers && comment.loc.start.line === line
-      if (keyword === 'eslint-disable-next-line') return covers && comment.loc.end.line === line - 1
-      return covers && comment.range[1] <= directive.range[0]
-    })
     const isStatic = (node: TSESTree.Node, position: Position) => {
       const verdict = classify(node, position)
       return verdict.data && verdict.stable
@@ -76,10 +82,10 @@ export const staticJsxInClient = ESLintUtils.RuleCreator.withoutDocs({
         value.type === AST_NODE_TYPES.JSXExpressionContainer && isStatic(value.expression, position)
       )
     }
-    const childPosition = (node: Jsx): Position =>
+    const childPosition = (node: Jsx) =>
       node.type === AST_NODE_TYPES.JSXElement ? positionOf(node.openingElement) : 'text'
-    const verdicts = new Map<Jsx, Verdict>()
-    const judge = (node: Jsx): Verdict => {
+    const verdicts = new Map<Jsx, Judgement>()
+    const judge = (node: Jsx): Judgement => {
       const cached = verdicts.get(node)
       if (cached) return cached
       const position = childPosition(node)
@@ -107,12 +113,13 @@ export const staticJsxInClient = ESLintUtils.RuleCreator.withoutDocs({
       verdicts.set(node, verdict)
       return verdict
     }
-    const findings: { loc: TSESTree.SourceLocation; count: number }[] = []
+    const report = (loc: TSESTree.SourceLocation, count: number) =>
+      context.report({ loc, messageId: 'static', data: { count: String(count) } })
     // Reports the outermost static subtree only, so a static card is one finding rather than one per nested element.
     const visit = (node: Jsx) => {
       const { isStatic: isStaticNode, count } = judge(node)
       if (isStaticNode) {
-        if (count >= minElements) findings.push({ loc: node.loc, count })
+        if (count >= minElements) report(node.loc, count)
         return
       }
       // A run of static siblings under a dynamic parent can be passed in as `children` just the same, so it is judged as one block.
@@ -123,7 +130,7 @@ export const staticJsxInClient = ESLintUtils.RuleCreator.withoutDocs({
         const last = run.at(-1)
         const total = run.reduce((sum, member) => sum + judge(member).count, 0)
         if (first && last && run.length > 1 && total >= minElements)
-          findings.push({ loc: { start: first.loc.start, end: last.loc.end }, count: total })
+          report({ start: first.loc.start, end: last.loc.end }, total)
         else for (const member of run) visit(member)
         run = []
       }
@@ -144,14 +151,6 @@ export const staticJsxInClient = ESLintUtils.RuleCreator.withoutDocs({
     const visitRoot = (node: Jsx) => {
       if (!isJsx(node.parent) && isRenderedByComponent(node)) visit(node)
     }
-    return {
-      JSXElement: visitRoot,
-      JSXFragment: visitRoot,
-      'Program:exit'() {
-        if (!isDirectiveKept && !needsClient(sourceCode)) return
-        for (const { loc, count } of findings)
-          context.report({ loc, messageId: 'static', data: { count: String(count) } })
-      },
-    }
+    return { JSXElement: visitRoot, JSXFragment: visitRoot }
   },
 })
