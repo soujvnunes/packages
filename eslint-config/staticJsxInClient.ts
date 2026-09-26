@@ -1,25 +1,12 @@
-import {
-  ASTUtils,
-  AST_NODE_TYPES,
-  ESLintUtils,
-  TSESLint,
-  type TSESTree,
-} from '@typescript-eslint/utils'
+import { AST_NODE_TYPES, ESLintUtils, type TSESTree } from '@typescript-eslint/utils'
 import { createClassifier } from './createClassifier'
+import { createClientNeedTracker } from './createClientNeedTracker'
 import { findUseClientDirective } from './findUseClientDirective'
 import { isComponentFunction } from './isComponentFunction'
-import { isNamespaceImport } from './isNamespaceImport'
-import { jsxTagRoot } from './jsxTagRoot'
-type Variable = TSESLint.Scope.Variable
+import { isFunctionAttribute } from './isFunctionAttribute'
 type Jsx = TSESTree.JSXElement | TSESTree.JSXFragment
 type Verdict = { isStatic: boolean; count: number }
-const { DefinitionType, ScopeType } = TSESLint.Scope
-const INTRINSIC = /^[a-z]/u
-const HANDLER = /^on[A-Z]/u
-// Intrinsic attributes that take a function, which a server parent cannot put on a tag.
-const FUNCTION_ATTRIBUTES = new Set(['ref', 'action', 'formAction'])
-const MODULE_SCOPES = new Set<string>([ScopeType.module, ScopeType.global])
-const MODULE_DECLARATIONS = new Set<string>([DefinitionType.FunctionName, DefinitionType.ClassName])
+type Position = ReturnType<ReturnType<typeof createClassifier>['positionOf']>
 const FUNCTIONS = new Set<string>([
   AST_NODE_TYPES.ArrowFunctionExpression,
   AST_NODE_TYPES.FunctionExpression,
@@ -27,13 +14,10 @@ const FUNCTIONS = new Set<string>([
 ])
 const isJsx = (node: TSESTree.Node): node is Jsx =>
   node.type === AST_NODE_TYPES.JSXElement || node.type === AST_NODE_TYPES.JSXFragment
-const isIntrinsic = (element: TSESTree.JSXOpeningElement) =>
-  element.name.type === AST_NODE_TYPES.JSXIdentifier && INTRINSIC.test(element.name.name)
-// Markup is movable only from a component body: in a callback a library or an event calls, no server parent exists to take it.
-const isInComponentBody = (node: TSESTree.Node) => {
+const isRenderedByComponent = (node: TSESTree.Node) => {
   let current: TSESTree.Node | undefined = node.parent
   while (current && !FUNCTIONS.has(current.type)) current = current.parent
-  return !!current && isComponentFunction(current)
+  return !current || isComponentFunction(current)
 }
 export const staticJsxInClient = ESLintUtils.RuleCreator.withoutDocs({
   meta: {
@@ -58,63 +42,42 @@ export const staticJsxInClient = ESLintUtils.RuleCreator.withoutDocs({
   create(context, [{ minElements }]) {
     const { sourceCode } = context
     if (!findUseClientDirective(sourceCode.ast)) return {}
-    const classify = createClassifier(sourceCode, true)
-    const isStatic = (node: TSESTree.Node, position: 'text' | 'prop') => {
+    const { classify, classifyTag, positionOf } = createClassifier(sourceCode, true)
+    // A file that needs nothing from the client belongs to no-needless-use-client, whose fix (delete the directive) makes this rule's moot.
+    const tracker = createClientNeedTracker(sourceCode)
+    const isStatic = (node: TSESTree.Node, position: Position) => {
       const verdict = classify(node, position)
       return verdict.data && verdict.stable
     }
-    const variableOf = (node: TSESTree.Node, name: string) =>
-      ASTUtils.findVariable(sourceCode.getScope(node), name)
-    // The component an element renders has to be the same one on the server: an import, or a function, class or `const` declared at module level.
-    const isModuleBinding = (variable: Variable | null) =>
-      !!variable &&
-      variable.defs.length > 0 &&
-      variable.defs.every(
-        (def) =>
-          def.type === DefinitionType.ImportBinding ||
-          (MODULE_SCOPES.has(variable.scope.type) &&
-            (MODULE_DECLARATIONS.has(def.type) ||
-              (def.type === DefinitionType.Variable && def.parent.kind === 'const'))),
-      )
-    const isStaticName = (element: TSESTree.JSXOpeningElement) => {
-      const { name } = element
-      if (name.type === AST_NODE_TYPES.JSXNamespacedName) return true
-      if (name.type === AST_NODE_TYPES.JSXIdentifier)
-        return INTRINSIC.test(name.name) || isModuleBinding(variableOf(element, name.name))
-      const tag = jsxTagRoot(name)
-      if (!tag) return false
-      const variable = variableOf(element, tag.root.name)
-      // One level into a namespace is a module export; dotting into a named import (`Ctx.Provider`, `motion.div`) reads into what may be a client reference, which a server parent cannot do.
-      if (variable?.defs.some((def) => def.type === DefinitionType.ImportBinding))
-        return tag.depth === 1 && isNamespaceImport(variable)
-      return isModuleBinding(variable)
-    }
     const isStaticAttribute = (
       attribute: TSESTree.JSXAttribute | TSESTree.JSXSpreadAttribute,
-      position: 'text' | 'prop',
+      position: Position,
     ) => {
       if (attribute.type !== AST_NODE_TYPES.JSXAttribute) return false
       const key = attribute.name.type === AST_NODE_TYPES.JSXIdentifier ? attribute.name.name : ''
-      if (HANDLER.test(key) || FUNCTION_ATTRIBUTES.has(key)) return false
+      if (isFunctionAttribute(key)) return false
       const { value } = attribute
       if (!value || value.type === AST_NODE_TYPES.Literal) return true
       return (
         value.type === AST_NODE_TYPES.JSXExpressionContainer && isStatic(value.expression, position)
       )
     }
+    // A tag's attributes and children can only hold data, while a component's can hold a function; a fragment's children are its parent's.
+    const childPosition = (node: Jsx): Position =>
+      node.type === AST_NODE_TYPES.JSXElement ? positionOf(node.openingElement) : 'prop'
     const verdicts = new Map<Jsx, Verdict>()
     const judge = (node: Jsx): Verdict => {
       const cached = verdicts.get(node)
       if (cached) return cached
+      const position = childPosition(node)
       let isStaticNode = true
       let count = 0
-      // A tag's attributes and children can only hold data, while a component's can hold a function.
-      let position: 'text' | 'prop' = 'prop'
       if (node.type === AST_NODE_TYPES.JSXElement) {
         const { openingElement } = node
-        position = isIntrinsic(openingElement) ? 'text' : 'prop'
+        const tag = classifyTag(openingElement)
         isStaticNode =
-          isStaticName(openingElement) &&
+          tag.data &&
+          tag.stable &&
           openingElement.attributes.every((attribute) => isStaticAttribute(attribute, position))
         count = 1
       }
@@ -131,23 +94,23 @@ export const staticJsxInClient = ESLintUtils.RuleCreator.withoutDocs({
       verdicts.set(node, verdict)
       return verdict
     }
-    const report = (loc: TSESTree.SourceLocation, count: number) =>
-      context.report({ loc, messageId: 'static', data: { count: String(count) } })
+    const findings: { loc: TSESTree.SourceLocation; count: number }[] = []
     // Reports the outermost static subtree only, so a static card is one finding rather than one per nested element.
     const visit = (node: Jsx) => {
       const { isStatic: isStaticNode, count } = judge(node)
       if (isStaticNode) {
-        if (count >= minElements) report(node.loc, count)
+        if (count >= minElements) findings.push({ loc: node.loc, count })
         return
       }
       // A run of static siblings under a dynamic parent can be passed in as `children` just the same, so it is judged as one block.
+      const position = childPosition(node)
       let run: Jsx[] = []
       const flush = () => {
         const [first] = run
         const last = run.at(-1)
         const total = run.reduce((sum, member) => sum + judge(member).count, 0)
         if (first && last && run.length > 1 && total >= minElements)
-          report({ start: first.loc.start, end: last.loc.end }, total)
+          findings.push({ loc: { start: first.loc.start, end: last.loc.end }, count: total })
         else for (const member of run) visit(member)
         run = []
       }
@@ -158,7 +121,7 @@ export const staticJsxInClient = ESLintUtils.RuleCreator.withoutDocs({
           visit(child)
         } else if (
           child.type === AST_NODE_TYPES.JSXExpressionContainer &&
-          !isStatic(child.expression, 'prop')
+          !isStatic(child.expression, position)
         )
           flush()
         else if (child.type === AST_NODE_TYPES.JSXSpreadChild) flush()
@@ -166,8 +129,17 @@ export const staticJsxInClient = ESLintUtils.RuleCreator.withoutDocs({
       flush()
     }
     const visitRoot = (node: Jsx) => {
-      if (!isJsx(node.parent) && isInComponentBody(node)) visit(node)
+      if (!isJsx(node.parent) && isRenderedByComponent(node)) visit(node)
     }
-    return { JSXElement: visitRoot, JSXFragment: visitRoot }
+    return {
+      ...tracker.listeners,
+      JSXElement: visitRoot,
+      JSXFragment: visitRoot,
+      'Program:exit'() {
+        if (!tracker.needsClient()) return
+        for (const { loc, count } of findings)
+          context.report({ loc, messageId: 'static', data: { count: String(count) } })
+      },
+    }
   },
 })

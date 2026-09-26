@@ -50,7 +50,7 @@ const PASSES: [string, string][] = [
   ],
   [
     'a static subtree below the threshold, the size of an icon inside a button',
-    "'use client'\nexport const A = ({ go }) => <button onClick={go}><span><Icon /></span></button>",
+    "'use client'\nimport { Icon } from './ui'\nexport const A = ({ go }) => <button onClick={go}><span><Icon /></span></button>",
   ],
   [
     'a read of an import next to a prop',
@@ -119,67 +119,110 @@ const MORE_PASSES: [string, string][] = [
     'markup an event handler builds',
     "'use client'\nexport const A = ({ go }) => <button onClick={() => toast(<div><b>Saved</b><p>Done</p></div>)}>Save</button>",
   ],
+  [
+    'a static file that needs nothing from the client, which the directive rule owns',
+    "'use client'\nexport const Card = () => <div><h2>Title</h2><p>Body</p></div>",
+  ],
+  [
+    'a dot into a module-level object',
+    "'use client'\nimport { Card } from './ui'\nconst UI = { Card }\nexport const A = ({ go }) => <UI.Card><h2>Title</h2><p>Body</p></UI.Card>",
+  ],
+  [
+    'a context rendered as its own provider',
+    "'use client'\nimport { ThemeContext } from './theme'\nexport const A = () => <ThemeContext value=\"dark\"><h2>Title</h2><p>Body</p></ThemeContext>",
+  ],
+  [
+    'a component next/dynamic makes',
+    "'use client'\nimport dynamic from 'next/dynamic'\nconst Map = dynamic(() => import('./map'), { ssr: false })\nexport const A = () => <section><Map /><h2>Title</h2><p>Body</p></section>",
+  ],
 ]
 const REPORTS: [string, string, number[]][] = [
   [
+    'a static block inside a local provider, without the provider',
+    "'use client'\nimport { createContext } from 'react'\nconst ThemeContext = createContext('light')\nexport const A = ({ children }) => <ThemeContext.Provider value=\"dark\"><main><h2>Title</h2><p>Body</p></main></ThemeContext.Provider>",
+    [3],
+  ],
+  [
+    'a run that an imported text child does not split',
+    "'use client'\nimport { label } from './copy'\nexport const A = ({ go }) => <div onClick={go}><h1>T</h1>{label}<p>a</p><p>b</p></div>",
+    [3],
+  ],
+  [
+    'module-level markup',
+    "'use client'\nconst EMPTY = <div><h2>Title</h2><p>Body</p></div>\nexport const A = ({ go }) => <button onClick={go}>{EMPTY}</button>",
+    [3],
+  ],
+  [
+    'a component inside memo and forwardRef',
+    "'use client'\nimport { memo, forwardRef } from 'react'\nexport const Card = memo(forwardRef((props, ref) => <div ref={ref}><section><h2>Title</h2><p>Body</p></section></div>))\nexport const Toggle = ({ go }) => <button onClick={go} />",
+    [3],
+  ],
+  [
     'a read through a named import handed to a component, as a copy dictionary is',
-    "'use client'\nimport { copy } from './copy'\nimport { Input } from './input'\nexport const A = () => <div><Input placeholder={copy.email} /><p>a</p></div>",
+    "'use client'\nimport { copy } from './copy'\nimport { Input } from './input'\nexport const A = () => <div><Input placeholder={copy.email} /><p>a</p></div>\nexport const Toggle = ({ go }) => <button onClick={go} />",
     [3],
   ],
   [
     'a static card once, at its outermost element',
-    "'use client'\nexport const Card = () => <div className=\"card\"><h2>Title</h2><p>Body {'text'}</p></div>",
+    "'use client'\nexport const Card = () => <div className=\"card\"><h2>Title</h2><p>Body {'text'}</p></div>\nexport const Toggle = ({ go }) => <button onClick={go} />",
     [3],
   ],
   [
     'a run of static siblings under a dynamic form, as one block',
-    '\'use client\'\nexport const Form = ({ go }) => <form onSubmit={go}><fieldset><label>Name</label><input name="name" required /></fieldset><button>Send</button></form>',
+    '\'use client\'\nexport const Form = ({ go }) => <form onSubmit={go}><fieldset><label>Name</label><input name="name" required /></fieldset><button>Send</button></form>\nexport const Toggle = ({ go }) => <button onClick={go} />',
     [4],
   ],
   [
     'a static branch of a condition',
-    "'use client'\nexport const A = ({ open }) => <div>{open && <section><h3>Help</h3><p>Text</p></section>}</div>",
+    "'use client'\nexport const A = ({ open }) => <div>{open && <section><h3>Help</h3><p>Text</p></section>}</div>\nexport const Toggle = ({ go }) => <button onClick={go} />",
     [3],
   ],
   [
     'reads of an import and a static module constant',
-    "'use client'\nimport { copy } from './copy'\nconst FIELD = 'name'\nexport const A = ({ go }) => <form onSubmit={go}><div><label htmlFor={FIELD}>{copy.labels[FIELD]}</label><input id={`${FIELD}-input`} name={FIELD} /></div></form>",
+    "'use client'\nimport { copy } from './copy'\nconst FIELD = 'name'\nexport const A = ({ go }) => <form onSubmit={go}><div><label htmlFor={FIELD}>{copy.labels[FIELD]}</label><input id={`${FIELD}-input`} name={FIELD} /></div></form>\nexport const Toggle = ({ go }) => <button onClick={go} />",
     [3],
   ],
   [
     'a module constant copy dictionary',
-    "'use client'\nconst COPY = { title: 'Title', body: 'Body' }\nexport const A = () => <div><h2>{COPY.title}</h2><p>{COPY.body}</p></div>",
+    "'use client'\nconst COPY = { title: 'Title', body: 'Body' }\nexport const A = () => <div><h2>{COPY.title}</h2><p>{COPY.body}</p></div>\nexport const Toggle = ({ go }) => <button onClick={go} />",
     [3],
   ],
   [
     'an imported asset on an intrinsic element',
-    "'use client'\nimport logo from './logo.svg'\nexport const A = () => <div><img src={logo} alt=\"\" /><h2>Title</h2></div>",
+    "'use client'\nimport logo from './logo.svg'\nexport const A = () => <div><img src={logo} alt=\"\" /><h2>Title</h2></div>\nexport const Toggle = ({ go }) => <button onClick={go} />",
     [3],
   ],
   [
     'the static part of a fragment, without counting the fragment',
-    "'use client'\nexport const A = ({ go }) => <><button onClick={go} /><ul><li>One</li><li>Two</li></ul></>",
+    "'use client'\nexport const A = ({ go }) => <><button onClick={go} /><ul><li>One</li><li>Two</li></ul></>\nexport const Toggle = ({ go }) => <button onClick={go} />",
     [3],
   ],
   [
     'a flat run of static siblings under a handler',
-    "'use client'\nexport const A = ({ go }) => <div onClick={go}><h1>T</h1><p>A</p><p>B</p><p>C</p></div>",
+    "'use client'\nexport const A = ({ go }) => <div onClick={go}><h1>T</h1><p>A</p><p>B</p><p>C</p></div>\nexport const Toggle = ({ go }) => <button onClick={go} />",
     [4],
   ],
   [
     'a static fragment of four',
-    "'use client'\nexport const A = () => <><h1>T</h1><p>A</p><p>B</p><p>C</p></>",
+    "'use client'\nexport const A = () => <><h1>T</h1><p>A</p><p>B</p><p>C</p></>\nexport const Toggle = ({ go }) => <button onClick={go} />",
     [4],
   ],
   [
     'one level into a namespace import',
-    "'use client'\nimport * as UI from 'ui'\nexport const A = () => <UI.Card><h2>Title</h2><p>Body</p></UI.Card>",
+    "'use client'\nimport * as UI from 'ui'\nexport const A = () => <UI.Card><h2>Title</h2><p>Body</p></UI.Card>\nexport const Toggle = ({ go }) => <button onClick={go} />",
     [3],
   ],
   [
     'an imported component with literal props',
-    "'use client'\nimport { Card } from './card'\nexport const A = () => <Card title=\"x\"><h2>Title</h2><p>Body</p></Card>",
+    "'use client'\nimport { Card } from './card'\nexport const A = () => <Card title=\"x\"><h2>Title</h2><p>Body</p></Card>\nexport const Toggle = ({ go }) => <button onClick={go} />",
     [3],
+  ],
+]
+const TYPESCRIPT_REPORTS: [string, string, number[]][] = [
+  [
+    'a component checked with satisfies',
+    "'use client'\nexport const Card = (() => <div><section><h2>Title</h2><p>Body</p></section></div>) satisfies FC\nexport const Toggle = ({ go }) => <button onClick={go} />",
+    [4],
   ],
 ]
 describe.each(SETUPS)('no-static-jsx-in-client under %s', (_setup, setup) => {
@@ -196,6 +239,20 @@ describe.each(SETUPS)('no-static-jsx-in-client under %s', (_setup, setup) => {
     expect(
       lint(setup, "'use client'\nexport const A = () => <div><h2>Title</h2><p>Body</p></div>", 4),
     ).toEqual([])
-    expect(lint(setup, "'use client'\nexport const A = () => <h1>Hi</h1>", 1)).toEqual([1])
+    expect(
+      lint(
+        setup,
+        "'use client'\nexport const A = () => <h1>Hi</h1>\nexport const Toggle = ({ go }) => <button onClick={go} />",
+        1,
+      ),
+    ).toEqual([1])
   })
 })
+describe.each(SETUPS.slice(1))(
+  'no-static-jsx-in-client on TypeScript syntax under %s',
+  (_setup, setup) => {
+    it.each(TYPESCRIPT_REPORTS)('reports %s', (_case, code, counts) => {
+      expect(lint(setup, code)).toEqual(counts)
+    })
+  },
+)
