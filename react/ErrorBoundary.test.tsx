@@ -111,9 +111,7 @@ describe('ErrorBoundary', () => {
         throw thrown
       }
       render(
-        <ErrorBoundary
-          Fallback={Spy}
-          onError={onError}>
+        <ErrorBoundary Fallback={Spy} onError={onError}>
           <Thrower />
         </ErrorBoundary>,
       )
@@ -162,9 +160,7 @@ describe('ErrorBoundary', () => {
       }
       expect(() =>
         render(
-          <ErrorBoundary
-            Fallback={Fallback}
-            onError={onError}>
+          <ErrorBoundary Fallback={Fallback} onError={onError}>
             <Thrower />
           </ErrorBoundary>,
         ),
@@ -181,9 +177,7 @@ describe('ErrorBoundary', () => {
       return null
     }
     render(
-      <ErrorBoundary
-        Fallback={Fallback}
-        onError={onError}>
+      <ErrorBoundary Fallback={Fallback} onError={onError}>
         <Throws message="A" />
         <Throws message="B" />
       </ErrorBoundary>,
