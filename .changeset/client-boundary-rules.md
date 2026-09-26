@@ -5,7 +5,7 @@
 Add two rules on the Next preset, both at error, for `.jsx` and `.tsx` files that open with `'use client'`. Next's `error` and `global-error` files are skipped, since Next requires them to be client components.
 
 - `soujvnunes/no-needless-use-client` reports the directive only when the file holds nothing a server module could not, judged by allow-list: server-safe module-level statements, component and type exports, tags a server component can render, and data handed to components, with no hook, handler, class component or browser global.
-- `soujvnunes/no-static-jsx-in-client` reports a subtree of three or more elements (the `minElements` option), or a run of static siblings under a dynamic parent, that reads only literals, imports and module constants whose value is itself static, which ships to the browser and hydrates for nothing. It reports only in a file that needs the client, so the two rules never give contradictory fixes.
+- `soujvnunes/no-static-jsx-in-client` reports a subtree of three or more elements (the `minElements` option), or a run of static siblings under a dynamic parent, that reads only literals, imports and module constants whose value is itself static, which ships to the browser and hydrates for nothing. It reports only in a file that needs the client, or whose directive is kept by disabling the other rule on its line, so the two rules never give contradictory fixes; they share one analysis per file.
 
 Neither autofixes. The fix for the first is deleting the line; the fix for the second is rendering the markup in the server parent and passing it in as `children` or a named `ReactNode` prop.
 
