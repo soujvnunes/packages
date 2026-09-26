@@ -1,37 +1,12 @@
-import { Linter } from 'eslint'
-import globals from 'globals'
-import tseslint from 'typescript-eslint'
 import { describe, expect, it } from 'vitest'
-import { soujvnunesPlugin } from './plugin'
-// Each case runs twice: once bare, and once under what the Next preset gives a `.tsx` file, since a declared global or a TypeScript lib global resolves differently from an undeclared one.
-const SETUPS: [string, Linter.LanguageOptions][] = [
-  ['espree with no globals', {}],
-  [
-    "the Next preset's TypeScript parser and browser globals",
-    { parser: tseslint.parser, globals: globals.browser, parserOptions: { lib: ['dom', 'esnext'] } },
-  ],
-]
+import { lintWithRule } from './lintWithRule'
+import { ruleSetups } from './ruleSetups'
 const COUNT = /: (\d+) elements/u
 // Each finding as its element count, so a case asserts both where the rule reports and how big it says the block is.
-const lint = (languageOptions: Linter.LanguageOptions, code: string, minElements = 3) =>
-  new Linter()
-    .verify(
-      code,
-      {
-        files: ['**/*.tsx'],
-        plugins: { soujvnunes: soujvnunesPlugin },
-        languageOptions: {
-          ecmaVersion: 'latest',
-          sourceType: 'module',
-          ...languageOptions,
-          parserOptions: { ecmaFeatures: { jsx: true }, ...languageOptions.parserOptions },
-        },
-        linterOptions: { reportUnusedDisableDirectives: 'off' },
-        rules: { 'soujvnunes/no-static-jsx-in-client': ['error', { minElements }] },
-      },
-      'component.tsx',
-    )
-    .map(({ fatal, message }) => (fatal ? message : Number(COUNT.exec(message)?.[1])))
+const lint = (languageOptions: Parameters<typeof lintWithRule>[0], code: string, minElements = 3) =>
+  lintWithRule(languageOptions, code, {
+    'soujvnunes/no-static-jsx-in-client': ['error', { minElements }],
+  }).map(({ fatal, message }) => (fatal ? message : Number(COUNT.exec(message)?.[1])))
 const PASSES: [string, string][] = [
   [
     'static markup in a module with no directive, which a server parent can render',
@@ -86,8 +61,6 @@ const PASSES: [string, string][] = [
     'a bare import handed to a component, likely a function',
     "'use client'\nimport { formatPrice } from './format'\nimport { NumberFlow } from 'number-flow'\nexport const A = () => <div><NumberFlow format={formatPrice} /><p>a</p><p>b</p></div>",
   ],
-]
-const MORE_PASSES: [string, string][] = [
   [
     'an imported handler on a tag',
     "'use client'\nimport { track } from './analytics'\nexport const A = ({ open }) => <section hidden={open}><div onClick={track}><h2>Title</h2><p>Body</p></div></section>",
@@ -139,6 +112,10 @@ const MORE_PASSES: [string, string][] = [
   [
     'a comment that mentions both names without disabling anything',
     "// see the eslint-disable docs about no-needless-use-client\n'use client'\nexport const Card = () => <section><h2>T</h2><p>a</p><p>b</p></section>",
+  ],
+  [
+    'a file-wide disable in a line comment, which ESLint does not honour',
+    "// eslint-disable soujvnunes/no-needless-use-client\n'use client'\nexport const Card = () => <section><h2>T</h2><p>a</p><p>b</p></section>",
   ],
 ]
 const REPORTS: [string, string, number[]][] = [
@@ -265,11 +242,8 @@ const TYPESCRIPT_REPORTS: [string, string, number[]][] = [
     [4],
   ],
 ]
-describe.each(SETUPS)('no-static-jsx-in-client under %s', (_setup, setup) => {
+describe.each(ruleSetups)('no-static-jsx-in-client under %s', (_setup, setup) => {
   it.each(PASSES)('passes %s', (_case, code) => {
-    expect(lint(setup, code)).toEqual([])
-  })
-  it.each(MORE_PASSES)('passes %s', (_case, code) => {
     expect(lint(setup, code)).toEqual([])
   })
   it.each(REPORTS)('reports %s', (_case, code, counts) => {
@@ -288,7 +262,7 @@ describe.each(SETUPS)('no-static-jsx-in-client under %s', (_setup, setup) => {
     ).toEqual([1])
   })
 })
-describe.each(SETUPS.slice(1))(
+describe.each(ruleSetups.slice(1))(
   'no-static-jsx-in-client on TypeScript syntax under %s',
   (_setup, setup) => {
     it.each(TYPESCRIPT_REPORTS)('reports %s', (_case, code, counts) => {
