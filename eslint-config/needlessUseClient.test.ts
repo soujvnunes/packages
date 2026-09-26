@@ -1,35 +1,10 @@
-import { Linter } from 'eslint'
-import globals from 'globals'
-import tseslint from 'typescript-eslint'
 import { describe, expect, it } from 'vitest'
-import { soujvnunesPlugin } from './plugin'
-// Each case runs twice: once bare, and once under what the Next preset gives a `.tsx` file, since a declared global or a TypeScript lib global resolves differently from an undeclared one.
-const SETUPS: [string, Linter.LanguageOptions][] = [
-  ['espree with no globals', {}],
-  [
-    "the Next preset's TypeScript parser and browser globals",
-    { parser: tseslint.parser, globals: globals.browser, parserOptions: { lib: ['dom', 'esnext'] } },
-  ],
-]
-const TYPESCRIPT = SETUPS.slice(1)
-const lint = (languageOptions: Linter.LanguageOptions, code: string) =>
-  new Linter()
-    .verify(
-      code,
-      {
-        files: ['**/*.tsx'],
-        plugins: { soujvnunes: soujvnunesPlugin },
-        languageOptions: {
-          ecmaVersion: 'latest',
-          sourceType: 'module',
-          ...languageOptions,
-          parserOptions: { ecmaFeatures: { jsx: true }, ...languageOptions.parserOptions },
-        },
-        rules: { 'soujvnunes/no-needless-use-client': 'error' },
-      },
-      'component.tsx',
-    )
-    .map(({ fatal, message, messageId }) => (fatal ? message : messageId))
+import { lintWithRule } from './lintWithRule'
+import { ruleSetups } from './ruleSetups'
+const lint = (languageOptions: Parameters<typeof lintWithRule>[0], code: string) =>
+  lintWithRule(languageOptions, code, { 'soujvnunes/no-needless-use-client': 'error' }).map(
+    ({ fatal, message, messageId }) => (fatal ? message : messageId),
+  )
 const KEEPS: [string, string][] = [
   ['a module with no directive', 'export const Hero = () => <h1>Hi</h1>'],
   [
@@ -446,6 +421,10 @@ const REPORTS: [string, string][] = [
 ]
 const TYPESCRIPT_KEEPS: [string, string][] = [
   [
+    'a typed handler',
+    "'use client'\nexport const A = ({ go }: { go: () => void }) => <button onClick={go} />",
+  ],
+  [
     'an enum member built by a call',
     "'use client'\nimport { init } from './init'\nenum E { A = init() }\nexport const A = () => <p>Hi</p>",
   ],
@@ -477,7 +456,7 @@ const TYPESCRIPT_REPORTS: [string, string][] = [
     "'use client'\nexport interface Props { id: string }\nexport const A = ({ id }: Props) => <p id={id} />",
   ],
 ]
-describe.each(SETUPS)('no-needless-use-client under %s', (_setup, setup) => {
+describe.each(ruleSetups)('no-needless-use-client under %s', (_setup, setup) => {
   it.each(KEEPS)('keeps the directive for %s', (_case, code) => {
     expect(lint(setup, code)).toEqual([])
   })
@@ -485,19 +464,14 @@ describe.each(SETUPS)('no-needless-use-client under %s', (_setup, setup) => {
     expect(lint(setup, code)).toEqual(['needless'])
   })
 })
-describe.each(TYPESCRIPT)('no-needless-use-client on TypeScript syntax under %s', (_setup, setup) => {
-  it.each(TYPESCRIPT_KEEPS)('keeps the directive for %s', (_case, code) => {
-    expect(lint(setup, code)).toEqual([])
-  })
-  it.each(TYPESCRIPT_REPORTS)('reports %s', (_case, code) => {
-    expect(lint(setup, code)).toEqual(['needless'])
-  })
-  it('keeps the directive for a typed handler', () => {
-    expect(
-      lint(
-        setup,
-        "'use client'\nexport const A = ({ go }: { go: () => void }) => <button onClick={go} />",
-      ),
-    ).toEqual([])
-  })
-})
+describe.each(ruleSetups.slice(1))(
+  'no-needless-use-client on TypeScript syntax under %s',
+  (_setup, setup) => {
+    it.each(TYPESCRIPT_KEEPS)('keeps the directive for %s', (_case, code) => {
+      expect(lint(setup, code)).toEqual([])
+    })
+    it.each(TYPESCRIPT_REPORTS)('reports %s', (_case, code) => {
+      expect(lint(setup, code)).toEqual(['needless'])
+    })
+  },
+)
