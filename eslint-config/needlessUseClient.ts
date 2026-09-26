@@ -20,7 +20,7 @@ export const needlessUseClient = ESLintUtils.RuleCreator.withoutDocs({
     const directive = findUseClientDirective(sourceCode.ast)
     if (!directive) return {}
     return {
-      'Program:exit'() {
+      Program() {
         if (!needsClient(sourceCode)) context.report({ node: directive, messageId: 'needless' })
       },
     }
