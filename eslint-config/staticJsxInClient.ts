@@ -1,9 +1,9 @@
 import { AST_NODE_TYPES, ESLintUtils, type TSESTree } from '@typescript-eslint/utils'
 import { createClassifier } from './createClassifier'
-import { createClientNeedTracker } from './createClientNeedTracker'
 import { findUseClientDirective } from './findUseClientDirective'
 import { isComponentFunction } from './isComponentFunction'
 import { isFunctionAttribute } from './isFunctionAttribute'
+import { needsClient } from './needsClient'
 type Jsx = TSESTree.JSXElement | TSESTree.JSXFragment
 type Verdict = { isStatic: boolean; count: number }
 type Position = ReturnType<ReturnType<typeof createClassifier>['positionOf']>
@@ -41,10 +41,19 @@ export const staticJsxInClient = ESLintUtils.RuleCreator.withoutDocs({
   defaultOptions: [{ minElements: 3 }],
   create(context, [{ minElements }]) {
     const { sourceCode } = context
-    if (!findUseClientDirective(sourceCode.ast)) return {}
+    const directive = findUseClientDirective(sourceCode.ast)
+    if (!directive) return {}
     const { classify, classifyTag, positionOf } = createClassifier(sourceCode, true)
-    // A file that needs nothing from the client belongs to no-needless-use-client, whose fix (delete the directive) makes this rule's moot.
-    const tracker = createClientNeedTracker(sourceCode)
+    // A directive kept on purpose, with no-needless-use-client disabled on its line as that rule's message suggests.
+    const isDirectiveKept = sourceCode
+      .getAllComments()
+      .some(
+        (comment) =>
+          comment.value.includes('eslint-disable') &&
+          comment.value.includes('no-needless-use-client') &&
+          (comment.loc.end.line === directive.loc.start.line - 1 ||
+            comment.loc.start.line === directive.loc.start.line),
+      )
     const isStatic = (node: TSESTree.Node, position: Position) => {
       const verdict = classify(node, position)
       return verdict.data && verdict.stable
@@ -62,9 +71,8 @@ export const staticJsxInClient = ESLintUtils.RuleCreator.withoutDocs({
         value.type === AST_NODE_TYPES.JSXExpressionContainer && isStatic(value.expression, position)
       )
     }
-    // A tag's attributes and children can only hold data, while a component's can hold a function; a fragment's children are its parent's.
     const childPosition = (node: Jsx): Position =>
-      node.type === AST_NODE_TYPES.JSXElement ? positionOf(node.openingElement) : 'prop'
+      node.type === AST_NODE_TYPES.JSXElement ? positionOf(node.openingElement) : 'text'
     const verdicts = new Map<Jsx, Verdict>()
     const judge = (node: Jsx): Verdict => {
       const cached = verdicts.get(node)
@@ -132,11 +140,10 @@ export const staticJsxInClient = ESLintUtils.RuleCreator.withoutDocs({
       if (!isJsx(node.parent) && isRenderedByComponent(node)) visit(node)
     }
     return {
-      ...tracker.listeners,
       JSXElement: visitRoot,
       JSXFragment: visitRoot,
       'Program:exit'() {
-        if (!tracker.needsClient()) return
+        if (!isDirectiveKept && !needsClient(sourceCode)) return
         for (const { loc, count } of findings)
           context.report({ loc, messageId: 'static', data: { count: String(count) } })
       },

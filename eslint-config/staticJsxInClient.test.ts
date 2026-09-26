@@ -26,6 +26,7 @@ const lint = (languageOptions: Linter.LanguageOptions, code: string, minElements
           ...languageOptions,
           parserOptions: { ecmaFeatures: { jsx: true }, ...languageOptions.parserOptions },
         },
+        linterOptions: { reportUnusedDisableDirectives: 'off' },
         rules: { 'soujvnunes/no-static-jsx-in-client': ['error', { minElements }] },
       },
       'component.tsx',
@@ -137,6 +138,21 @@ const MORE_PASSES: [string, string][] = [
   ],
 ]
 const REPORTS: [string, string, number[]][] = [
+  [
+    'a directive kept by disabling the directive rule on its line',
+    "// eslint-disable-next-line soujvnunes/no-needless-use-client -- a boundary for a dependency\n'use client'\nexport const Card = () => <section><h2>T</h2><p>a</p><p>b</p></section>",
+    [4],
+  ],
+  [
+    'an imported text child inside a fragment, which does not split the run',
+    "'use client'\nimport { label } from './copy'\nexport const A = ({ go }) => <div onClick={go}><>{label}<h1>T</h1><p>a</p></><p>b</p></div>",
+    [3],
+  ],
+  [
+    'memo over a component binding as a static tag',
+    "'use client'\nimport { memo } from 'react'\nconst RowBase = ({ id }) => <tr id={id} />\nconst Row = memo(RowBase)\nexport const Table = ({ go }) => <table onClick={go}><tbody><Row /><Row /></tbody></table>",
+    [3],
+  ],
   [
     'a static block inside a local provider, without the provider',
     "'use client'\nimport { createContext } from 'react'\nconst ThemeContext = createContext('light')\nexport const A = ({ children }) => <ThemeContext.Provider value=\"dark\"><main><h2>Title</h2><p>Body</p></main></ThemeContext.Provider>",
