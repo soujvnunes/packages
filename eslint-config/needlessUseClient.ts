@@ -1,6 +1,6 @@
 import { ESLintUtils } from '@typescript-eslint/utils'
-import { createClientNeedTracker } from './createClientNeedTracker'
 import { findUseClientDirective } from './findUseClientDirective'
+import { needsClient } from './needsClient'
 export const needlessUseClient = ESLintUtils.RuleCreator.withoutDocs({
   meta: {
     type: 'problem',
@@ -19,11 +19,9 @@ export const needlessUseClient = ESLintUtils.RuleCreator.withoutDocs({
     const { sourceCode } = context
     const directive = findUseClientDirective(sourceCode.ast)
     if (!directive) return {}
-    const tracker = createClientNeedTracker(sourceCode)
     return {
-      ...tracker.listeners,
       'Program:exit'() {
-        if (!tracker.needsClient()) context.report({ node: directive, messageId: 'needless' })
+        if (!needsClient(sourceCode)) context.report({ node: directive, messageId: 'needless' })
       },
     }
   },

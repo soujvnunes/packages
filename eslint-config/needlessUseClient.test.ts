@@ -218,6 +218,78 @@ const KEEPS: [string, string][] = [
     'a method read off a data constant',
     "'use client'\nimport { Field } from './ui'\nconst LABEL = 'name'\nexport const A = () => <Field transform={LABEL.toUpperCase} />",
   ],
+  [
+    'a function default in a destructured local',
+    "'use client'\nimport { Chart } from './ui'\nexport const A = (props) => { const { format = (v) => `${v}%`, data } = props; return <Chart format={format} data={data} /> }",
+  ],
+  [
+    'a function default in a module-level pattern',
+    "'use client'\nimport { Chart } from './ui'\nconst { format = (v) => v } = {}\nexport const A = () => <Chart format={format} />",
+  ],
+  [
+    'a received tag defaulting to motion.div',
+    "'use client'\nimport { motion } from 'motion/react'\nexport const Box = ({ as: Tag = motion.div, children }) => <Tag>{children}</Tag>",
+  ],
+  [
+    'a received tag defaulting to a higher-order result',
+    "'use client'\nimport { withTheme } from './theme'\nimport { Base } from './ui'\nexport const Box = ({ as: Tag = withTheme(Base) }) => <Tag />",
+  ],
+  [
+    'a let object reassigned to hold a function',
+    "'use client'\nimport { Chart } from './ui'\nlet OPTIONS = { format: 'currency' }\nexport const A = ({ percent }) => { if (percent) OPTIONS = { format: (v) => v }; return <Chart format={OPTIONS.format} /> }",
+  ],
+  [
+    'a const object written through a member',
+    "'use client'\nimport { Chart } from './ui'\nconst OPTIONS = { format: 'currency' }\nexport const A = ({ percent }) => { if (percent) OPTIONS.format = (v) => v; return <Chart format={OPTIONS.format} /> }",
+  ],
+  [
+    'a key a later spread may replace',
+    "'use client'\nimport { Chart } from './ui'\nimport { overrides } from './overrides'\nconst OPTIONS = { format: 'currency', ...overrides }\nexport const A = () => <Chart format={OPTIONS.format} />",
+  ],
+  [
+    'a key a later computed key may replace',
+    "'use client'\nimport { fmt } from './fmt'\nimport { Chart } from './ui'\nconst K = 'format'\nconst OPTIONS = { format: 'currency', [K]: fmt }\nexport const A = () => <Chart format={OPTIONS.format} />",
+  ],
+  [
+    'a call in a module-level pattern default',
+    "'use client'\nimport { init } from './analytics'\nconst { client = init('key') } = {}\nexport const A = () => <p>Hi</p>",
+  ],
+  [
+    'a call inside module-level markup',
+    "'use client'\nimport { init } from './analytics'\nconst BANNER = <p>{init('key')}</p>\nexport const A = () => BANNER",
+  ],
+  [
+    'an empty re-export, which still imports the module',
+    "'use client'\nexport {} from './init-sentry'\nexport const A = () => <p>Hi</p>",
+  ],
+  [
+    'a context imported under an alias',
+    '\'use client\'\nimport { ThemeContext as Theme } from \'./theme\'\nexport const A = ({ children }) => <Theme value="dark" mode="x">{children}</Theme>',
+  ],
+  [
+    'a context named with Ctx',
+    '\'use client\'\nimport { ThemeCtx } from \'./theme\'\nexport const A = ({ children }) => <ThemeCtx value="dark" mode="x">{children}</ThemeCtx>',
+  ],
+  [
+    'a lone value attribute, the provider shape',
+    "'use client'\nimport { Store } from './store'\nexport const A = ({ children }) => <Store value={1}>{children}</Store>",
+  ],
+  [
+    'createPortal',
+    "'use client'\nimport { createPortal } from 'react-dom'\nexport const Modal = ({ children, container }) => createPortal(children, container)",
+  ],
+  [
+    'a hook imported under an alias',
+    "'use client'\nimport { useState as state } from 'react'\nexport const A = () => { const [value] = state(0); return <p>{value}</p> }",
+  ],
+  [
+    'a method read off a constant built from another',
+    "'use client'\nimport { Field } from './ui'\nconst LABELS = { name: 'Name' }\nconst LABEL = LABELS.name\nexport const A = () => <Field transform={LABEL.toUpperCase} />",
+  ],
+  [
+    'an array method read off a nested constant',
+    "'use client'\nimport { Table } from './ui'\nconst DATA = { rows: [] }\nexport const A = () => <Table render={DATA.rows.map} />",
+  ],
 ]
 const REPORTS: [string, string][] = [
   ['a static component', "'use client'\nexport const Hero = () => <h1>Hi</h1>"],
@@ -273,8 +345,39 @@ const REPORTS: [string, string][] = [
     'a module constant read off another',
     "'use client'\nconst SIZES = { sm: 'h-8' }\nconst DEFAULT_SIZE = SIZES.sm\nexport const Box = () => <div className={DEFAULT_SIZE} />",
   ],
+  [
+    'memo over a component binding',
+    "'use client'\nimport { memo } from 'react'\nconst RowBase = ({ id }) => <tr id={id} />\nexport const Row = memo(RowBase)",
+  ],
+  ['a let with no initializer', "'use client'\nlet counter\nexport const A = () => <p>Hi</p>"],
+  [
+    'a helper function declaration',
+    "'use client'\nfunction helper() { return 1 }\nexport const A = () => <p>{helper()}</p>",
+  ],
+  [
+    'template, unary, binary, conditional and logical constants',
+    "'use client'\nconst A1 = `a`\nconst B1 = -1\nconst C1 = 1 + 2\nconst D1 = true ? 'a' : 'b'\nconst E1 = null ?? 'x'\nexport const A = () => <p>Hi</p>",
+  ],
+  [
+    'a computed key in a module constant',
+    "'use client'\nconst K = 'a'\nconst M = { [K]: 1 }\nexport const A = () => <p>Hi</p>",
+  ],
+  [
+    'a module-level tv call',
+    "'use client'\nimport { tv } from 'tailwind-variants'\nconst button = tv({ base: 'x' })\nexport const A = () => <button className={button()} />",
+  ],
+  ['module-level markup', "'use client'\nconst ICON = <svg />\nexport const A = () => <p>{ICON}</p>"],
+  [
+    'a received tag with a tag-name default',
+    "'use client'\nexport const Box = ({ as: Tag = 'div', children }) => <Tag>{children}</Tag>",
+  ],
 ]
 const TYPESCRIPT_REPORTS: [string, string][] = [
+  ['an enum', "'use client'\nenum Size { Small }\nexport const A = () => <p>Hi</p>"],
+  [
+    'a type-only export-all',
+    "'use client'\nexport type * from './types'\nexport const A = () => <p>Hi</p>",
+  ],
   [
     'an inline type-only re-export',
     "'use client'\nexport { type Props } from './types'\nexport const Hero = () => <h1>Hi</h1>",
