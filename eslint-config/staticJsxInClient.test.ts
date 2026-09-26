@@ -86,7 +86,46 @@ const PASSES: [string, string][] = [
     "'use client'\nimport { formatPrice } from './format'\nimport { NumberFlow } from 'number-flow'\nexport const A = () => <div><NumberFlow format={formatPrice} /><p>a</p><p>b</p></div>",
   ],
 ]
+const MORE_PASSES: [string, string][] = [
+  [
+    'an imported handler on a tag',
+    "'use client'\nimport { track } from './analytics'\nexport const A = ({ open }) => <section hidden={open}><div onClick={track}><h2>Title</h2><p>Body</p></div></section>",
+  ],
+  [
+    'an imported form action on a button',
+    "'use client'\nimport { save } from './save'\nexport const A = ({ open }) => <section hidden={open}><form><button formAction={save}>Save</button><p>a</p></form></section>",
+  ],
+  [
+    'a handler read from a module constant',
+    "'use client'\nimport { track } from './analytics'\nconst HANDLERS = { click: track }\nexport const A = ({ open }) => <section hidden={open}><div onClick={HANDLERS.click}><h2>Title</h2><p>Body</p></div></section>",
+  ],
+  [
+    'an import inside an object prop',
+    "'use client'\nimport { formatPrice } from './format'\nimport { Chart } from 'chart'\nexport const A = ({ go }) => <section onClick={go}><div><Chart options={{ format: formatPrice }} /><p>a</p></div></section>",
+  ],
+  [
+    'a namespace member handed to a component',
+    "'use client'\nimport * as fmt from './format'\nimport { Chart } from 'chart'\nexport const A = ({ go }) => <section onClick={go}><div><Chart format={fmt.price} /><p>a</p></div></section>",
+  ],
+  [
+    'a module constant aliasing an import',
+    "'use client'\nimport { formatPrice } from './format'\nimport { Chart } from 'chart'\nconst FORMAT = formatPrice\nexport const A = ({ go }) => <section onClick={go}><div><Chart format={FORMAT} /><p>a</p></div></section>",
+  ],
+  [
+    'markup a library callback builds',
+    "'use client'\nexport const columns = [{ accessorKey: 'amount', header: () => <div className=\"text-right\"><span>Amount</span><small>BRL</small></div> }]",
+  ],
+  [
+    'markup an event handler builds',
+    "'use client'\nexport const A = ({ go }) => <button onClick={() => toast(<div><b>Saved</b><p>Done</p></div>)}>Save</button>",
+  ],
+]
 const REPORTS: [string, string, number[]][] = [
+  [
+    'a read through a named import handed to a component, as a copy dictionary is',
+    "'use client'\nimport { copy } from './copy'\nimport { Input } from './input'\nexport const A = () => <div><Input placeholder={copy.email} /><p>a</p></div>",
+    [3],
+  ],
   [
     'a static card once, at its outermost element',
     "'use client'\nexport const Card = () => <div className=\"card\"><h2>Title</h2><p>Body {'text'}</p></div>",
@@ -145,6 +184,9 @@ const REPORTS: [string, string, number[]][] = [
 ]
 describe.each(SETUPS)('no-static-jsx-in-client under %s', (_setup, setup) => {
   it.each(PASSES)('passes %s', (_case, code) => {
+    expect(lint(setup, code)).toEqual([])
+  })
+  it.each(MORE_PASSES)('passes %s', (_case, code) => {
     expect(lint(setup, code)).toEqual([])
   })
   it.each(REPORTS)('reports %s', (_case, code, counts) => {
