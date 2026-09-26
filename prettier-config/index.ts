@@ -5,7 +5,7 @@ const require = createRequire(import.meta.url)
 const base: Config = {
   jsxSingleQuote: false,
   bracketSameLine: true,
-  singleAttributePerLine: true,
+  singleAttributePerLine: false,
   singleQuote: true,
   semi: false,
   trailingComma: 'all',
