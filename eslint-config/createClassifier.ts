@@ -1,9 +1,9 @@
 import { ASTUtils, AST_NODE_TYPES, TSESLint, type TSESTree } from '@typescript-eslint/utils'
+import { everyDef } from './everyDef'
 import { importedName } from './importedName'
 import { isComponentFunction } from './isComponentFunction'
 import { isComponentInit } from './isComponentInit'
 import { isNamespaceImport } from './isNamespaceImport'
-import { jsxTagRoot } from './jsxTagRoot'
 import { patternDefaults } from './patternDefaults'
 type Variable = TSESLint.Scope.Variable
 type Position = 'text' | 'prop'
@@ -33,7 +33,6 @@ const LITERAL_INITS = new Set<string>([
   AST_NODE_TYPES.Literal,
   AST_NODE_TYPES.TemplateLiteral,
 ])
-// Every method a string, array, number or plain object carries, so `LABEL.toUpperCase` or `ROWS.map` is a function whatever the constant holds.
 const METHOD_NAMES = new Set(
   [String.prototype, Array.prototype, Number.prototype, Object.prototype].flatMap((prototype) =>
     Object.getOwnPropertyNames(prototype).filter(
@@ -44,6 +43,7 @@ const METHOD_NAMES = new Set(
 const ALWAYS: Verdict = { data: true, stable: true }
 const NEVER: Verdict = { data: false, stable: false }
 const PER_RENDER: Verdict = { data: true, stable: false }
+const DECLARATION: Verdict = { data: false, stable: true }
 const both = (left: Verdict, right: Verdict) => ({
   data: left.data && right.data,
   stable: left.stable && right.stable,
@@ -54,7 +54,6 @@ const keyName = (key: TSESTree.Node, computed: boolean) => {
   if (key.type === AST_NODE_TYPES.Literal && typeof key.value === 'string') return key.value
   return undefined
 }
-// A write through a member (`OPTIONS.format = fn`, `delete OPTIONS.format`, `FORMATS.push(fn)`), or the object handed to a call that may write it.
 const isMutated = (variable: Variable) =>
   variable.references.some(({ identifier }) => {
     let current: TSESTree.Node = identifier
@@ -93,9 +92,18 @@ export const createClassifier = (
   // A default is created by the module or component itself, so a binding that has one is data only when its default is.
   const withDefault = (name: TSESTree.Node, verdict: Verdict) =>
     all([verdict, ...patternDefaults(name).map((fallback) => classify(fallback, 'prop'))])
-  const isReassigned = (variable: Variable) =>
-    variable.references.some((reference) => reference.isWrite() && !reference.init)
-  const ofBinding = (variable: Variable): Verdict => {
+  const written = new Map<Variable, boolean>()
+  const isWritten = (variable: Variable, kind: string) => {
+    const cached = written.get(variable)
+    if (cached !== undefined) return cached
+    const verdict =
+      (kind !== 'const' &&
+        variable.references.some((reference) => reference.isWrite() && !reference.init)) ||
+      isMutated(variable)
+    written.set(variable, verdict)
+    return verdict
+  }
+  const ofBinding = (variable: Variable) => {
     const cached = memo.get(variable)
     if (cached) return cached
     if (resolving.has(variable)) {
@@ -110,9 +118,9 @@ export const createClassifier = (
         if (def.type === DefinitionType.Parameter)
           return isComponentFunction(def.node) ? withDefault(def.name, PER_RENDER) : NEVER
         if (def.type === DefinitionType.FunctionName || def.type === DefinitionType.ClassName)
-          return { data: false, stable: true }
+          return DECLARATION
         if (def.type !== DefinitionType.Variable || !def.node.init) return NEVER
-        if ((def.parent.kind !== 'const' && isReassigned(variable)) || isMutated(variable)) return NEVER
+        if (isWritten(variable, def.parent.kind)) return NEVER
         const init = classify(def.node.init, 'prop')
         return withDefault(def.name, {
           data: init.data,
@@ -125,20 +133,17 @@ export const createClassifier = (
     if (outermost && !cycled) memo.set(variable, verdict)
     return verdict
   }
-  // An import holds the same value on the server. A tag's attributes and children can only hold data, so any import there is; elsewhere a bare import or a namespace member may be a function, and a read through a named import (a copy dictionary) is data only under `importMembersAreData`.
   const ofImport = (position: Position, isDictionaryRead: boolean) => ({
     data: position === 'text' || (isDictionaryRead && importMembersAreData),
     stable: true,
   })
-  const importOf = (variable: Variable | null) =>
-    !!variable &&
-    variable.defs.length > 0 &&
-    variable.defs.every((def) => def.type === DefinitionType.ImportBinding)
-  const ofIdentifier = (node: TSESTree.Identifier, position: Position): Verdict => {
+  const isImport = (variable: Variable | null) =>
+    everyDef(variable, (def) => def.type === DefinitionType.ImportBinding)
+  const ofIdentifier = (node: TSESTree.Identifier, position: Position) => {
     if (node.name === 'undefined') return ALWAYS
     const variable = variableOf(node, node.name)
     if (!variable || variable.defs.length === 0) return NEVER
-    if (importOf(variable)) return ofImport(position, false)
+    if (isImport(variable)) return ofImport(position, false)
     return ofBinding(variable)
   }
   const properties = new Map<TSESTree.ObjectExpression, Map<string, Verdict>>()
@@ -167,15 +172,14 @@ export const createClassifier = (
       properties.set(object, (properties.get(object) ?? new Map()).set(memoKey, result))
     return result
   }
-  const ofMember = (node: TSESTree.MemberExpression, position: Position): Verdict => {
+  const ofMember = (node: TSESTree.MemberExpression, position: Position) => {
     const name = keyName(node.property, node.computed)
-    // A key named like a string or array method is a function unless a literal the rule can read says otherwise.
     const isMethod = name !== undefined && METHOD_NAMES.has(name)
     const key = node.computed ? classify(node.property, position) : ALWAYS
     if (node.object.type !== AST_NODE_TYPES.Identifier)
       return isMethod ? NEVER : both(classify(node.object, position), key)
     const variable = variableOf(node.object, node.object.name)
-    if (importOf(variable)) return both(ofImport(position, !isNamespaceImport(variable)), key)
+    if (isImport(variable)) return both(ofImport(position, !isNamespaceImport(variable)), key)
     const [def] = variable?.defs ?? []
     if (
       !variable ||
@@ -184,7 +188,7 @@ export const createClassifier = (
       def.node.id.type !== AST_NODE_TYPES.Identifier
     )
       return isMethod ? NEVER : both(ofIdentifier(node.object, position), key)
-    if ((def.parent.kind !== 'const' && isReassigned(variable)) || isMutated(variable)) return NEVER
+    if (isWritten(variable, def.parent.kind)) return NEVER
     const binding = ofBinding(variable)
     const { init } = def.node
     if (init.type === AST_NODE_TYPES.ObjectExpression) {
@@ -258,8 +262,7 @@ export const createClassifier = (
         return NEVER
     }
   }
-  // What a tag renders: `data` when a server component could render the same thing (a tag name, an import, a namespace export, a module-level component, or a tag the parent passed in with a renderable default), `stable` when it is the same on every render.
-  const ofTagExpression = (node: TSESTree.Node): Verdict => {
+  const ofTagExpression = (node: TSESTree.Node) => {
     if (node.type === AST_NODE_TYPES.Literal) return typeof node.value === 'string' ? ALWAYS : NEVER
     if (node.type === AST_NODE_TYPES.Identifier) return ofTagBinding(variableOf(node, node.name))
     if (node.type !== AST_NODE_TYPES.MemberExpression || node.object.type !== AST_NODE_TYPES.Identifier)
@@ -298,7 +301,7 @@ export const createClassifier = (
       only.name.name === 'value'
     return PROVIDER.test(name) || PROVIDER.test(importedName(variable)) || isValueOnly
   }
-  const classifyTag = (element: TSESTree.JSXOpeningElement): Verdict => {
+  const classifyTag = (element: TSESTree.JSXOpeningElement) => {
     const { name } = element
     if (name.type === AST_NODE_TYPES.JSXNamespacedName) return ALWAYS
     if (name.type === AST_NODE_TYPES.JSXIdentifier) {
@@ -306,11 +309,13 @@ export const createClassifier = (
       const variable = variableOf(element, name.name)
       return isProvider(element, name.name, variable) ? NEVER : ofTagBinding(variable)
     }
-    const tag = jsxTagRoot(name)
     // One level into a namespace is a module export; dotting into anything else (`Ctx.Provider`, `motion.div`) reads into what may be a client reference, which a server component cannot do.
-    return tag?.depth === 1 && isNamespaceImport(variableOf(element, tag.root.name)) ? ALWAYS : NEVER
+    return name.object.type === AST_NODE_TYPES.JSXIdentifier &&
+      isNamespaceImport(variableOf(element, name.object.name))
+      ? ALWAYS
+      : NEVER
   }
-  const positionOf = (element: TSESTree.JSXOpeningElement): Position =>
+  const positionOf = (element: TSESTree.JSXOpeningElement) =>
     element.name.type === AST_NODE_TYPES.JSXIdentifier && INTRINSIC.test(element.name.name)
       ? 'text'
       : 'prop'
