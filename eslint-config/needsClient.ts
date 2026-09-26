@@ -3,6 +3,7 @@ import globals from 'globals'
 import { calleeName } from './calleeName'
 import { childNodes } from './childNodes'
 import { createClassifier } from './createClassifier'
+import { everyDef } from './everyDef'
 import { importedName } from './importedName'
 import { isComponentInit } from './isComponentInit'
 import { isComponentName } from './isComponentName'
@@ -75,27 +76,26 @@ const analyze = (sourceCode: Readonly<TSESLint.SourceCode>) => {
   const isData = (node: TSESTree.Node) => classify(node, 'prop').data
   const isComponentBinding = (identifier: TSESTree.Identifier) => {
     const variable = variableOf(identifier, identifier.name)
-    return (
-      !!variable &&
-      variable.defs.length > 0 &&
-      variable.defs.every(
-        (def) =>
-          def.type === DefinitionType.Type ||
-          (isComponentName(variable.name) &&
-            (def.type === DefinitionType.FunctionName ||
-              (def.type === DefinitionType.Variable && isComponentInit(def.node.init)))),
-      )
+    const isNamedLikeComponent = isComponentName(variable?.name)
+    return everyDef(
+      variable,
+
+      (def) =>
+        def.type === DefinitionType.Type ||
+        (isNamedLikeComponent &&
+          (def.type === DefinitionType.FunctionName ||
+            (def.type === DefinitionType.Variable && isComponentInit(def.node.init)))),
     )
   }
   // A read off a local binding, with every computed key along the chain inert too; a read off an import may reach into a client reference.
-  const isLocalRead = (node: TSESTree.MemberExpression): boolean => {
+  const isLocalRead = (node: TSESTree.MemberExpression) => {
     let root: TSESTree.Node = node
     while (root.type === AST_NODE_TYPES.MemberExpression) {
       if (root.computed && !isInert(root.property)) return false
       root = root.object
     }
     const variable = root.type === AST_NODE_TYPES.Identifier ? variableOf(root, root.name) : null
-    return !!variable?.defs.length && variable.defs.every((def) => def.type === DefinitionType.Variable)
+    return everyDef(variable, (def) => def.type === DefinitionType.Variable)
   }
   const isPlainCallee = (callee: TSESTree.Node): boolean =>
     callee.type === AST_NODE_TYPES.Identifier ||
@@ -109,7 +109,7 @@ const analyze = (sourceCode: Readonly<TSESLint.SourceCode>) => {
     if (node.type === AST_NODE_TYPES.CallExpression)
       return (
         isPlainCallee(node.callee) &&
-        (PURE_CALLS.has(calleeName(node.callee) ?? '') || isComponentWrapperCall(node)) &&
+        (PURE_CALLS.has(calleeName(node.callee)) || isComponentWrapperCall(node)) &&
         node.arguments.every(isInert)
       )
     return INERT_TYPES.has(node.type) && childNodes(node, sourceCode.visitorKeys).every(isInert)
@@ -177,7 +177,7 @@ const analyze = (sourceCode: Readonly<TSESLint.SourceCode>) => {
   }
   // Both names a call goes by, local and imported (`import { useState as state }`, `import { store as useStore }`), since either can mark a client API.
   const callNames = (callee: TSESTree.Node) => {
-    if (callee.type !== AST_NODE_TYPES.Identifier) return [calleeName(callee) ?? '']
+    if (callee.type !== AST_NODE_TYPES.Identifier) return [calleeName(callee)]
     return [callee.name, importedName(variableOf(callee, callee.name))]
   }
   const needsNode = (node: TSESTree.Node) => {
@@ -186,7 +186,7 @@ const analyze = (sourceCode: Readonly<TSESLint.SourceCode>) => {
         return callNames(node.callee).some((name) => HOOK.test(name) || CLIENT_CALLS.has(name))
       case AST_NODE_TYPES.ClassDeclaration:
       case AST_NODE_TYPES.ClassExpression:
-        return !!node.superClass && CLASS_BASES.has(calleeName(node.superClass) ?? '')
+        return !!node.superClass && CLASS_BASES.has(calleeName(node.superClass))
       case AST_NODE_TYPES.MemberExpression:
         return (
           node.object.type === AST_NODE_TYPES.Identifier &&
