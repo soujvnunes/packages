@@ -1,5 +1,6 @@
+import { useLayoutEffect } from 'react'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest'
 import { ErrorBoundary, type ErrorBoundaryFallbackProps } from './ErrorBoundary'
 const Fallback = ({ error, reset }: ErrorBoundaryFallbackProps) => (
   <button onClick={reset}>{error.message}</button>
@@ -68,6 +69,121 @@ describe('ErrorBoundary', () => {
     )
     fireEvent.click(screen.getByText('Boom.'))
     expect(screen.getByText('recovered')).toBeDefined()
+  })
+  it.each([
+    ['null', null, 'null'],
+    ['undefined', undefined, 'undefined'],
+    ['an empty string', '', ''],
+    ['a string', 'plain string', 'plain string'],
+    ['an API error object', { message: 'Row not found', code: 'PGRST116' }, 'Row not found'],
+    ['a null-prototype object', Object.create(null) as unknown, 'A non-Error value was thrown'],
+    [
+      'an object whose toString throws',
+      {
+        toString: () => {
+          throw new Error('nope')
+        },
+      },
+      'A non-Error value was thrown',
+    ],
+    ['NaN', Number.NaN, 'NaN'],
+    ['a plain object tagged Error', { [Symbol.toStringTag]: 'Error', code: 'X' }, '[object Error]'],
+    [
+      'an object whose digest getter throws',
+      {
+        message: 'm',
+        get digest() {
+          throw new Error('digest getter')
+        },
+      },
+      'm',
+    ],
+  ])(
+    'wraps %s in one Error, with the value on cause, for both the Fallback and onError',
+    (_, thrown, message) => {
+      const onError = vi.fn<(error: Error) => void>()
+      const seen = vi.fn()
+      const Spy = ({ error }: ErrorBoundaryFallbackProps) => {
+        seen(error)
+        return <span>fallback</span>
+      }
+      const Thrower = () => {
+        throw thrown
+      }
+      render(
+        <ErrorBoundary Fallback={Spy} onError={onError}>
+          <Thrower />
+        </ErrorBoundary>,
+      )
+      const [error] = onError.mock.calls[0] ?? []
+      expect(screen.getByText('fallback')).toBeDefined()
+      expect(onError).toHaveBeenCalledOnce()
+      expect(error).toBeInstanceOf(Error)
+      expect(error?.message).toBe(message)
+      expect(error && Object.hasOwn(error, 'cause')).toBe(true)
+      expect(error?.cause).toBe(thrown)
+      expect(seen.mock.lastCall?.[0]).toBe(error)
+    },
+  )
+  it('passes an Error from another realm through untouched, digest included', () => {
+    const frame = document.body.appendChild(document.createElement('iframe'))
+    onTestFinished(() => frame.remove())
+    const realm = frame.contentWindow
+    const isErrorConstructor = (value: unknown): value is ErrorConstructor =>
+      typeof value === 'function'
+    const ForeignError = realm && 'Error' in realm ? realm.Error : undefined
+    if (!isErrorConstructor(ForeignError))
+      throw new Error('jsdom gave the iframe no Error constructor.')
+    const foreign = Object.assign(new ForeignError('Server error'), { digest: 'abc123' })
+    expect(foreign instanceof Error).toBe(false)
+    const onError = vi.fn()
+    const Thrower = () => {
+      throw foreign
+    }
+    render(
+      <ErrorBoundary
+        Fallback={({ error }) => <span>{`${error.message} ${error.digest ?? ''}`}</span>}
+        onError={onError}>
+        <Thrower />
+      </ErrorBoundary>,
+    )
+    expect(screen.getByText('Server error abc123')).toBeDefined()
+    expect(onError.mock.calls[0]?.[0]).toBe(foreign)
+  })
+  it.each(['NEXT_REDIRECT;replace;/login;307;', 'NEXT_HTTP_ERROR_FALLBACK;404', 'NEXT_NOT_FOUND'])(
+    "rethrows Next's %s navigation error for Next's own boundary, without the Fallback or onError",
+    (digest) => {
+      const navigation = Object.assign(new Error(digest), { digest })
+      const onError = vi.fn()
+      const Thrower = () => {
+        throw navigation
+      }
+      expect(() =>
+        render(
+          <ErrorBoundary Fallback={Fallback} onError={onError}>
+            <Thrower />
+          </ErrorBoundary>,
+        ),
+      ).toThrow(navigation)
+      expect(onError).not.toHaveBeenCalled()
+    },
+  )
+  it('reports each error caught in one commit once, in order, though state keeps only the last', () => {
+    const onError = vi.fn<(error: Error) => void>()
+    const Throws = ({ message }: { message: string }) => {
+      useLayoutEffect(() => {
+        throw new Error(message)
+      })
+      return null
+    }
+    render(
+      <ErrorBoundary Fallback={Fallback} onError={onError}>
+        <Throws message="A" />
+        <Throws message="B" />
+      </ErrorBoundary>,
+    )
+    expect(onError.mock.calls.map(([error]) => error.message)).toEqual(['A', 'B'])
+    expect(screen.getByText('B')).toBeDefined()
   })
   it("passes Next's digest through to the Fallback", () => {
     const digested = Object.assign(new Error('Server error'), { digest: 'abc123' })
