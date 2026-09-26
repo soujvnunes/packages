@@ -3,20 +3,17 @@ import { createClassifier } from './createClassifier'
 import { findUseClientDirective } from './findUseClientDirective'
 import { isComponentFunction } from './isComponentFunction'
 import { isFunctionAttribute } from './isFunctionAttribute'
+import { isFunctionNode } from './isFunctionNode'
 import { needsClient } from './needsClient'
 type Jsx = TSESTree.JSXElement | TSESTree.JSXFragment
 type Verdict = { isStatic: boolean; count: number }
 type Position = ReturnType<ReturnType<typeof createClassifier>['positionOf']>
-const FUNCTIONS = new Set<string>([
-  AST_NODE_TYPES.ArrowFunctionExpression,
-  AST_NODE_TYPES.FunctionExpression,
-  AST_NODE_TYPES.FunctionDeclaration,
-])
+const DISABLE_KEYWORDS = ['eslint-disable-next-line', 'eslint-disable-line', 'eslint-disable']
 const isJsx = (node: TSESTree.Node): node is Jsx =>
   node.type === AST_NODE_TYPES.JSXElement || node.type === AST_NODE_TYPES.JSXFragment
 const isRenderedByComponent = (node: TSESTree.Node) => {
   let current: TSESTree.Node | undefined = node.parent
-  while (current && !FUNCTIONS.has(current.type)) current = current.parent
+  while (current && !isFunctionNode(current)) current = current.parent
   return !current || isComponentFunction(current)
 }
 export const staticJsxInClient = ESLintUtils.RuleCreator.withoutDocs({
@@ -44,16 +41,24 @@ export const staticJsxInClient = ESLintUtils.RuleCreator.withoutDocs({
     const directive = findUseClientDirective(sourceCode.ast)
     if (!directive) return {}
     const { classify, classifyTag, positionOf } = createClassifier(sourceCode, true)
-    // A directive kept on purpose, with no-needless-use-client disabled on its line as that rule's message suggests.
-    const isDirectiveKept = sourceCode
-      .getAllComments()
-      .some(
-        (comment) =>
-          comment.value.includes('eslint-disable') &&
-          comment.value.includes('no-needless-use-client') &&
-          (comment.loc.end.line === directive.loc.start.line - 1 ||
-            comment.loc.start.line === directive.loc.start.line),
+    const isDirectiveKept = sourceCode.getAllComments().some((comment) => {
+      const text = comment.value.trim()
+      const keyword = DISABLE_KEYWORDS.find(
+        (candidate) => text === candidate || text.startsWith(`${candidate} `),
       )
+      if (!keyword) return false
+      const list = text.slice(keyword.length)
+      const rules =
+        list
+          .split('--')[0]
+          ?.split(/[\s,]+/u)
+          .filter(Boolean) ?? []
+      const covers = rules.length === 0 || rules.some((rule) => rule.endsWith('no-needless-use-client'))
+      const line = directive.loc.start.line
+      if (keyword === 'eslint-disable-line') return covers && comment.loc.start.line === line
+      if (keyword === 'eslint-disable-next-line') return covers && comment.loc.end.line === line - 1
+      return covers && comment.range[1] <= directive.range[0]
+    })
     const isStatic = (node: TSESTree.Node, position: Position) => {
       const verdict = classify(node, position)
       return verdict.data && verdict.stable

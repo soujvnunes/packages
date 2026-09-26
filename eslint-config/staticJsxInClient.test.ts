@@ -136,8 +136,32 @@ const MORE_PASSES: [string, string][] = [
     'a component next/dynamic makes',
     "'use client'\nimport dynamic from 'next/dynamic'\nconst Map = dynamic(() => import('./map'), { ssr: false })\nexport const A = () => <section><Map /><h2>Title</h2><p>Body</p></section>",
   ],
+  [
+    'a comment that mentions both names without disabling anything',
+    "// see the eslint-disable docs about no-needless-use-client\n'use client'\nexport const Card = () => <section><h2>T</h2><p>a</p><p>b</p></section>",
+  ],
 ]
 const REPORTS: [string, string, number[]][] = [
+  [
+    'a directive kept by a file-wide disable above a header comment',
+    "/* eslint-disable soujvnunes/no-needless-use-client */\n// A boundary for a dependency.\n'use client'\nexport const Card = () => <section><h2>T</h2><p>a</p><p>b</p></section>",
+    [4],
+  ],
+  [
+    'a directive kept by a same-line disable',
+    "'use client' // eslint-disable-line soujvnunes/no-needless-use-client\nexport const Card = () => <section><h2>T</h2><p>a</p><p>b</p></section>",
+    [4],
+  ],
+  [
+    'a dictionary key named like a string method',
+    "'use client'\nconst LABELS = { search: 'Buscar' }\nexport const A = ({ go }) => <section onClick={go}><div><h2>{LABELS.search}</h2><p>a</p></div></section>",
+    [3],
+  ],
+  [
+    'a self-closing component with a lone value inside a static block',
+    "'use client'\nimport { Badge } from './ui'\nexport const A = ({ go }) => <section onClick={go}><div><Badge value=\"New\" /><p>a</p></div></section>",
+    [3],
+  ],
   [
     'a directive kept by disabling the directive rule on its line',
     "// eslint-disable-next-line soujvnunes/no-needless-use-client -- a boundary for a dependency\n'use client'\nexport const Card = () => <section><h2>T</h2><p>a</p><p>b</p></section>",
