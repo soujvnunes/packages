@@ -1,9 +1,10 @@
 import { ASTUtils, AST_NODE_TYPES, TSESLint, type TSESTree } from '@typescript-eslint/utils'
+import { importedName } from './importedName'
 import { isComponentFunction } from './isComponentFunction'
 import { isComponentInit } from './isComponentInit'
 import { isNamespaceImport } from './isNamespaceImport'
 import { jsxTagRoot } from './jsxTagRoot'
-import { patternDefault } from './patternDefault'
+import { patternDefaults } from './patternDefaults'
 type Variable = TSESLint.Scope.Variable
 type Position = 'text' | 'prop'
 type Verdict = { data: boolean; stable: boolean }
@@ -11,6 +12,21 @@ const { DefinitionType, ScopeType } = TSESLint.Scope
 const INTRINSIC = /^[a-z]/u
 // A React 19 context renders as its own provider (`<SessionContext value>`), which a server component can neither create nor provide.
 const PROVIDER = /(?:Context|Ctx|Provider)$/u
+const MUTATING_METHODS = new Set([
+  'push',
+  'pop',
+  'shift',
+  'unshift',
+  'splice',
+  'sort',
+  'reverse',
+  'fill',
+  'copyWithin',
+  'set',
+  'add',
+  'delete',
+  'clear',
+])
 const MODULE_SCOPES = new Set<string>([ScopeType.module, ScopeType.global])
 const LITERAL_INITS = new Set<string>([
   AST_NODE_TYPES.ArrayExpression,
@@ -38,7 +54,7 @@ const keyName = (key: TSESTree.Node, computed: boolean) => {
   if (key.type === AST_NODE_TYPES.Literal && typeof key.value === 'string') return key.value
   return undefined
 }
-// A write through a member (`OPTIONS.format = fn`, `delete OPTIONS.format`), or the object handed to a call that may write it.
+// A write through a member (`OPTIONS.format = fn`, `delete OPTIONS.format`, `FORMATS.push(fn)`), or the object handed to a call that may write it.
 const isMutated = (variable: Variable) =>
   variable.references.some(({ identifier }) => {
     let current: TSESTree.Node = identifier
@@ -50,10 +66,17 @@ const isMutated = (variable: Variable) =>
     const { parent } = current
     if (current === identifier)
       return parent?.type === AST_NODE_TYPES.CallExpression && parent.callee !== current
+    const method =
+      current.type === AST_NODE_TYPES.MemberExpression
+        ? keyName(current.property, current.computed)
+        : undefined
     return (
       (parent?.type === AST_NODE_TYPES.AssignmentExpression && parent.left === current) ||
       parent?.type === AST_NODE_TYPES.UpdateExpression ||
-      (parent?.type === AST_NODE_TYPES.UnaryExpression && parent.operator === 'delete')
+      (parent?.type === AST_NODE_TYPES.UnaryExpression && parent.operator === 'delete') ||
+      (parent?.type === AST_NODE_TYPES.CallExpression &&
+        parent.callee === current &&
+        MUTATING_METHODS.has(method ?? ''))
     )
   })
 /** Classifies JSX values and tags for both client-boundary rules: `data` when a server parent could supply it, `stable` when the server would hold the same one. */
@@ -68,10 +91,8 @@ export const createClassifier = (
   const resolving = new Set<Variable>()
   let cycled = false
   // A default is created by the module or component itself, so a binding that has one is data only when its default is.
-  const withDefault = (name: TSESTree.Node, verdict: Verdict) => {
-    const fallback = patternDefault(name)
-    return fallback ? both(verdict, classify(fallback, 'prop')) : verdict
-  }
+  const withDefault = (name: TSESTree.Node, verdict: Verdict) =>
+    all([verdict, ...patternDefaults(name).map((fallback) => classify(fallback, 'prop'))])
   const isReassigned = (variable: Variable) =>
     variable.references.some((reference) => reference.isWrite() && !reference.init)
   const ofBinding = (variable: Variable): Verdict => {
@@ -91,7 +112,7 @@ export const createClassifier = (
         if (def.type === DefinitionType.FunctionName || def.type === DefinitionType.ClassName)
           return { data: false, stable: true }
         if (def.type !== DefinitionType.Variable || !def.node.init) return NEVER
-        if (def.parent.kind !== 'const' && isReassigned(variable)) return NEVER
+        if ((def.parent.kind !== 'const' && isReassigned(variable)) || isMutated(variable)) return NEVER
         const init = classify(def.node.init, 'prop')
         return withDefault(def.name, {
           data: init.data,
@@ -120,29 +141,39 @@ export const createClassifier = (
     if (importOf(variable)) return ofImport(position, false)
     return ofBinding(variable)
   }
-  // The value a key of an object literal ends with: the last property of that name, joined with every spread or computed key after it, since either may replace it; an unknown key joins them all.
+  const properties = new Map<TSESTree.ObjectExpression, Map<string, Verdict>>()
+  // The value a key of an object literal ends with: the last property of that name, joined with every spread or computed key after it, since either may replace it; a key only a spread provides takes the spreads, and an unknown key joins them all.
   const ofProperty = (
     object: TSESTree.ObjectExpression,
     name: string | undefined,
     position: Position,
   ) => {
+    const memoKey = `${position} ${name ?? ''}`
+    const cached = properties.get(object)?.get(memoKey)
+    if (cached) return cached
     let verdict: Verdict | null = null
-    for (const property of object.properties) {
+    for (const property of [...object.properties].reverse()) {
       const isProperty = property.type === AST_NODE_TYPES.Property
       const propertyName = isProperty ? keyName(property.key, property.computed) : undefined
-      const value = classify(isProperty ? property.value : property.argument, position)
-      if (name !== undefined && propertyName === name) verdict = value
-      else if (name === undefined || propertyName === undefined)
+      const isMatch = name !== undefined && propertyName === name
+      if (isMatch || name === undefined || propertyName === undefined) {
+        const value = classify(isProperty ? property.value : property.argument, position)
         verdict = verdict ? both(verdict, value) : value
+        if (isMatch) break
+      }
     }
-    return verdict ?? NEVER
+    const result = verdict ?? NEVER
+    if (resolving.size === 0)
+      properties.set(object, (properties.get(object) ?? new Map()).set(memoKey, result))
+    return result
   }
   const ofMember = (node: TSESTree.MemberExpression, position: Position): Verdict => {
     const name = keyName(node.property, node.computed)
-    if (name !== undefined && METHOD_NAMES.has(name)) return NEVER
+    // A key named like a string or array method is a function unless a literal the rule can read says otherwise.
+    const isMethod = name !== undefined && METHOD_NAMES.has(name)
     const key = node.computed ? classify(node.property, position) : ALWAYS
     if (node.object.type !== AST_NODE_TYPES.Identifier)
-      return both(classify(node.object, position), key)
+      return isMethod ? NEVER : both(classify(node.object, position), key)
     const variable = variableOf(node.object, node.object.name)
     if (importOf(variable)) return both(ofImport(position, !isNamespaceImport(variable)), key)
     const [def] = variable?.defs ?? []
@@ -152,7 +183,7 @@ export const createClassifier = (
       !def.node.init ||
       def.node.id.type !== AST_NODE_TYPES.Identifier
     )
-      return both(ofIdentifier(node.object, position), key)
+      return isMethod ? NEVER : both(ofIdentifier(node.object, position), key)
     if ((def.parent.kind !== 'const' && isReassigned(variable)) || isMutated(variable)) return NEVER
     const binding = ofBinding(variable)
     const { init } = def.node
@@ -163,7 +194,7 @@ export const createClassifier = (
     if (init.type === AST_NODE_TYPES.ArrayExpression && node.computed) return both(binding, key)
     if (LITERAL_INITS.has(init.type))
       return name === 'length' ? { data: true, stable: binding.stable } : NEVER
-    return both(binding, key)
+    return isMethod ? NEVER : both(binding, key)
   }
   const classify = (node: TSESTree.Node | null, position: Position): Verdict => {
     if (!node) return NEVER
@@ -235,37 +266,33 @@ export const createClassifier = (
       return NEVER
     return isNamespaceImport(variableOf(node.object, node.object.name)) ? ALWAYS : NEVER
   }
+  const resolvingTags = new Set<Variable>()
   const ofTagBinding = (variable: Variable | null): Verdict => {
-    if (!variable || variable.defs.length === 0) return NEVER
+    if (!variable || variable.defs.length === 0 || resolvingTags.has(variable)) return NEVER
+    resolvingTags.add(variable)
     const isModuleLevel = MODULE_SCOPES.has(variable.scope.type)
-    return all(
+    const verdict = all(
       variable.defs.map((def) => {
         if (def.type === DefinitionType.ImportBinding) return ALWAYS
         if (def.type === DefinitionType.FunctionName) return isModuleLevel ? ALWAYS : NEVER
-        if (def.type === DefinitionType.Parameter) {
-          if (!isComponentFunction(def.node)) return NEVER
-          const fallback = patternDefault(def.name)
-          return fallback ? both(PER_RENDER, ofTagExpression(fallback)) : PER_RENDER
-        }
+        if (def.type === DefinitionType.Parameter)
+          return isComponentFunction(def.node)
+            ? all([PER_RENDER, ...patternDefaults(def.name).map(ofTagExpression)])
+            : NEVER
         if (def.type !== DefinitionType.Variable) return NEVER
         return isModuleLevel && def.parent.kind === 'const' && isComponentInit(def.node.init)
           ? ALWAYS
           : NEVER
       }),
     )
+    resolvingTags.delete(variable)
+    return verdict
   }
-  const importedName = (variable: Variable | null) => {
-    const [def] = variable?.defs ?? []
-    if (def?.type !== DefinitionType.ImportBinding || def.node.type !== AST_NODE_TYPES.ImportSpecifier)
-      return ''
-    const { imported } = def.node
-    return imported.type === AST_NODE_TYPES.Identifier ? imported.name : imported.value
-  }
-  // The provider shape: a name that reads as a context under any alias, or one lone `value` attribute.
   const isProvider = (element: TSESTree.JSXOpeningElement, name: string, variable: Variable | null) => {
     const [only, ...rest] = element.attributes
     const isValueOnly =
       rest.length === 0 &&
+      !element.selfClosing &&
       only?.type === AST_NODE_TYPES.JSXAttribute &&
       only.name.type === AST_NODE_TYPES.JSXIdentifier &&
       only.name.name === 'value'
@@ -287,5 +314,5 @@ export const createClassifier = (
     element.name.type === AST_NODE_TYPES.JSXIdentifier && INTRINSIC.test(element.name.name)
       ? 'text'
       : 'prop'
-  return { classify, classifyTag, positionOf, variableOf, importedName }
+  return { classify, classifyTag, positionOf, variableOf }
 }
