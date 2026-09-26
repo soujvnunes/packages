@@ -230,8 +230,3 @@ export const oneLineComments: Rule.RuleModule = {
     }
   },
 }
-export const oneLineCommentsPlugin = {
-  // No `version`: it feeds ESLint's cache key, and a hardcoded one drifts from package.json and serves stale cached results after a behaviour change.
-  meta: { name: '@soujvnunes/eslint-config' },
-  rules: { 'one-line-comments': oneLineComments },
-}
