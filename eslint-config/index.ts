@@ -13,8 +13,9 @@ import security from 'eslint-plugin-security'
 import unusedImports from 'eslint-plugin-unused-imports'
 import globals from 'globals'
 import tseslint from 'typescript-eslint'
-import { oneLineCommentsPlugin } from './oneLineComments'
-export { oneLineComments, oneLineCommentsPlugin } from './oneLineComments'
+import { soujvnunesPlugin } from './plugin'
+export { oneLineComments } from './oneLineComments'
+export { soujvnunesPlugin } from './plugin'
 const DEFAULT_IGNORES: string[] = [
   '**/node_modules/**',
   '**/.next/**',
@@ -252,8 +253,19 @@ const buildConfig = ({
   // Its own block, with a wider glob: the main block above is `**/*.{js,jsx,ts,tsx}`, so a rule placed there never reaches a `.mjs`, `.cjs`, `.mts` or `.cts` file. It carries its own `plugins` and `linterOptions` for the same reason, since neither reaches those files either.
   const oneLineCommentsOverride: Linter.Config = {
     files: ['**/*.{js,jsx,mjs,cjs,ts,tsx,mts,cts}'],
-    plugins: { soujvnunes: oneLineCommentsPlugin },
+    plugins: { soujvnunes: soujvnunesPlugin },
     rules: { 'soujvnunes/one-line-comments': 'error' },
+  }
+  // Next only, and JSX files only: both rules read a `'use client'` module, which only a React Server Components app has.
+  const clientBoundaryOverride: Linter.Config = {
+    files: ['**/*.{jsx,tsx}'],
+    // Next requires these two conventions to be client components and hands them functions, so the directive is never needless and no server parent exists to take their markup.
+    ignores: ['**/{error,global-error}.{jsx,tsx}'],
+    plugins: { soujvnunes: soujvnunesPlugin },
+    rules: {
+      'soujvnunes/no-needless-use-client': 'error',
+      'soujvnunes/no-static-jsx-in-client': 'error',
+    },
   }
   // Node scripts own stdout, so printing IS their job.
   const scriptsOverride: Linter.Config = {
@@ -286,7 +298,7 @@ const buildConfig = ({
     prettier,
     oneLineCommentsOverride,
     rootConfigOverride,
-    ...(next ? [nextFileConventionsOverride] : []),
+    ...(next ? [nextFileConventionsOverride, clientBoundaryOverride] : []),
     scriptsOverride,
     ...extend,
   ]
