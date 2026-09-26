@@ -290,6 +290,58 @@ const KEEPS: [string, string][] = [
     'an array method read off a nested constant',
     "'use client'\nimport { Table } from './ui'\nconst DATA = { rows: [] }\nexport const A = () => <Table render={DATA.rows.map} />",
   ],
+  [
+    'a received tag defaulting to itself, without overflowing the stack',
+    "'use client'\nexport const Box = ({ as: Tag = Tag }) => <Tag />",
+  ],
+  [
+    'two received tags defaulting to each other',
+    "'use client'\nexport const Box = ({ as: Tag = Other, other: Other = Tag }) => <Tag />",
+  ],
+  [
+    'a call in a computed key partway along a module-level read',
+    "'use client'\nimport { detect } from './detect'\nconst DICT = { pt: { title: 'Título' } }\nconst TITLE = DICT[detect()].title\nexport const A = () => <p>{TITLE}</p>",
+  ],
+  [
+    'a call in the callee of a module-level cva',
+    "'use client'\nimport { setup } from './setup'\nconst button = setup().cva({ base: 'x' })\nexport const A = () => <button className={button()} />",
+  ],
+  [
+    'a mutated object handed over whole',
+    "'use client'\nimport { Chart } from './ui'\nconst OPTIONS = { format: 'currency' }\nexport const A = ({ percent }) => { if (percent) OPTIONS.format = (v) => v; return <Chart options={OPTIONS} /> }",
+  ],
+  [
+    'an object Object.assign writes',
+    "'use client'\nimport { Chart } from './ui'\nconst OPTIONS = { format: 'currency' }\nexport const A = () => { Object.assign(OPTIONS, { format: (v) => v }); return <Chart {...OPTIONS} /> }",
+  ],
+  [
+    'a default on an enclosing pattern',
+    "'use client'\nimport { Chart } from './ui'\nexport const A = ({ options: { format } = { format: (v) => v } }) => <Chart format={format} />",
+  ],
+  [
+    'an array a method call writes',
+    "'use client'\nimport { Chart } from './ui'\nconst FORMATS = []\nexport const A = () => { FORMATS.push((v) => v); return <Chart format={FORMATS[0]} /> }",
+  ],
+  [
+    'a local hook name bound to a non-hook import',
+    "'use client'\nimport { store as useStore } from './store'\nexport const A = () => { const value = useStore(); return <p>{value}</p> }",
+  ],
+  [
+    'flushSync',
+    "'use client'\nimport { flushSync } from 'react-dom'\nexport const A = ({ go }) => <p>{flushSync(go)}</p>",
+  ],
+  [
+    'a key deleted from its object',
+    "'use client'\nimport { Chart } from './ui'\nconst OPTIONS = { format: 'currency' }\nexport const A = () => { delete OPTIONS.format; return <Chart format={OPTIONS.format} /> }",
+  ],
+  [
+    'a key incremented in place',
+    "'use client'\nimport { Chart } from './ui'\nconst COUNTS = { a: 1 }\nexport const A = () => { COUNTS.a++; return <Chart count={COUNTS.a} /> }",
+  ],
+  [
+    'an object handed to a call that may write it',
+    "'use client'\nimport { Chart } from './ui'\nimport { patch } from './patch'\nconst OPTIONS = { format: 'currency' }\nexport const A = () => { patch(OPTIONS); return <Chart format={OPTIONS.format} /> }",
+  ],
 ]
 const REPORTS: [string, string][] = [
   ['a static component', "'use client'\nexport const Hero = () => <h1>Hi</h1>"],
@@ -371,6 +423,32 @@ const REPORTS: [string, string][] = [
     'a received tag with a tag-name default',
     "'use client'\nexport const Box = ({ as: Tag = 'div', children }) => <Tag>{children}</Tag>",
   ],
+  [
+    'a key a spread before it cannot replace',
+    "'use client'\nimport { Chart } from './ui'\nimport { base } from './base'\nconst OPTIONS = { ...base, format: 'currency' }\nexport const A = () => <Chart format={OPTIONS.format} />",
+  ],
+  [
+    'a received tag defaulting to a namespace member',
+    "'use client'\nimport * as UI from './ui'\nexport const Box = ({ as: Tag = UI.Card, children }) => <Tag>{children}</Tag>",
+  ],
+  [
+    'a received tag defaulting to an imported component',
+    "'use client'\nimport { Card } from './ui'\nexport const Box = ({ as: Tag = Card, children }) => <Tag>{children}</Tag>",
+  ],
+  [
+    'a dictionary key named like a string method',
+    "'use client'\nimport { Input } from './ui'\nconst LABELS = { search: 'Buscar' }\nexport const A = () => <Input placeholder={LABELS.search} />",
+  ],
+  [
+    'a self-closing component with a lone value, which cannot be a provider',
+    "'use client'\nimport { Progress } from './ui'\nexport const A = () => <Progress value={50} />",
+  ],
+]
+const TYPESCRIPT_KEEPS: [string, string][] = [
+  [
+    'an enum member built by a call',
+    "'use client'\nimport { init } from './init'\nenum E { A = init() }\nexport const A = () => <p>Hi</p>",
+  ],
 ]
 const TYPESCRIPT_REPORTS: [string, string][] = [
   ['an enum', "'use client'\nenum Size { Small }\nexport const A = () => <p>Hi</p>"],
@@ -408,6 +486,9 @@ describe.each(SETUPS)('no-needless-use-client under %s', (_setup, setup) => {
   })
 })
 describe.each(TYPESCRIPT)('no-needless-use-client on TypeScript syntax under %s', (_setup, setup) => {
+  it.each(TYPESCRIPT_KEEPS)('keeps the directive for %s', (_case, code) => {
+    expect(lint(setup, code)).toEqual([])
+  })
   it.each(TYPESCRIPT_REPORTS)('reports %s', (_case, code) => {
     expect(lint(setup, code)).toEqual(['needless'])
   })
