@@ -123,6 +123,64 @@ const KEEPS: [string, string][] = [
   ['window', "'use client'\nexport const Width = () => <p>{window.innerWidth}</p>"],
   ['location', "'use client'\nexport const Path = () => <p>{location.pathname}</p>"],
   ['localStorage', "'use client'\nexport const Saved = () => <p>{localStorage.getItem('k')}</p>"],
+  [
+    'a defaulted function prop',
+    "'use client'\nimport { Chart } from 'chart'\nexport const Stats = ({ format = (v) => `${v}%` }) => <Chart format={format} />",
+  ],
+  [
+    'a defaulted imported prop',
+    "'use client'\nimport { ChevronIcon } from './icons'\nexport const A = ({ icon = ChevronIcon }) => <Button icon={icon} />",
+  ],
+  [
+    'a callback argument that holds an imported function',
+    "'use client'\nimport { formatPrice } from './format'\nconst COLUMNS = [{ key: 'price', format: formatPrice }]\nexport const A = () => <ul>{COLUMNS.map((column) => <Cell key={column.key} format={column.format} />)}</ul>",
+  ],
+  [
+    'a function child behind a member',
+    "'use client'\nconst renderers = { row: (item) => <li>{item}</li> }\nexport const A = () => <List>{renderers.row}</List>",
+  ],
+  [
+    'a function child behind &&',
+    "'use client'\nconst renderRow = (item) => <li>{item}</li>\nexport const A = ({ open }) => <List>{open && renderRow}</List>",
+  ],
+  [
+    'an imported function child behind ?:',
+    "'use client'\nimport { renderRow } from './rows'\nexport const A = ({ open }) => <List>{open ? renderRow : null}</List>",
+  ],
+  [
+    'a context rendered as its own provider',
+    "'use client'\nimport { SessionContext } from './session-context'\nexport const SessionProvider = ({ session, children }) => <SessionContext value={session}>{children}</SessionContext>",
+  ],
+  ['client-only', "'use client'\nimport 'client-only'\nexport const A = () => <p>Hi</p>"],
+  [
+    'a module-level side effect',
+    "'use client'\nimport { gsap } from 'gsap'\ngsap.registerPlugin()\nexport const A = () => <p>Hi</p>",
+  ],
+  [
+    'a default-exported helper',
+    "'use client'\nexport default function formatPrice(value) { return value }",
+  ],
+  ['an anonymous default-exported function', "'use client'\nexport default (value) => value"],
+  [
+    'a browser global read through globalThis',
+    "'use client'\nexport const Saved = () => <p>{globalThis.localStorage.getItem('k')}</p>",
+  ],
+  [
+    'a callback ref on a tag',
+    "'use client'\nexport const A = () => <input ref={(node) => node?.focus()} />",
+  ],
+  [
+    'an imported form action',
+    "'use client'\nimport { save } from './save'\nexport const A = () => <form action={save} />",
+  ],
+  [
+    'a namespace member handed to a component',
+    "'use client'\nimport * as fmt from './format'\nexport const A = () => <Chart format={fmt.price} />",
+  ],
+  [
+    'a read through a named import handed to a component',
+    "'use client'\nimport { copy } from './copy'\nexport const A = () => <Input placeholder={copy.email} />",
+  ],
 ]
 const REPORTS: [string, string][] = [
   ['a static component', "'use client'\nexport const Hero = () => <h1>Hi</h1>"],
@@ -155,11 +213,27 @@ const REPORTS: [string, string][] = [
     "'use client'\nconst Hero = () => <h1>Hi</h1>\nexport { Hero }",
   ],
   [
+    'imports read in a tag, where only data can go',
+    "'use client'\nimport { copy } from './copy'\nimport logo from './logo.svg'\nexport const Hero = () => <h1 title={copy.title}><img src={logo} alt=\"\" />{copy.heading}</h1>",
+  ],
+  [
+    'a named namespace import from radix-ui',
+    "'use client'\nimport { Label as LabelPrimitive } from 'radix-ui'\nimport { cn } from './cn'\nexport const Label = ({ className, ...props }) => <LabelPrimitive.Root className={cn('text-sm', className)} {...props} />",
+  ],
+  [
     'a default-exported component',
     "'use client'\nexport default function Page() { return <h1>Hi</h1> }",
   ],
 ]
 const TYPESCRIPT_REPORTS: [string, string][] = [
+  [
+    'a DOM type named only in a type position',
+    "'use client'\nexport const Card = (props: React.HTMLAttributes<HTMLDivElement>) => <div {...props} />",
+  ],
+  [
+    'a forwardRef typed with a DOM element',
+    "'use client'\nimport { forwardRef } from 'react'\nexport const Input = forwardRef<HTMLInputElement, { id: string }>((props, ref) => <input ref={ref} {...props} />)",
+  ],
   [
     'a type-only re-export next to a static component',
     "'use client'\nexport type { Props } from './types'\nexport const Hero = () => <h1>Hi</h1>",
