@@ -36,9 +36,7 @@ describe('ErrorBoundary', () => {
   it('calls onError with the error and the component stack', () => {
     const onError = vi.fn()
     render(
-      <ErrorBoundary
-        Fallback={Fallback}
-        onError={onError}>
+      <ErrorBoundary Fallback={Fallback} onError={onError}>
         <Boom />
       </ErrorBoundary>,
     )

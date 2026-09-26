@@ -80,12 +80,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Que
   if (!matchesQuery(query, SCHEMA)) notFound()
 
   // query.action is 'review' | 'export' | undefined, query.export is 'csv' | 'pdf' | undefined
-  return (
-    <Report
-      action={query.action}
-      format={query.export}
-    />
-  )
+  return <Report action={query.action} format={query.export} />
 }
 
 // ?action=export&export=csv  valid
