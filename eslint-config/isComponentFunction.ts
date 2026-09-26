@@ -1,15 +1,11 @@
 import { AST_NODE_TYPES, type TSESTree } from '@typescript-eslint/utils'
 import { isComponentName } from './isComponentName'
-import { isComponentWrapperCall } from './isComponentWrapperCall'
+import { isComponentWrapper } from './isComponentWrapper'
 const MODULE_LEVEL = new Set<string>([
   AST_NODE_TYPES.Program,
   AST_NODE_TYPES.ExportNamedDeclaration,
   AST_NODE_TYPES.ExportDefaultDeclaration,
 ])
-const isWrapper = (node: TSESTree.Node) =>
-  isComponentWrapperCall(node) ||
-  node.type === AST_NODE_TYPES.TSAsExpression ||
-  node.type === AST_NODE_TYPES.TSSatisfiesExpression
 /** Whether a function is a component React renders: declared at module level under a PascalCase name or as the default export, through any `memo`, `forwardRef`, `as` or `satisfies` around it. */
 export const isComponentFunction = (node: TSESTree.Node) => {
   if (node.type === AST_NODE_TYPES.FunctionDeclaration)
@@ -23,7 +19,7 @@ export const isComponentFunction = (node: TSESTree.Node) => {
   )
     return false
   let holder: TSESTree.Node = node.parent
-  while (isWrapper(holder) && holder.parent) holder = holder.parent
+  while (isComponentWrapper(holder) && holder.parent) holder = holder.parent
   if (holder.type === AST_NODE_TYPES.ExportDefaultDeclaration) return true
   return (
     holder.type === AST_NODE_TYPES.VariableDeclarator &&
