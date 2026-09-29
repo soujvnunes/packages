@@ -48,7 +48,42 @@ const DOCUMENTED = new Set([
 const BOUNDARIES = new Set(['Program', 'BlockStatement', 'StaticBlock', 'TSModuleBlock'])
 const MEMBER_OPENERS = new Set(['{', ';', ','])
 const EM_DASH = String.fromCodePoint(0x2014)
-type Walked = NonNullable<Enclosing> & { body?: unknown; declare?: boolean; kind?: string }
+type Named = { type: string; name?: string } | null | undefined
+type Walked = NonNullable<Enclosing> & {
+  body?: unknown
+  declare?: boolean
+  kind?: string
+  id?: Named
+  declarations?: { id: Named }[]
+}
+type Statement = {
+  type: string
+  source?: unknown
+  specifiers?: { local?: Named }[]
+  declaration?: Named
+  expression?: Named
+}
+const DEFAULT_EXPORTS = new Set(['ExportDefaultDeclaration', 'TSExportAssignment'])
+const identifierName = (node: Named) => (node?.type === 'Identifier' ? node.name : undefined)
+const deferredExports = (body: Statement[]) => {
+  const names = new Set<string>()
+  const add = (node: Named) => {
+    const name = identifierName(node)
+    if (name) names.add(name)
+  }
+  for (const statement of body) {
+    if (statement.type === 'ExportNamedDeclaration' && !statement.source) {
+      for (const { local } of statement.specifiers ?? []) add(local)
+    }
+    if (DEFAULT_EXPORTS.has(statement.type)) add(statement.declaration ?? statement.expression)
+  }
+  return names
+}
+const isDeferred = (statement: Walked, deferred: Set<string>) =>
+  [statement.id, ...(statement.declarations ?? []).map(({ id }) => id)].some((id) => {
+    const name = identifierName(id)
+    return !!name && deferred.has(name)
+  })
 const holdsTag = (comment: Comment) => /(?:^|\s)@\w/u.test(comment.value)
 const isAmbient = (block: Walked) => {
   let node: Walked | undefined = block.parent ?? undefined
@@ -60,12 +95,13 @@ const isAmbient = (block: Walked) => {
 }
 const isBoundary = (node: Walked, child: Walked) =>
   BOUNDARIES.has(node.type) || (node.type === 'ArrowFunctionExpression' && node.body === child)
-const reachesExport = (start: Walked) => {
+const reachesExport = (start: Walked, deferred: Set<string>) => {
   let child = start
   let node: Walked | undefined = start.parent ?? undefined
   while (node) {
     if (EXPORTS.has(node.type)) return true
     if (node.type === 'TSModuleBlock' && isAmbient(node)) return true
+    if (node.type === 'Program') return isDeferred(child, deferred)
     if (isBoundary(node, child)) return false
     child = node
     node = node.parent ?? undefined
@@ -77,6 +113,7 @@ const isExportedDoc = (
   sourceCode: SourceCode,
   lookup: Lookup,
   decorated: Map<number, Enclosing>,
+  deferred: Set<string>,
 ) => {
   const before = sourceCode.getTokenBefore(comment)
   if (
@@ -89,11 +126,16 @@ const isExportedDoc = (
   const token = sourceCode.getTokenAfter(comment)
   if (!token) return false
   const target = decorated.get(token.range[0])
-  if (target?.type === 'ClassDeclaration' && EXPORTS.has(target.parent?.type ?? '')) return true
+  if (
+    target?.type === 'ClassDeclaration' &&
+    (EXPORTS.has(target.parent?.type ?? '') || isDeferred(target, deferred))
+  ) {
+    return true
+  }
   let node = lookup.nodeAt(token.range[0])
   while (node?.range?.[0] === token.range[0]) {
     if (EXPORTS.has(node.type)) return true
-    if (DOCUMENTED.has(node.type)) return reachesExport(node)
+    if (DOCUMENTED.has(node.type)) return reachesExport(node, deferred)
     node = node.parent ?? null
   }
   return false
@@ -105,6 +147,7 @@ const classify = (
   sourceCode: SourceCode,
   lookup: Lookup,
   decorated: Map<number, Enclosing>,
+  deferred: Set<string>,
 ): Kind => {
   const node = lookup.enclosingNode(comment)
   const inJsx = isJsxNode(node)
@@ -112,7 +155,7 @@ const classify = (
   if (isBanner(comment)) return 'banner'
   if (inJsx) return node?.type === 'JSXEmptyExpression' ? 'jsx' : 'attribute'
   if (isDocShaped(comment)) {
-    return isExportedDoc(comment, sourceCode, lookup, decorated) ? 'jsdoc' : 'orphanDoc'
+    return isExportedDoc(comment, sourceCode, lookup, decorated, deferred) ? 'jsdoc' : 'orphanDoc'
   }
   return comment.type === 'Line' ? 'line' : 'block'
 }
@@ -160,6 +203,7 @@ export const noComments: Rule.RuleModule = {
     const { lines, text } = sourceCode
     const lookup = createCommentLookup(sourceCode)
     const decorated = new Map<number, Enclosing>()
+    const deferred = deferredExports(sourceCode.ast.body)
     const jsdoc = (context.options[0] as { jsdoc?: 'exports' | 'never' } | undefined)?.jsdoc
     const lineStart = (line: number) => sourceCode.getIndexFromLoc({ line, column: 0 })
     const lineEnd = (line: number) => lineStart(line) + (lines[line - 1]?.length ?? 0)
@@ -202,7 +246,7 @@ export const noComments: Rule.RuleModule = {
       'Program:exit'() {
         const reports: { comment: Comment; messageId: string; fix: Removal | null }[] = []
         for (const comment of sourceCode.getAllComments().filter(isComment)) {
-          const kind = classify(comment, sourceCode, lookup, decorated)
+          const kind = classify(comment, sourceCode, lookup, decorated, deferred)
           if (kind === 'jsdoc' && jsdoc !== 'never') {
             if (comment.value.includes(EM_DASH))
               reports.push({ comment, messageId: 'emDash', fix: null })

@@ -65,6 +65,16 @@ const KEEPS: [string, string][] = [
     '/** Doc. */\nexport class A {\n  /** Field. */\n  b = 1\n  /** Method. */\n  c() {}\n}',
   ],
   [
+    'a JSDoc on a function a later export default names',
+    '/** Doc. */\nfunction Button() {\n  return 1\n}\nexport default Button',
+  ],
+  [
+    'a JSDoc on a class and its members that a later export list names',
+    '/** Doc. */\nclass A {\n  /** Field. */\n  b = 1\n}\nexport { A }',
+  ],
+  ['a JSDoc on a const a later export list names', '/** Doc. */\nconst a = 1\nexport { a }'],
+  ['a JSDoc on a const a later export list renames', '/** Doc. */\nconst a = 1\nexport { a as b }'],
+  [
     'a JSDoc above a directive above an export',
     '/** Doc. */\n// eslint-disable-next-line no-var\nexport var a = 1',
   ],
@@ -105,6 +115,12 @@ const TYPESCRIPT_KEEPS: [string, string][] = [
     '/** Doc. */\n@dec\n@other({ a: 1 })\nexport abstract class A {}',
   ],
   ['a JSDoc above a decorated default export', '/** Doc. */\n@dec\nexport default class A {}'],
+  [
+    'a JSDoc above a decorated class a later export list names',
+    '/** Doc. */\n@dec\nclass A {}\nexport { A }',
+  ],
+  ['a JSDoc on a type a later type export names', '/** Doc. */\ntype A = string\nexport type { A }'],
+  ['a JSDoc on a function a later export = names', '/** Doc. */\nfunction f() {}\nexport = f'],
   [
     'a JSDoc on decorated members of an exported class',
     'export class A {\n  /** Field. */\n  @prop() b = 1\n  /** Method. */\n  @dec c() {}\n}',
@@ -222,6 +238,12 @@ const FIXES: [string, string, string, string[]][] = [
     ['block'],
   ],
   ['a JSDoc above a non-exported const', '/** Doc. */\nconst a = 1', 'const a = 1', ['orphanDoc']],
+  [
+    'a JSDoc on a const whose name only a re-export from another module shares',
+    "/** Doc. */\nconst a = 1\nexport { a } from './x'",
+    "const a = 1\nexport { a } from './x'",
+    ['orphanDoc'],
+  ],
   [
     'a JSDoc above return',
     'function f() {\n  /** Doc. */\n  return 1\n}',
