@@ -21,41 +21,44 @@ type Kind =
   | 'block'
 type Removal = { range: [number, number]; text: string; lines: [number, number] | null }
 const EXPORTS = new Set(['ExportNamedDeclaration', 'ExportDefaultDeclaration', 'ExportAllDeclaration'])
-const MEMBERS = new Set([
+const DOCUMENTED = new Set([
+  'ClassDeclaration',
+  'FunctionDeclaration',
+  'TSDeclareFunction',
+  'VariableDeclaration',
+  'TSInterfaceDeclaration',
+  'TSTypeAliasDeclaration',
+  'TSEnumDeclaration',
+  'TSModuleDeclaration',
   'PropertyDefinition',
   'MethodDefinition',
-  'TSPropertySignature',
-  'TSMethodSignature',
   'TSAbstractPropertyDefinition',
   'TSAbstractMethodDefinition',
-  'TSEnumMember',
   'TSIndexSignature',
+  'TSPropertySignature',
+  'TSMethodSignature',
   'TSCallSignatureDeclaration',
   'TSConstructSignatureDeclaration',
+  'TSEnumMember',
+  'Property',
 ])
-const CONTAINERS = new Set([
-  'ClassBody',
-  'ClassDeclaration',
-  'PropertyDefinition',
-  'TSAbstractPropertyDefinition',
-  'TSInterfaceBody',
-  'TSInterfaceDeclaration',
-  'TSTypeLiteral',
-  'TSTypeAliasDeclaration',
-  'TSTypeAnnotation',
-  'TSPropertySignature',
-  'TSIntersectionType',
-  'TSUnionType',
-  'TSEnumBody',
-  'TSEnumDeclaration',
-])
+const BOUNDARIES = new Set(['Program', 'BlockStatement', 'StaticBlock', 'TSModuleBlock'])
 const MEMBER_OPENERS = new Set(['{', ';', ','])
 const EM_DASH = String.fromCodePoint(0x2014)
+type Walked = NonNullable<Enclosing> & { body?: unknown }
 const holdsTag = (comment: Comment) => /(?:^|\s)@\w/u.test(comment.value)
-const insideExport = (node: Enclosing) => {
-  let current = node
-  while (current && CONTAINERS.has(current.type)) current = current.parent ?? null
-  return !!current && EXPORTS.has(current.type)
+const isBoundary = (node: Walked, child: Walked) =>
+  BOUNDARIES.has(node.type) || (node.type === 'ArrowFunctionExpression' && node.body === child)
+const reachesExport = (start: Walked) => {
+  let child = start
+  let node: Walked | undefined = start.parent ?? undefined
+  while (node) {
+    if (EXPORTS.has(node.type)) return true
+    if (isBoundary(node, child)) return false
+    child = node
+    node = node.parent ?? undefined
+  }
+  return false
 }
 const isExportedDoc = (
   comment: Comment,
@@ -78,7 +81,7 @@ const isExportedDoc = (
   let node = lookup.nodeAt(token.range[0])
   while (node?.range?.[0] === token.range[0]) {
     if (EXPORTS.has(node.type)) return true
-    if (MEMBERS.has(node.type)) return insideExport(node.parent ?? null)
+    if (DOCUMENTED.has(node.type)) return reachesExport(node)
     node = node.parent ?? null
   }
   return false

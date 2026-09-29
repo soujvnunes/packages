@@ -109,12 +109,36 @@ const TYPESCRIPT_KEEPS: [string, string][] = [
     'a JSDoc on decorated members of an exported class',
     'export class A {\n  /** Field. */\n  @prop() b = 1\n  /** Method. */\n  @dec c() {}\n}',
   ],
+  [
+    'a JSDoc in an object value on an exported class property, which declaration emit publishes',
+    'export class A {\n  b = {\n    /** Doc. */\n    c: 1,\n  }\n}',
+  ],
+  [
+    'a JSDoc on a key of an exported as const dict',
+    "export const ROUTES = {\n  /** The landing page. */\n  home: '/',\n} as const",
+  ],
+  [
+    'a JSDoc on a key of an exported satisfies dict',
+    "export const ROUTES = {\n  /** The landing page. */\n  home: '/',\n} satisfies Record<string, string>",
+  ],
+  [
+    'a JSDoc in an inline props type on an exported function',
+    "export function Button({ variant }: {\n  /** The look. */\n  variant: 'a' | 'b'\n}) {\n  return variant\n}",
+  ],
+  [
+    'a JSDoc in a type literal passed as a generic argument',
+    "export type Props = Readonly<{\n  /** The look. */\n  variant: 'a' | 'b'\n}>",
+  ],
+  [
+    'a JSDoc in an array of a type literal',
+    'export type Rows = {\n  /** The id. */\n  id: string\n}[]',
+  ],
 ]
 const TYPESCRIPT_FIXES: [string, string, string, string[]][] = [
   [
-    'a JSDoc in an object value on an exported class property',
-    'export class A {\n  b = {\n    /** Doc. */\n    c: 1,\n  }\n}',
-    'export class A {\n  b = {\n    c: 1,\n  }\n}',
+    'a JSDoc in a type literal inside an exported function body',
+    'export function f() {\n  const a: {\n    /** Doc. */\n    b: number\n  } = { b: 1 }\n  return a\n}',
+    'export function f() {\n  const a: {\n    b: number\n  } = { b: 1 }\n  return a\n}',
     ['orphanDoc'],
   ],
   [
@@ -170,6 +194,24 @@ const FIXES: [string, string, string, string[]][] = [
   ],
   ['a JSDoc above an import', "/** Doc. */\nimport a from 'a'", "import a from 'a'", ['orphanDoc']],
   ['a JSDoc above an expression statement', '/** Doc. */\nf()', 'f()', ['orphanDoc']],
+  [
+    'a JSDoc on an object member inside an exported function body',
+    'export function f() {\n  return {\n    /** Doc. */\n    a: 1,\n  }\n}',
+    'export function f() {\n  return {\n    a: 1,\n  }\n}',
+    ['orphanDoc'],
+  ],
+  [
+    'a JSDoc on an object member an exported arrow returns',
+    'export const f = () => ({\n  /** Doc. */\n  a: 1,\n})',
+    'export const f = () => ({\n  a: 1,\n})',
+    ['orphanDoc'],
+  ],
+  [
+    'a JSDoc on a member of an object that is not exported',
+    'const a = {\n  /** Doc. */\n  b: 1,\n}',
+    'const a = {\n  b: 1,\n}',
+    ['orphanDoc'],
+  ],
   [
     "a JSDoc above 'use client'",
     "/** Doc. */\n'use client'\nexport const a = 1",
