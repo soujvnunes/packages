@@ -1,5 +1,11 @@
 # @soujvnunes/lib
 
+## 0.1.4
+
+### Patch Changes
+
+- cf50912: `createMongooseConnection` declares its return type as the exported `MongooseConnection` interface, so the docs on `withDb` and `withDbCallback` now reach the published types and show on hover. The inferred return type it replaces carried no docs at all.
+
 ## 0.1.3
 
 ### Patch Changes
