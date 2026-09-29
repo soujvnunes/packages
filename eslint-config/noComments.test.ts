@@ -536,6 +536,20 @@ describe.each(ruleSetups)('no-comments in a JS file under %s', (_setup, setup) =
     expect(lintAs('next.config.mjs', '/** Doc. */\nconst a = 1')).toEqual(['orphanDoc'])
   })
   it.each([
+    ['module.exports = f', '/** Doc. */\nfunction f() {}\nmodule.exports = f'],
+    ['module.exports = { f }', '/** Doc. */\nconst f = () => 1\nmodule.exports = { f }'],
+    ['module.exports = { g: f }', '/** Doc. */\nconst f = () => 1\nmodule.exports = { g: f }'],
+    ['exports.g = f', '/** Doc. */\nfunction f() {}\nexports.g = f'],
+    ['module.exports.g = f', '/** Doc. */\nfunction f() {}\nmodule.exports.g = f'],
+  ])('keeps a JSDoc on a declaration a CommonJS %s names', (_case, code) => {
+    expect(lintAs('index.cjs', code)).toEqual([])
+  })
+  it('reports a JSDoc on a CommonJS local that no export assignment names', () => {
+    expect(lintAs('index.cjs', '/** Doc. */\nfunction f() {}\nmodule.exports = g')).toEqual([
+      'orphanDoc',
+    ])
+  })
+  it.each([
     [
       'an untyped @param',
       '/** @param a explains the whole design of the module */\nfunction f(a) {\n  return a\n}',

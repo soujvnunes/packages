@@ -75,6 +75,20 @@ const DECLARATION_FILE = /\.d\.[cm]?ts$/u
 const EM_DASH = String.fromCodePoint(0x2014)
 const identifierName = (node: Node | null | undefined) =>
   node?.type === AST_NODE_TYPES.Identifier ? node.name : undefined
+const isModuleExports = (node: Node) =>
+  node.type === AST_NODE_TYPES.MemberExpression &&
+  identifierName(node.object) === 'module' &&
+  identifierName(node.property) === 'exports'
+const commonJsExport = (statement: Node) => {
+  if (statement.type !== AST_NODE_TYPES.ExpressionStatement) return null
+  const { expression } = statement
+  if (expression.type !== AST_NODE_TYPES.AssignmentExpression) return null
+  const { left, right } = expression
+  if (left.type !== AST_NODE_TYPES.MemberExpression) return null
+  const exported =
+    isModuleExports(left) || identifierName(left.object) === 'exports' || isModuleExports(left.object)
+  return exported ? right : null
+}
 const deferredExports = (body: TSESTree.ProgramStatement[]) => {
   const names = new Set<string>()
   const add = (node: Node | null) => {
@@ -82,6 +96,12 @@ const deferredExports = (body: TSESTree.ProgramStatement[]) => {
     if (name) names.add(name)
   }
   for (const statement of body) {
+    const commonJs = commonJsExport(statement)
+    if (commonJs?.type === AST_NODE_TYPES.ObjectExpression) {
+      for (const property of commonJs.properties) {
+        if (property.type === AST_NODE_TYPES.Property) add(property.value)
+      }
+    } else add(commonJs)
     if (statement.type === AST_NODE_TYPES.ExportNamedDeclaration && !statement.source) {
       for (const { local } of statement.specifiers) add(local)
     }
@@ -116,6 +136,7 @@ const isModuleFile = (program: TSESTree.Program) =>
   program.body.some(
     (statement) =>
       MODULE_STATEMENTS.has(statement.type) ||
+      commonJsExport(statement) !== null ||
       (statement.type === AST_NODE_TYPES.TSImportEqualsDeclaration &&
         statement.moduleReference.type === AST_NODE_TYPES.TSExternalModuleReference),
   )
