@@ -4,7 +4,8 @@ type MessageId = 'multiple'
 type Entry = { node: TSESTree.Node; name: string }
 const isTypeOnlyDeclaration = (declaration: TSESTree.ExportNamedDeclaration['declaration']): boolean =>
   declaration?.type === AST_NODE_TYPES.TSInterfaceDeclaration ||
-  declaration?.type === AST_NODE_TYPES.TSTypeAliasDeclaration
+  declaration?.type === AST_NODE_TYPES.TSTypeAliasDeclaration ||
+  declaration?.type === AST_NODE_TYPES.TSDeclareFunction
 const declaratorEntries = (declaration: TSESTree.VariableDeclaration): Entry[] =>
   declaration.declarations.map((declarator) => ({
     node: declarator,
@@ -41,7 +42,9 @@ const namedEntries = (node: TSESTree.ExportNamedDeclaration): Entry[] => {
 const exportEntries = (statement: TSESTree.ProgramStatement): Entry[] => {
   if (statement.type === AST_NODE_TYPES.ExportNamedDeclaration) return namedEntries(statement)
   if (statement.type === AST_NODE_TYPES.ExportDefaultDeclaration)
-    return [{ node: statement, name: 'default' }]
+    return statement.declaration.type === AST_NODE_TYPES.TSDeclareFunction
+      ? []
+      : [{ node: statement, name: 'default' }]
   return []
 }
 export const oneExportPerFile = ESLintUtils.RuleCreator.withoutDocs<[], MessageId>({

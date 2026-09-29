@@ -47,10 +47,22 @@ const TYPESCRIPT_KEEPS: [string, string][] = [
     'a value export beside a type-only re-export specifier',
     "export const a = 1\nexport { type B } from './b'",
   ],
+  [
+    'an overloaded function, whose signatures are one export',
+    'export function f(a: string): string\nexport function f(a: number): number\nexport function f(a: string | number) { return a }',
+  ],
+  [
+    'an overloaded default function, whose signatures are one export',
+    'export default function f(a: string): string\nexport default function f(a: number): number\nexport default function f(a: string | number) { return a }',
+  ],
 ]
 const TYPESCRIPT_REPORTS: [string, string][] = [
   ['two enums', 'export enum A { X }\nexport enum B { Y }'],
   ['a value export beside an enum, which counts', 'export const a = 1\nexport enum B { X }'],
+  [
+    'an overloaded function beside a const export',
+    'export function f(a: string): string\nexport function f(a: string) { return a }\nexport const b = 1',
+  ],
 ]
 describe.each(ruleSetups.slice(1))(
   'one-export-per-file on TypeScript syntax under %s',
