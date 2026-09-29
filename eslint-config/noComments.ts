@@ -1,3 +1,4 @@
+import { AST_NODE_TYPES, type TSESTree } from '@typescript-eslint/utils'
 import type { AST, Rule, SourceCode } from 'eslint'
 import {
   createCommentLookup,
@@ -21,92 +22,97 @@ type Kind =
   | 'line'
   | 'block'
 type Removal = { range: [number, number]; text: string; lines: [number, number] | null }
-const EXPORTS = new Set(['ExportNamedDeclaration', 'ExportDefaultDeclaration', 'ExportAllDeclaration'])
-const DOCUMENTED = new Set([
-  'ClassDeclaration',
-  'FunctionDeclaration',
-  'TSDeclareFunction',
-  'VariableDeclaration',
-  'TSInterfaceDeclaration',
-  'TSTypeAliasDeclaration',
-  'TSEnumDeclaration',
-  'TSModuleDeclaration',
-  'PropertyDefinition',
-  'MethodDefinition',
-  'TSAbstractPropertyDefinition',
-  'TSAbstractMethodDefinition',
-  'AccessorProperty',
-  'TSAbstractAccessorProperty',
-  'TSParameterProperty',
-  'TSIndexSignature',
-  'TSPropertySignature',
-  'TSMethodSignature',
-  'TSCallSignatureDeclaration',
-  'TSConstructSignatureDeclaration',
-  'TSEnumMember',
-  'Property',
+type Node = TSESTree.Node
+const EXPORTS = new Set<AST_NODE_TYPES>([
+  AST_NODE_TYPES.ExportNamedDeclaration,
+  AST_NODE_TYPES.ExportDefaultDeclaration,
+  AST_NODE_TYPES.ExportAllDeclaration,
 ])
-const BOUNDARIES = new Set(['Program', 'BlockStatement', 'StaticBlock', 'TSModuleBlock'])
+const DOCUMENTED = new Set<AST_NODE_TYPES>([
+  AST_NODE_TYPES.ClassDeclaration,
+  AST_NODE_TYPES.FunctionDeclaration,
+  AST_NODE_TYPES.TSDeclareFunction,
+  AST_NODE_TYPES.VariableDeclaration,
+  AST_NODE_TYPES.TSInterfaceDeclaration,
+  AST_NODE_TYPES.TSTypeAliasDeclaration,
+  AST_NODE_TYPES.TSEnumDeclaration,
+  AST_NODE_TYPES.TSModuleDeclaration,
+  AST_NODE_TYPES.PropertyDefinition,
+  AST_NODE_TYPES.MethodDefinition,
+  AST_NODE_TYPES.TSAbstractPropertyDefinition,
+  AST_NODE_TYPES.TSAbstractMethodDefinition,
+  AST_NODE_TYPES.AccessorProperty,
+  AST_NODE_TYPES.TSAbstractAccessorProperty,
+  AST_NODE_TYPES.TSParameterProperty,
+  AST_NODE_TYPES.TSIndexSignature,
+  AST_NODE_TYPES.TSPropertySignature,
+  AST_NODE_TYPES.TSMethodSignature,
+  AST_NODE_TYPES.TSCallSignatureDeclaration,
+  AST_NODE_TYPES.TSConstructSignatureDeclaration,
+  AST_NODE_TYPES.TSEnumMember,
+  AST_NODE_TYPES.Property,
+])
+const BOUNDARIES = new Set<AST_NODE_TYPES>([
+  AST_NODE_TYPES.Program,
+  AST_NODE_TYPES.BlockStatement,
+  AST_NODE_TYPES.StaticBlock,
+  AST_NODE_TYPES.TSModuleBlock,
+])
 const MEMBER_OPENERS = new Set(['{', ';', ','])
 const JS_FILE = /\.[cm]?jsx?$/u
 const EM_DASH = String.fromCodePoint(0x2014)
-type Named = { type: string; name?: string } | null | undefined
-type Walked = NonNullable<Enclosing> & {
-  body?: unknown
-  declare?: boolean
-  kind?: string
-  id?: Named
-  declarations?: { id: Named }[]
-}
-type Statement = {
-  type: string
-  source?: unknown
-  specifiers?: { local?: Named }[]
-  declaration?: Named
-  expression?: Named
-}
-const DEFAULT_EXPORTS = new Set(['ExportDefaultDeclaration', 'TSExportAssignment'])
-const identifierName = (node: Named) => (node?.type === 'Identifier' ? node.name : undefined)
-const deferredExports = (body: Statement[]) => {
+const identifierName = (node: Node | null | undefined) =>
+  node?.type === AST_NODE_TYPES.Identifier ? node.name : undefined
+const deferredExports = (body: TSESTree.ProgramStatement[]) => {
   const names = new Set<string>()
-  const add = (node: Named) => {
+  const add = (node: Node | null) => {
     const name = identifierName(node)
     if (name) names.add(name)
   }
   for (const statement of body) {
-    if (statement.type === 'ExportNamedDeclaration' && !statement.source) {
-      for (const { local } of statement.specifiers ?? []) add(local)
+    if (statement.type === AST_NODE_TYPES.ExportNamedDeclaration && !statement.source) {
+      for (const { local } of statement.specifiers) add(local)
     }
-    if (DEFAULT_EXPORTS.has(statement.type)) add(statement.declaration ?? statement.expression)
+    if (statement.type === AST_NODE_TYPES.ExportDefaultDeclaration) add(statement.declaration)
+    if (statement.type === AST_NODE_TYPES.TSExportAssignment) add(statement.expression)
   }
   return names
 }
-const isDeferred = (statement: Walked, deferred: Set<string>) =>
-  [statement.id, ...(statement.declarations ?? []).map(({ id }) => id)].some((id) => {
+const declaredIds = (statement: Node): (Node | null)[] => {
+  if (statement.type === AST_NODE_TYPES.VariableDeclaration) {
+    return statement.declarations.map(({ id }) => id)
+  }
+  return 'id' in statement ? [statement.id] : []
+}
+const isDeferred = (statement: Node, deferred: Set<string>) =>
+  declaredIds(statement).some((id) => {
     const name = identifierName(id)
     return !!name && deferred.has(name)
   })
 const holdsTag = (comment: Comment) => /(?:^|\s)@\w/u.test(comment.value)
-const isAmbient = (block: Walked) => {
-  let node: Walked | undefined = block.parent ?? undefined
+const isAmbient = (block: Node) => {
+  let node: Node | undefined = block.parent
   while (node) {
-    if (node.type === 'TSModuleDeclaration' && (node.declare || node.kind === 'global')) return true
-    node = node.parent ?? undefined
+    if (node.type === AST_NODE_TYPES.TSModuleDeclaration && (node.declare || node.kind === 'global')) {
+      return true
+    }
+    node = node.parent
   }
   return false
 }
-const isBoundary = (node: Walked, child: Walked) =>
-  BOUNDARIES.has(node.type) || (node.type === 'ArrowFunctionExpression' && node.body === child)
-const reachesExport = (start: Walked, deferred: Set<string>) => {
+const isBoundary = (node: Node, child: Node) =>
+  BOUNDARIES.has(node.type) ||
+  (node.type === AST_NODE_TYPES.ArrowFunctionExpression && node.body === child)
+const reachesExport = (start: Node, deferred: Set<string>) => {
   let child = start
-  let node: Walked | undefined = start.parent ?? undefined
+  let node: Node | undefined = start.parent
   while (node) {
     if (EXPORTS.has(node.type)) return true
-    if (node.type === 'TSModuleBlock' && isAmbient(node)) return true
-    if (node.type === 'Program') return isDeferred(child, deferred)
+    if (node.type === AST_NODE_TYPES.TSModuleBlock && isAmbient(node)) return true
+    if (node.type === AST_NODE_TYPES.Program) return isDeferred(child, deferred)
     if (isBoundary(node, child)) return false
     child = node
-    node = node.parent ?? undefined
+    node = node.parent
   }
   return false
 }
@@ -114,7 +120,7 @@ const isExportedDoc = (
   comment: Comment,
   sourceCode: SourceCode,
   lookup: Lookup,
-  decorated: Map<number, Enclosing>,
+  decorated: Map<number, Node>,
   deferred: Set<string>,
 ) => {
   const before = sourceCode.getTokenBefore(comment)
@@ -129,13 +135,13 @@ const isExportedDoc = (
   if (!token) return false
   const target = decorated.get(token.range[0])
   if (
-    target?.type === 'ClassDeclaration' &&
-    (EXPORTS.has(target.parent?.type ?? '') || isDeferred(target, deferred))
+    target?.type === AST_NODE_TYPES.ClassDeclaration &&
+    (EXPORTS.has(target.parent.type) || isDeferred(target, deferred))
   ) {
     return true
   }
   let node = lookup.nodeAt(token.range[0])
-  while (node?.range?.[0] === token.range[0]) {
+  while (node?.range[0] === token.range[0]) {
     if (EXPORTS.has(node.type)) return true
     if (DOCUMENTED.has(node.type)) return reachesExport(node, deferred)
     node = node.parent ?? null
@@ -143,19 +149,19 @@ const isExportedDoc = (
   return false
 }
 const isJsxNode = (node: Enclosing) =>
-  !!node && node.type.startsWith('JSX') && node.type !== 'JSXExpressionContainer'
+  !!node && node.type.startsWith('JSX') && node.type !== AST_NODE_TYPES.JSXExpressionContainer
 const classify = (
   comment: Comment,
   sourceCode: SourceCode,
   lookup: Lookup,
-  decorated: Map<number, Enclosing>,
+  decorated: Map<number, Node>,
   deferred: Set<string>,
 ): Kind => {
   const node = lookup.enclosingNode(comment)
   const inJsx = isJsxNode(node)
   if (isToolDirective(comment)) return inJsx ? 'jsxDirective' : 'directive'
   if (isBanner(comment)) return 'banner'
-  if (inJsx) return node?.type === 'JSXEmptyExpression' ? 'jsx' : 'attribute'
+  if (inJsx) return node?.type === AST_NODE_TYPES.JSXEmptyExpression ? 'jsx' : 'attribute'
   if (isDocShaped(comment)) {
     return isExportedDoc(comment, sourceCode, lookup, decorated, deferred) ? 'jsdoc' : 'orphanDoc'
   }
@@ -204,8 +210,9 @@ export const noComments: Rule.RuleModule = {
     const sourceCode = context.sourceCode
     const { lines, text } = sourceCode
     const lookup = createCommentLookup(sourceCode)
-    const decorated = new Map<number, Enclosing>()
-    const deferred = deferredExports(sourceCode.ast.body)
+    const decorated = new Map<number, Node>()
+    const program = sourceCode.ast as unknown as TSESTree.Program
+    const deferred = deferredExports(program.body)
     const typedJs = JS_FILE.test(context.filename)
     const jsdoc = (context.options[0] as { jsdoc?: 'exports' | 'never' } | undefined)?.jsdoc
     const lineStart = (line: number) => sourceCode.getIndexFromLoc({ line, column: 0 })
@@ -244,8 +251,11 @@ export const noComments: Rule.RuleModule = {
     }
     return {
       Decorator(node: Rule.Node) {
-        const parent = node.parent as Enclosing & { decorators?: unknown[] }
-        if (node.range && parent?.decorators?.[0] === node) decorated.set(node.range[0], parent)
+        const decorator = node as unknown as TSESTree.Decorator
+        const { parent } = decorator
+        if ('decorators' in parent && parent.decorators[0] === decorator) {
+          decorated.set(decorator.range[0], parent)
+        }
       },
       'Program:exit'() {
         const reports: { comment: Comment; messageId: string; fix: Removal | null }[] = []

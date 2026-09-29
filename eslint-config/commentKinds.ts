@@ -1,12 +1,8 @@
+import { AST_NODE_TYPES, type TSESTree } from '@typescript-eslint/utils'
 import type { AST, SourceCode } from 'eslint'
 export type Comment = ReturnType<SourceCode['getAllComments']>[number]
 export type Neighbour = ReturnType<SourceCode['getTokenAfter']>
-export type Enclosing = {
-  type: string
-  range?: [number, number]
-  loc?: AST.SourceLocation
-  parent?: Enclosing
-} | null
+export type Enclosing = TSESTree.Node | null
 const DIRECTIVE =
   /^\s*(?:eslint-disable\b|eslint-enable\b|\/\s*<|prettier-ignore|biome-ignore|(?:istanbul|c8|v8)\s+ignore\b|(?:webpack|turbopack)[A-Z]|@vitest-environment\b)/u
 const ANYWHERE = /\bgitleaks:allow\b/u
@@ -58,14 +54,14 @@ export const createCommentLookup = (sourceCode: SourceCode) => {
   const nodeAt = (index: number): Enclosing => {
     const known = nodes.get(index)
     if (known !== undefined) return known
-    const node = sourceCode.getNodeByRangeIndex(index) as Enclosing
+    const node = sourceCode.getNodeByRangeIndex(index) as unknown as Enclosing
     nodes.set(index, node)
     return node
   }
   const enclosingNode = (comment: Comment) => nodeAt(comment.range?.[0] ?? 0)
   const jsxContainer = (comment: Comment) => {
     const node = enclosingNode(comment)
-    return node?.type === 'JSXEmptyExpression' ? (node.parent ?? null) : null
+    return node?.type === AST_NODE_TYPES.JSXEmptyExpression ? node.parent : null
   }
   const sidesOf = (span: AST.SourceLocation | null | undefined) => {
     if (!span) return null
