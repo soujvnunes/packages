@@ -1,4 +1,4 @@
-import { Linter } from 'eslint'
+import { ESLint, Linter } from 'eslint'
 import type { Linter as LinterTypes } from 'eslint'
 import { describe, expect, it } from 'vitest'
 import { lintWithRule } from './lintWithRule'
@@ -53,12 +53,15 @@ describe('shared shape', () => {
     const config = createBaseConfig({ tsconfigRootDir: '/repo' })
     expect(mainBlock(config).languageOptions?.parserOptions).toMatchObject({ tsconfigRootDir: '/repo' })
   })
-  it('exempts root config files from the default-export and syntax bans', () => {
+  it('exempts root config files from the default-export ban, keeping the syntax bans that are not about export shape', () => {
     const override = createBaseConfig().find((entry) => entry.files?.[0] === '*.{mjs,js,ts,mts,cts}')
-    expect(override?.rules).toMatchObject({
-      'import-x/no-default-export': 'off',
-      'no-restricted-syntax': 'off',
-    })
+    expect(override?.rules?.['import-x/no-default-export']).toBe('off')
+    const rule = override?.rules?.['no-restricted-syntax'] as [string, ...{ selector: string }[]]
+    const selectors = rule.slice(1).map((entry) => (entry as { selector: string }).selector)
+    expect(selectors).not.toEqual(
+      expect.arrayContaining(['ExportDefaultDeclaration > FunctionDeclaration']),
+    )
+    expect(selectors).toEqual(expect.arrayContaining(['TSEnumDeclaration']))
   })
 })
 describe('import order', () => {
@@ -125,14 +128,27 @@ describe('createNextConfig', () => {
     expect(settings.react).toEqual({ version: 'detect' })
     expect(settings['import-x/resolver-next']).toHaveLength(1)
   })
-  it('exempts the Next file conventions, which must default-export', () => {
+  it('exempts the Next file conventions from the default-export ban only, so page.tsx still gets the lucide selector', () => {
     const override = createNextConfig().find((entry) =>
       entry.files?.[0]?.includes('{default,page,layout'),
     )
-    expect(override?.rules).toMatchObject({
-      'import-x/no-default-export': 'off',
-      'no-restricted-syntax': 'off',
-    })
+    expect(override?.rules?.['import-x/no-default-export']).toBe('off')
+    const rule = override?.rules?.['no-restricted-syntax'] as [
+      string,
+      ...{ selector: string; message: string }[],
+    ]
+    const selectors = rule.slice(1).map((entry) => (entry as { selector: string }).selector)
+    expect(selectors).not.toEqual(
+      expect.arrayContaining(['ExportDefaultDeclaration > FunctionDeclaration']),
+    )
+    expect(selectors).not.toEqual(
+      expect.arrayContaining(['ExportNamedDeclaration > FunctionDeclaration']),
+    )
+    expect(selectors).toEqual(
+      expect.arrayContaining([
+        "ImportDeclaration[source.value='lucide-react'][importKind!='type'] > ImportSpecifier[importKind!='type'][imported.name!=/Icon$/][imported.name!='createLucideIcon'][imported.name!='icons'][imported.name!='dynamicIconImports']",
+      ]),
+    )
   })
   it.each(['proxy', 'middleware'])('exempts %s, since a repo can be on either name', (name) => {
     const override = createNextConfig().find((entry) =>
@@ -468,5 +484,238 @@ describe('comment rules', () => {
         .map(({ messageId }) => messageId)
     expect(lintDoc('error')).toEqual([])
     expect(lintDoc(['error', { jsdoc: 'never' }])).toEqual(['jsdoc'])
+  })
+})
+const mainRestrictedSyntaxSelectors = (config: LinterTypes.Config[]) => {
+  const rule = mainBlock(config).rules?.['no-restricted-syntax'] as [string, ...{ selector: string }[]]
+  return rule.slice(1).map((entry) => (entry as { selector: string }).selector)
+}
+describe('a11y', () => {
+  it('turns on the jsx-a11y recommended rules at error on the Next preset', () => {
+    const rules = mainBlock(createNextConfig()).rules ?? {}
+    expect(rules['jsx-a11y/alt-text']).toBe('error')
+    expect(rules['jsx-a11y/anchor-has-content']).toBe('error')
+  })
+  it('leaves jsx-a11y out of the base preset entirely', () => {
+    const rules = mainBlock(createBaseConfig()).rules ?? {}
+    expect(Object.keys(rules).some((rule) => rule.startsWith('jsx-a11y/'))).toBe(false)
+  })
+  it('maps Link, Image, Button and Input to the native element they render, on the Next preset', () => {
+    const settings = mainBlock(createNextConfig()).settings ?? {}
+    expect(settings['jsx-a11y']).toEqual({
+      components: { Link: 'a', Image: 'img', Button: 'button', Input: 'input' },
+    })
+  })
+})
+describe('new restricted-syntax selectors', () => {
+  it('bans a lucide-react import whose name does not end in Icon, on both presets', () => {
+    expect(mainRestrictedSyntaxSelectors(createBaseConfig())).toEqual(
+      expect.arrayContaining([expect.stringContaining("source.value='lucide-react'")]),
+    )
+  })
+  it('bans an import from next/font/google', () => {
+    expect(mainRestrictedSyntaxSelectors(createNextConfig())).toEqual(
+      expect.arrayContaining(["ImportDeclaration[source.value='next/font/google']"]),
+    )
+  })
+  it('bans cloneElement as a named react import and as React.cloneElement', () => {
+    const selectors = mainRestrictedSyntaxSelectors(createNextConfig())
+    expect(selectors).toEqual(
+      expect.arrayContaining([
+        "ImportDeclaration[source.value='react'] > ImportSpecifier[imported.name='cloneElement']",
+        "MemberExpression[object.name='React'][property.name='cloneElement']",
+      ]),
+    )
+  })
+  it('exempts the createLucideIcon, icons and dynamicIconImports names', () => {
+    const selector = mainRestrictedSyntaxSelectors(createBaseConfig()).find((entry) =>
+      entry.includes("source.value='lucide-react'"),
+    )
+    const rule: LinterTypes.RuleEntry = ['error', { selector, message: 'x' }]
+    const lint = (code: string) => lintWithRule({}, code, { 'no-restricted-syntax': rule })
+    expect(lint("import { createLucideIcon, icons, dynamicIconImports } from 'lucide-react'")).toEqual(
+      [],
+    )
+    expect(lint("import { Home } from 'lucide-react'")).toHaveLength(1)
+  })
+})
+describe('barrel and feature-root files', () => {
+  it('reports every index.ts/tsx barrel file outside pages/', () => {
+    const override = createNextConfig().find(
+      (entry) => Array.isArray(entry.files) && entry.files[0] === '**/index.{ts,tsx}',
+    )
+    expect(override?.ignores).toEqual(['**/pages/**'])
+  })
+  it('reports a loose file at a feature root, exempting its own tests and the Next file conventions', () => {
+    const override = createNextConfig().find(
+      (entry) => Array.isArray(entry.files) && entry.files[0] === '**/features/*/*.{ts,tsx}',
+    )
+    expect(override?.ignores).toEqual([
+      '**/*.test.{ts,tsx}',
+      expect.stringContaining('{default,page,layout'),
+    ])
+  })
+  it('lets a route file under a features segment keep export default function, since a page cannot leave its segment', async () => {
+    const eslint = new ESLint({
+      cwd: process.cwd(),
+      overrideConfigFile: true,
+      overrideConfig: createNextConfig(),
+    })
+    const selectorsFor = async (path: string) => {
+      const config = (await eslint.calculateConfigForFile(path)) as LinterTypes.Config
+      const rule = config.rules?.['no-restricted-syntax'] as [unknown, ...{ selector: string }[]]
+      return rule.slice(1).map((entry) => (entry as { selector: string }).selector)
+    }
+    const page = await selectorsFor('app/features/[slug]/page.tsx')
+    expect(page).not.toContain('Program')
+    expect(page).not.toEqual(
+      expect.arrayContaining([
+        expect.stringContaining('ExportDefaultDeclaration > FunctionDeclaration'),
+      ]),
+    )
+    expect(await selectorsFor('app/features/[slug]/helpers.ts')).toContain('Program')
+  })
+  it.each(['**/index.{ts,tsx}', '**/features/*/*.{ts,tsx}'])(
+    'keeps every main-block syntax ban in %s, since an override replaces the whole no-restricted-syntax entry',
+    (glob) => {
+      const config = createNextConfig({ classMergeName: 'clsx' })
+      const override = config.find((entry) => Array.isArray(entry.files) && entry.files[0] === glob)
+      const rule = override?.rules?.['no-restricted-syntax'] as [string, ...{ selector: string }[]]
+      const selectors = rule.slice(1).map((entry) => (entry as { selector: string }).selector)
+      expect(selectors).toEqual([...mainRestrictedSyntaxSelectors(config), 'Program'])
+    },
+  )
+  it('leaves both overrides off the base preset, whose index.ts is an npm entry point, not a barrel', () => {
+    const config = createBaseConfig()
+    expect(
+      config.some((entry) => Array.isArray(entry.files) && entry.files[0] === '**/index.{ts,tsx}'),
+    ).toBe(false)
+  })
+})
+describe('cn() ternary', () => {
+  it("bans a ternary passed straight to cn() on the Next preset's main block", () => {
+    expect(mainRestrictedSyntaxSelectors(createNextConfig())).toEqual(
+      expect.arrayContaining(["CallExpression[callee.name='cn'] > ConditionalExpression"]),
+    )
+  })
+  it('reads the callee name from classMergeName', () => {
+    expect(mainRestrictedSyntaxSelectors(createNextConfig({ classMergeName: 'clsx' }))).toEqual(
+      expect.arrayContaining(["CallExpression[callee.name='clsx'] > ConditionalExpression"]),
+    )
+  })
+  it('is absent on the base preset, which has no Tailwind layer to merge classes for', () => {
+    expect(mainRestrictedSyntaxSelectors(createBaseConfig())).not.toEqual(
+      expect.arrayContaining([expect.stringContaining("callee.name='cn'")]),
+    )
+  })
+  it('still reaches page.tsx and next.config.ts, the two overrides the file-convention composition could have dropped it from', () => {
+    const page = createNextConfig().find((entry) => entry.files?.[0]?.includes('{default,page,layout'))
+    const root = createNextConfig().find((entry) => entry.files?.[0] === '*.{mjs,js,ts,mts,cts}')
+    const selectorsOf = (entry?: LinterTypes.Config) =>
+      ((entry?.rules?.['no-restricted-syntax'] as [string, ...{ selector: string }[]]) ?? []).map(
+        (item) => (typeof item === 'object' ? item.selector : item),
+      )
+    expect(selectorsOf(page)).toEqual(
+      expect.arrayContaining(["CallExpression[callee.name='cn'] > ConditionalExpression"]),
+    )
+    expect(selectorsOf(root)).toEqual(
+      expect.arrayContaining(["CallExpression[callee.name='cn'] > ConditionalExpression"]),
+    )
+  })
+})
+describe('arbitrary Tailwind values', () => {
+  const restrictedPattern = (options?: ConfigOptions) => {
+    const config = createNextConfig({ tailwindEntryPoint: TAILWIND_ENTRY, ...options })
+    const rule = mainBlock(config).rules?.['better-tailwindcss/no-restricted-classes'] as [
+      string,
+      { restrict: { pattern: string }[] },
+    ]
+    const [restriction] = rule[1].restrict
+    if (!restriction) throw new Error('no-restricted-classes was wired with an empty restrict list')
+    return restriction.pattern
+  }
+  it('bans a bracketed value with no allow-list entry', () => {
+    const pattern = restrictedPattern()
+    expect('text-[11px]'.match(pattern)).not.toBeNull()
+    expect('-mt-[3px]'.match(pattern)).not.toBeNull()
+    expect('hover:-translate-x-[2px]'.match(pattern)).not.toBeNull()
+    expect('data-[state=open]:opacity-100'.match(pattern)).toBeNull()
+  })
+  it('exempts a prefix named in allowArbitraryClasses', () => {
+    const pattern = restrictedPattern({ allowArbitraryClasses: ['grid-cols'] })
+    expect('grid-cols-[200px_1fr]'.match(pattern)).toBeNull()
+    expect('!grid-cols-[200px_1fr]'.match(pattern)).toBeNull()
+    expect('md:!grid-cols-[200px_1fr]'.match(pattern)).toBeNull()
+    expect('text-[11px]'.match(pattern)).not.toBeNull()
+  })
+  it('does nothing when tailwindEntryPoint is unset', () => {
+    expect(mainBlock(createNextConfig()).rules).not.toHaveProperty(
+      'better-tailwindcss/no-restricted-classes',
+    )
+  })
+})
+describe('module boundaries', () => {
+  it('restricts next.config.* and the listed modules to relative imports only', () => {
+    const config = createNextConfig({ nextConfigModules: ['src/env.ts'] })
+    const override = config.find(
+      (entry) => Array.isArray(entry.files) && entry.files.includes('src/env.ts'),
+    )
+    expect(override?.files).toEqual(expect.arrayContaining(['next.config.{ts,mts,cts}', 'src/env.ts']))
+    expect(override?.rules?.['no-restricted-imports']).toEqual(['error', { patterns: ['@/*'] }])
+  })
+  it('names only next.config files the default ignores leave lintable, since *.config.js and *.config.mjs are ignored', async () => {
+    const eslint = new ESLint({
+      cwd: process.cwd(),
+      overrideConfigFile: true,
+      overrideConfig: createNextConfig({ nextConfigModules: ['src/env.ts'] }),
+    })
+    await expect(eslint.isPathIgnored('next.config.js')).resolves.toBe(true)
+    await expect(eslint.isPathIgnored('next.config.mjs')).resolves.toBe(true)
+    for (const path of ['next.config.ts', 'next.config.mts', 'next.config.cts', 'src/env.ts']) {
+      await expect(eslint.isPathIgnored(path)).resolves.toBe(false)
+    }
+  })
+  it('adds no override when nextConfigModules is left empty', () => {
+    const config = createNextConfig()
+    expect(
+      config.some((entry) => Array.isArray(entry.files) && entry.files[0]?.startsWith('next.config')),
+    ).toBe(false)
+  })
+  it('keeps utils/ pure: server-only, next, react and the app/lib aliases are all restricted', () => {
+    const override = createBaseConfig().find(
+      (entry) => Array.isArray(entry.files) && entry.files[0] === '**/utils/**',
+    )
+    expect(override?.rules?.['no-restricted-imports']).toEqual([
+      'error',
+      { patterns: ['server-only', 'next/*', 'react', '@/lib/*', '@/app/*'] },
+    ])
+  })
+})
+describe('max-lines', () => {
+  it('caps a module at 300 lines, skipping blank lines and comments', () => {
+    expect(mainBlock(createBaseConfig()).rules?.['max-lines']).toEqual([
+      'error',
+      { max: 300, skipBlankLines: true, skipComments: true },
+    ])
+  })
+  it('exempts test files and the copy/ folder', () => {
+    const override = createBaseConfig().find(
+      (entry) => Array.isArray(entry.files) && entry.files.includes('**/copy/**'),
+    )
+    expect(override?.files).toEqual(expect.arrayContaining(['**/*.test.*', '**/copy/**']))
+    expect(override?.rules).toEqual({ 'max-lines': 'off' })
+  })
+})
+describe('strictExportGlobs', () => {
+  it('leaves soujvnunes/one-export-per-file unwired with no globs', () => {
+    const rules = createBaseConfig().flatMap((entry) => Object.keys(entry.rules ?? {}))
+    expect(rules).not.toContain('soujvnunes/one-export-per-file')
+  })
+  it('wires it at error on the globs given', () => {
+    const override = createBaseConfig({ strictExportGlobs: ['src/features/*/index.ts'] }).find(
+      (entry) => entry.rules?.['soujvnunes/one-export-per-file'],
+    )
+    expect(override?.files).toEqual(['src/features/*/index.ts'])
+    expect(override?.rules).toEqual({ 'soujvnunes/one-export-per-file': 'error' })
   })
 })
