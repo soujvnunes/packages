@@ -3,6 +3,17 @@ import { connect, type Connection, type ConnectOptions, type Mongoose, type mong
 export interface MongooseConnectionOptions extends ConnectOptions {
   mongoDbURI: string | undefined
 }
+export interface MongooseConnection {
+  connectDb: () => Promise<Connection>
+  getDbClient: () => Promise<mongo.MongoClient>
+  getDB: () => Promise<mongo.Db>
+  /** Connects, then runs the callback (for Server Components & standard async functions). */
+  withDb: <T>(operation: () => Promise<T> | PromiseLike<T>) => Promise<T>
+  /** Wraps a callback so it connects on call (for Server Actions / reusable async functions). */
+  withDbCallback: <Args extends unknown[], Return>(
+    action: (...args: Args) => Promise<Return>,
+  ) => (...args: Args) => Promise<Return>
+}
 const cache = {
   conn: null as Connection | null,
   promise: null as Promise<Mongoose> | null,
@@ -19,7 +30,7 @@ export const createMongooseConnection = ({
   serverSelectionTimeoutMS = 5000,
   serverApi = { version: '1' as const, strict: true, deprecationErrors: true },
   ...rest
-}: MongooseConnectionOptions) => {
+}: MongooseConnectionOptions): MongooseConnection => {
   const cached = global.mongoose ?? (global.mongoose = cache)
   const connectDb = async () => {
     if (!mongoDbURI) throw Error('Missing database environment variable')
