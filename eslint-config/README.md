@@ -44,17 +44,22 @@ export default createBaseConfig()
 | `importGroups` | react, next, module, parent, sibling, index | Full import-order groups; insert your `@/...` paths |
 | `ignores` | (none) | Extra ignore globs, merged after the built-in defaults |
 | `tsconfigRootDir` | `process.cwd()` | Root for typescript-eslint's project service |
-| `tailwindEntryPoint` | (none) | Tailwind v4 CSS entry path. When set on the Next preset, wires `eslint-plugin-better-tailwindcss` correctness rules such as `no-unknown-classes`, which flags a class not registered in the theme. The stylistic rules stay off, since `prettier-plugin-tailwindcss` already owns class order |
+| `tailwindEntryPoint` | (none) | Tailwind v4 CSS entry path. When set on the Next preset, wires `eslint-plugin-better-tailwindcss` correctness rules such as `no-unknown-classes`, which flags a class not registered in the theme, and `no-restricted-classes`, which flags an arbitrary-value class such as `text-[11px]`. The stylistic rules stay off, since `prettier-plugin-tailwindcss` already owns class order |
+| `allowArbitraryClasses` | `[]` | Utility prefixes exempt from the arbitrary-Tailwind-value ban, for a shape with no theme token (`['grid-cols']` for `grid-cols-[200px_1fr]`). Read only when `tailwindEntryPoint` is set |
+| `classMergeName` | `'cn'` | The class-merge helper name a ternary passed straight to it is banned inside of |
+| `nextConfigModules` | `[]` | Modules `next.config.*` loads, restricted to relative imports (`no-restricted-imports` on `['@/*']`) the same as the config file itself, on the Next preset |
+| `strictExportGlobs` | `[]` | Globs wired to `soujvnunes/one-export-per-file`. With no globs the rule stays exported but off |
 | `extend` | `[]` | Extra flat-config objects appended at the end |
 
 Type-aware rules use typescript-eslint's **project service**, so no `parserOptions.project` wiring is needed. It discovers the nearest `tsconfig.json` per file.
 
 ## Built-in exemptions
 
-- A config file or script at the repo root (`*.{mjs,js,ts,mts,cts}`) may default-export, so `import-x/no-default-export` and `no-restricted-syntax` are off there.
-- On the Next preset, the file conventions Next requires to default-export (`page`, `layout`, `error`, `loading`, `not-found`, `proxy`, `middleware`, `sitemap`, `robots` and the rest) get the same exemption. `proxy` and `middleware` are both listed, since a repo can be on either name.
+- A config file or script at the repo root (`*.{mjs,js,ts,mts,cts}`) may default-export, so `import-x/no-default-export` is off there. `no-restricted-syntax` stays on for everything that is not about export shape: the file still keeps the react-import bans, the enum ban, the lucide/next-font/cloneElement bans and, on the Next preset, the `cn()`-ternary ban. Only the two export-default selectors drop.
+- On the Next preset, the file conventions Next requires to default-export (`page`, `layout`, `error`, `loading`, `not-found`, `proxy`, `middleware`, `sitemap`, `robots` and the rest) get the same treatment: the export-default selectors drop, every other `no-restricted-syntax` selector stays, which is why a `lucide-react` import that does not end in `Icon` is still caught inside `page.tsx`. `proxy` and `middleware` are both listed, since a repo can be on either name.
 - `scripts/**/*.mjs` gets Node globals and `no-console` off, because printing is a script's job.
 - The comment rules run in a block of their own on `**/*.{js,jsx,mjs,cjs,ts,tsx,mts,cts}`, with their own `plugins`, since the main block's glob stops at `.js`, `.jsx`, `.ts` and `.tsx` and would never reach an `.mjs`, `.cjs`, `.mts` or `.cts` file.
+- `**/*.test.*` and `**/copy/**` are exempt from `max-lines`, since a test file's assertions and a copy dictionary's strings are not the same kind of length as logic.
 
 ## Style rules worth knowing before you adopt
 
@@ -78,3 +83,47 @@ These are the opinions most likely to surprise an existing codebase. All of them
 Measured on a Next app with 77 client files, with the TypeScript parser and browser globals the preset uses: the first rule found the 3 wrappers around a Radix primitive and `cn()` that were known to be needless, and nothing else once `error` files were exempt; the second found 16 static subtrees in 8 files, every one a block of labels and inputs or a heading a server parent could render. A threshold of two elements found 43, most of them label and input pairs that are not worth a refactor.
 
 Adopting this in an existing repo is usually one `eslint --fix` pass plus a short list of genuine fixes from the type-aware rules.
+
+## Accessibility on the Next preset
+
+`jsx-a11y`'s recommended rules run at error, not just registered with zero rules. `settings['jsx-a11y'].components` maps `Link` to `a`, `Image` to `img`, `Button` to `button` and `Input` to `input`, so a rule such as `anchor-is-valid` or `alt-text` reads through the wrapper to the native element it renders. Measured on a Next app with 676 source files: 7 real findings across 5 rules (`no-autofocus`, `click-events-have-key-events`, `no-noninteractive-element-interactions`, `no-static-element-interactions`, `anchor-has-content`), one of which is a component that forwards `children` only through `{...props}`, which the rule cannot see through; everything else was a genuine finding.
+
+## New `no-restricted-syntax` selectors, and why page.tsx still gets them
+
+`no-restricted-syntax` selectors now live in a keyed record composed per file convention, rather than one hardcoded array turned fully off on `page.tsx`, `layout.tsx` and root config files. Those two overrides now drop only the two export-default selectors (`page.tsx` and `next.config.ts` both need to default-export) and keep everything else: the enum ban, the react-import bans, and the three additions below. This is what makes a `lucide-react` import inside `page.tsx` still get caught.
+
+- **A `lucide-react` import whose name does not end in `Icon`.** `import { Home } from 'lucide-react'` is reported; `import { HomeIcon } from 'lucide-react'` is not. `createLucideIcon`, `icons` and `dynamicIconImports` are exempt, since none of them is itself an icon, and a type-only import (`import type` or `{ type X }`) is exempt too. The check is on the imported name, not the local alias, so `import { Home as MyIcon }` still reports.
+- **Any import from `next/font/google`.** Self-hosted fonts only (`FONTS`).
+- **`cloneElement`**, both as a named import from `react` and as `React.cloneElement`.
+
+Measured on a Next app: `lucide-react` and `cloneElement` both read 0 (the app already imports the `*Icon` names and never touches `cloneElement`), `next/font/google` read 1 (`src/app/layout.tsx`).
+
+## Barrel files and feature roots, on the Next preset only
+
+Two more `no-restricted-syntax` overrides, each a single `Program` selector so every matching file reports once, whatever it contains:
+
+- `**/index.{ts,tsx}` (outside `**/pages/**`) reports a barrel file outright: import each module by its own path instead of re-exporting through an aggregator.
+- `**/features/*/*.{ts,tsx}` (outside its own `*.test.{ts,tsx}`) reports a file sitting loose at a feature's root: place it inside one of the feature's subfolders.
+
+Both are Next-preset only, since a plain TypeScript library's `index.ts` is its npm entry point, not the barrel the Next convention (`MODULARITY`) warns about; `createBaseConfig` never sees either override, which is why this very package's own `eslint-config/index.ts` is not flagged by its own rule.
+
+## `cn()` ternary ban, on the Next preset
+
+`CallExpression[callee.name='cn'] > ConditionalExpression` is its own entry in the same selector composition, so the file-convention overrides above cannot drop it independently of the export-default filtering: it rides along with every other selector wherever `no-restricted-syntax` is set. The callee name comes from `classMergeName` (default `'cn'`), for a repo whose merge helper is named `clsx` or something else. Use a `cva` variant or an object entry instead of `cn(base, condition ? 'a' : 'b')`. Measured on a Next app: 16 sites across 9 files, 8 of them in one badge component.
+
+## Arbitrary Tailwind values, when `tailwindEntryPoint` is set
+
+`better-tailwindcss/no-restricted-classes` bans a bracketed value on a utility (`text-[11px]`, `tracking-[0.08em]`, `bg-[#000]/50`) while leaving a bracketed **variant** alone (`data-[state=open]:`, `group-data-[state=open]:`, `peer-data-[checked]:`, `supports-[display:grid]:`, `[&_>_svg]:`), since those precede a colon and the ban only matches the class's own trailing bracket. `allowArbitraryClasses` exempts a utility prefix that has no theme-token shape at all, such as `grid-cols` for `grid-cols-[200px_1fr]`. Measured on a Next app: 28 distinct values at 52 sites, mostly `text-[Npx]` and `tracking-[Nem]`, none of which has a matching theme token today.
+
+## Module boundaries
+
+- `nextConfigModules` restricts `next.config.*` and the modules it names to relative imports only (`no-restricted-imports` on `['@/*']`), on the Next preset. A config file that imports through the `@/...` alias resolves it differently at build time than the app does, so anything the config loads stays relative.
+- `**/utils/**` restricts `server-only`, `next/*`, `react`, `@/lib/*` and `@/app/*` on both presets: a pure helper module takes data in and data out, never a server-only boundary or a framework import.
+
+## `max-lines`: 300, skipping blank lines and comments
+
+`**/*.test.*` and `**/copy/**` are exempt (a copy dictionary's length is strings, not logic). Probed on a Next app at 200 (28 hits), 250 (13 hits) and 300 (9 hits); 300 is the threshold this config ships, since it is the only one under 10.
+
+## `soujvnunes/one-export-per-file`, wired only through `strictExportGlobs`
+
+One value export per module; an interface, a type alias, or a type-only named export is free of the count. The rule is always exported from the plugin, so a consumer can wire it with `strictExportGlobs` once its own codebase is ready, but no preset turns it on by default. Probed on a read-only Next app with many small named constants and phase helpers grouped into a couple of files: 1,419 sites across 27 files, two files alone (a game-constants module and a phase-utilities module) accounting for 65 of them. That is well over the 20-file bar for adopting it by default, so it stays unwired there; a repo with smaller, more atomic modules already can wire it per folder with `strictExportGlobs`.
