@@ -10,7 +10,6 @@ type Position = 'text' | 'prop'
 type Verdict = { data: boolean; stable: boolean }
 const { DefinitionType, ScopeType } = TSESLint.Scope
 const INTRINSIC = /^[a-z]/u
-// A React 19 context renders as its own provider (`<SessionContext value>`), which a server component can neither create nor provide.
 const PROVIDER = /(?:Context|Ctx|Provider)$/u
 const MUTATING_METHODS = new Set([
   'push',
@@ -83,13 +82,11 @@ export const createClassifier = (
   sourceCode: Readonly<TSESLint.SourceCode>,
   importMembersAreData: boolean,
 ) => {
-  // Annotated so the declaration names the type through `@typescript-eslint/utils` rather than a pnpm path to scope-manager.
   const variableOf = (node: TSESTree.Node, name: string): Variable | null =>
     ASTUtils.findVariable(sourceCode.getScope(node), name)
   const memo = new Map<Variable, Verdict>()
   const resolving = new Set<Variable>()
   let cycled = false
-  // A default is created by the module or component itself, so a binding that has one is data only when its default is.
   const withDefault = (name: TSESTree.Node, verdict: Verdict) =>
     all([verdict, ...patternDefaults(name).map((fallback) => classify(fallback, 'prop'))])
   const written = new Map<Variable, boolean>()
@@ -129,7 +126,6 @@ export const createClassifier = (
       }),
     )
     resolving.delete(variable)
-    // Only an outermost result that met no cycle is final, since a cycle answers `never` for the binding it re-entered.
     if (outermost && !cycled) memo.set(variable, verdict)
     return verdict
   }
@@ -147,7 +143,6 @@ export const createClassifier = (
     return ofBinding(variable)
   }
   const properties = new Map<TSESTree.ObjectExpression, Map<string, Verdict>>()
-  // The value a key of an object literal ends with: the last property of that name, joined with every spread or computed key after it, since either may replace it; a key only a spread provides takes the spreads, and an unknown key joins them all.
   const ofProperty = (
     object: TSESTree.ObjectExpression,
     name: string | undefined,
@@ -204,7 +199,6 @@ export const createClassifier = (
     if (!node) return NEVER
     switch (node.type) {
       case AST_NODE_TYPES.Literal:
-        // A RegExp is an instance, which React refuses to pass from a server component.
         return 'regex' in node ? NEVER : ALWAYS
       case AST_NODE_TYPES.JSXEmptyExpression:
         return ALWAYS
@@ -309,7 +303,6 @@ export const createClassifier = (
       const variable = variableOf(element, name.name)
       return isProvider(element, name.name, variable) ? NEVER : ofTagBinding(variable)
     }
-    // One level into a namespace is a module export; dotting into anything else (`Ctx.Provider`, `motion.div`) reads into what may be a client reference, which a server component cannot do.
     return name.object.type === AST_NODE_TYPES.JSXIdentifier &&
       isNamespaceImport(variableOf(element, name.object.name))
       ? ALWAYS

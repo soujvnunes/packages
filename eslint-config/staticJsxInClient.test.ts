@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest'
 import { lintWithRule } from './lintWithRule'
 import { ruleSetups } from './ruleSetups'
 const COUNT = /: (\d+) elements/u
-// Each finding as its element count, so a case asserts both where the rule reports and how big it says the block is.
 const lint = (languageOptions: Parameters<typeof lintWithRule>[0], code: string, minElements = 3) =>
   lintWithRule(languageOptions, code, {
     'soujvnunes/no-static-jsx-in-client': ['error', { minElements }],

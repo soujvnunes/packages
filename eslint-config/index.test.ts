@@ -5,7 +5,6 @@ import { oneLineComments } from './oneLineComments'
 import { soujvnunesPlugin } from './plugin'
 import { createBaseConfig, createNextConfig, type ConfigOptions } from './index'
 const TAILWIND_ENTRY = './app/tailwind.config.css'
-// The one block carrying this package's own plugins, rules and settings, as opposed to the recommended sets it spreads in.
 const mainBlock = (config: LinterTypes.Config[]) => {
   const block = config.find((entry) => entry.files?.[0] === '**/*.{js,jsx,ts,tsx}')
   if (!block) throw new Error('The main config block is missing from the flat config.')
@@ -196,7 +195,6 @@ describe('one-line-comments', () => {
   const ruleTester = new RuleTester({
     languageOptions: { ecmaVersion: 'latest', sourceType: 'module' },
   })
-  // RuleTester applies one pass of fixes, so a rewrite that converges over two passes is checked through the Linter.
   const fix = (code: string) =>
     new Linter().verifyAndFix(code, {
       plugins: { soujvnunes: soujvnunesPlugin },

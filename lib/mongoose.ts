@@ -15,8 +15,8 @@ declare global {
 export const createMongooseConnection = ({
   mongoDbURI,
   bufferCommands = false,
-  maxPoolSize = 10, // Limit connections per lambda to prevent exhaustion
-  serverSelectionTimeoutMS = 5000, // Fail fast if DB is down
+  maxPoolSize = 10,
+  serverSelectionTimeoutMS = 5000,
   serverApi = { version: '1' as const, strict: true, deprecationErrors: true },
   ...rest
 }: MongooseConnectionOptions) => {
@@ -35,7 +35,7 @@ export const createMongooseConnection = ({
       const mongoose = await cached.promise
       cached.conn = mongoose.connection
       if (!cached.poolAttached && mongoose.connection.getClient()) {
-        attachDatabasePool(mongoose.connection.getClient()) // Vercel Fluid Compute connection management
+        attachDatabasePool(mongoose.connection.getClient())
         cached.poolAttached = true
       }
     } catch (error) {
@@ -44,7 +44,6 @@ export const createMongooseConnection = ({
     }
     return cached.conn
   }
-  // Return types are annotated so the emitted .d.ts can name the driver types without a non-portable reference into the transitive `mongodb` package.
   const getDbClient = async (): Promise<mongo.MongoClient> => {
     const conn = await connectDb()
     return conn.getClient()
@@ -53,12 +52,10 @@ export const createMongooseConnection = ({
     const client = await getDbClient()
     return client.db()
   }
-  /** Connects, then runs the callback (for Server Components & standard async functions). */
   const withDb = async <T>(operation: () => Promise<T> | PromiseLike<T>): Promise<T> => {
     await connectDb()
     return operation()
   }
-  /** Wraps a callback so it connects on call (for Server Actions / reusable async functions). */
   const withDbCallback =
     <Args extends unknown[], Return>(action: (...args: Args) => Promise<Return>) =>
     async (...args: Args): Promise<Return> => {
