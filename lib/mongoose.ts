@@ -32,7 +32,7 @@ export const createMongooseConnection = ({
   ...rest
 }: MongooseConnectionOptions): MongooseConnection => {
   const cached = global.mongoose ?? (global.mongoose = cache)
-  const connectDb = async () => {
+  const connectDb: MongooseConnection['connectDb'] = async () => {
     if (!mongoDbURI) throw Error('Missing database environment variable')
     if (cached.conn) return cached.conn
     cached.promise ??= connect(mongoDbURI, {
@@ -55,21 +55,21 @@ export const createMongooseConnection = ({
     }
     return cached.conn
   }
-  const getDbClient = async (): Promise<mongo.MongoClient> => {
+  const getDbClient: MongooseConnection['getDbClient'] = async () => {
     const conn = await connectDb()
     return conn.getClient()
   }
-  const getDB = async (): Promise<mongo.Db> => {
+  const getDB: MongooseConnection['getDB'] = async () => {
     const client = await getDbClient()
     return client.db()
   }
-  const withDb = async <T>(operation: () => Promise<T> | PromiseLike<T>): Promise<T> => {
+  const withDb: MongooseConnection['withDb'] = async (operation) => {
     await connectDb()
     return operation()
   }
-  const withDbCallback =
-    <Args extends unknown[], Return>(action: (...args: Args) => Promise<Return>) =>
-    async (...args: Args): Promise<Return> => {
+  const withDbCallback: MongooseConnection['withDbCallback'] =
+    (action) =>
+    async (...args) => {
       await connectDb()
       return action(...args)
     }
