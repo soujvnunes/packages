@@ -175,7 +175,7 @@ export const noComments: Rule.RuleModule = {
     type: 'suggestion',
     docs: {
       description:
-        'Disallow comments in code, except tool directives and a JSDoc directly above an exported symbol.',
+        'Disallow comments in code, except tool directives and a JSDoc directly above an exported symbol or a member of an exported class, interface, type or enum.',
     },
     fixable: 'code',
     schema: [
@@ -190,7 +190,7 @@ export const noComments: Rule.RuleModule = {
       block:
         'Comments are not allowed in code. Delete this block comment: a reason the code cannot carry belongs in the README. Only tool directives and a JSDoc on an exported symbol stay.',
       orphanDoc:
-        'A JSDoc is allowed only directly above an exported symbol, or a member of an exported class, interface or type. Delete this one.',
+        'A JSDoc is allowed only directly above an exported symbol, or a member of an exported class, interface, type or enum. Delete this one.',
       jsdoc: 'This config allows no JSDoc. Delete it.',
       jsx: 'Comments are not allowed in JSX. Delete this `{/* */}` container; only a tool directive stays.',
       attribute: 'Comments are not allowed inside a JSX tag. Delete this one.',
