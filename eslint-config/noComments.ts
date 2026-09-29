@@ -102,7 +102,9 @@ const isAmbient = (block: Node) => {
 }
 const isBoundary = (node: Node, child: Node) =>
   BOUNDARIES.has(node.type) ||
-  (node.type === AST_NODE_TYPES.ArrowFunctionExpression && node.body === child)
+  (node.type === AST_NODE_TYPES.ArrowFunctionExpression && node.body === child) ||
+  ((node.type === AST_NODE_TYPES.CallExpression || node.type === AST_NODE_TYPES.NewExpression) &&
+    node.arguments.some((argument) => argument === child))
 const reachesExport = (start: Node, deferred: Set<string>) => {
   let child = start
   let node: Node | undefined = start.parent

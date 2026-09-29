@@ -297,6 +297,24 @@ const FIXES: [string, string, string, string[]][] = [
     ['orphanDoc'],
   ],
   [
+    'a JSDoc on a key of an object passed to an exported call, whose type is the return type',
+    'export default defineConfig({\n  /** Doc. */\n  plugins: [],\n})',
+    'export default defineConfig({\n  plugins: [],\n})',
+    ['orphanDoc'],
+  ],
+  [
+    'a JSDoc on a field of a class passed to an exported call',
+    'export const A = mixin(class {\n  /** Doc. */\n  b = 1\n})',
+    'export const A = mixin(class {\n  b = 1\n})',
+    ['orphanDoc'],
+  ],
+  [
+    'a JSDoc on a key of an object passed to an exported new',
+    'export const a = new Store({\n  /** Doc. */\n  b: 1,\n})',
+    'export const a = new Store({\n  b: 1,\n})',
+    ['orphanDoc'],
+  ],
+  [
     'a JSDoc on a member of an object that is not exported',
     'const a = {\n  /** Doc. */\n  b: 1,\n}',
     'const a = {\n  b: 1,\n}',
