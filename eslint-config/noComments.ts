@@ -1,6 +1,14 @@
 import type { AST, Rule, SourceCode } from 'eslint'
-import { isBanner, isComment, isDirective, isDocShaped, spansLines } from './commentKinds'
-import type { Comment } from './commentKinds'
+import {
+  createCommentLookup,
+  isBanner,
+  isComment,
+  isDirective,
+  isDocShaped,
+  spansLines,
+} from './commentKinds'
+import type { Comment, Enclosing } from './commentKinds'
+type Lookup = ReturnType<typeof createCommentLookup>
 type Kind =
   | 'directive'
   | 'banner'
@@ -11,7 +19,6 @@ type Kind =
   | 'attribute'
   | 'line'
   | 'block'
-type Walked = { type: string; range?: [number, number]; parent?: Walked } | null
 type Removal = { range: [number, number]; text: string; lines: [number, number] | null }
 const EXPORTS = new Set(['ExportNamedDeclaration', 'ExportDefaultDeclaration'])
 const MEMBERS = new Set([
@@ -37,14 +44,12 @@ const CONTAINERS = new Set([
 const MEMBER_OPENERS = new Set(['{', ';', ','])
 const EM_DASH = String.fromCodePoint(0x2014)
 const holdsTag = (comment: Comment) => /(?:^|\s)@\w/u.test(comment.value)
-const nodeAt = (sourceCode: SourceCode, index: number) =>
-  sourceCode.getNodeByRangeIndex(index) as Walked
-const insideExport = (node: Walked) => {
+const insideExport = (node: Enclosing) => {
   let current = node
   while (current && CONTAINERS.has(current.type)) current = current.parent ?? null
   return !!current && EXPORTS.has(current.type)
 }
-const isExportedDoc = (comment: Comment, sourceCode: SourceCode) => {
+const isExportedDoc = (comment: Comment, sourceCode: SourceCode, lookup: Lookup) => {
   const before = sourceCode.getTokenBefore(comment)
   if (
     before?.loc &&
@@ -55,7 +60,7 @@ const isExportedDoc = (comment: Comment, sourceCode: SourceCode) => {
   }
   const token = sourceCode.getTokenAfter(comment)
   if (!token) return false
-  let node = nodeAt(sourceCode, token.range[0])
+  let node = lookup.nodeAt(token.range[0])
   while (node?.range?.[0] === token.range[0]) {
     if (EXPORTS.has(node.type)) return true
     if (MEMBERS.has(node.type)) return insideExport(node.parent ?? null)
@@ -63,15 +68,17 @@ const isExportedDoc = (comment: Comment, sourceCode: SourceCode) => {
   }
   return false
 }
-const isJsxNode = (node: Walked) =>
+const isJsxNode = (node: Enclosing) =>
   !!node && node.type.startsWith('JSX') && node.type !== 'JSXExpressionContainer'
-const classify = (comment: Comment, sourceCode: SourceCode): Kind => {
-  const node = nodeAt(sourceCode, comment.range?.[0] ?? 0)
+const classify = (comment: Comment, sourceCode: SourceCode, lookup: Lookup): Kind => {
+  const node = lookup.enclosingNode(comment)
   const inJsx = isJsxNode(node)
   if (isDirective(comment)) return inJsx ? 'jsxDirective' : 'directive'
   if (isBanner(comment)) return 'banner'
   if (inJsx) return node?.type === 'JSXEmptyExpression' ? 'jsx' : 'attribute'
-  if (isDocShaped(comment)) return isExportedDoc(comment, sourceCode) ? 'jsdoc' : 'orphanDoc'
+  if (isDocShaped(comment)) {
+    return isExportedDoc(comment, sourceCode, lookup) ? 'jsdoc' : 'orphanDoc'
+  }
   return comment.type === 'Line' ? 'line' : 'block'
 }
 const MESSAGE_IDS: Record<Kind, string | null> = {
@@ -116,6 +123,7 @@ export const noComments: Rule.RuleModule = {
   create(context) {
     const sourceCode = context.sourceCode
     const { lines, text } = sourceCode
+    const lookup = createCommentLookup(sourceCode)
     const jsdoc = (context.options[0] as { jsdoc?: 'exports' | 'never' } | undefined)?.jsdoc
     const lineStart = (line: number) => sourceCode.getIndexFromLoc({ line, column: 0 })
     const lineEnd = (line: number) => lineStart(line) + (lines[line - 1]?.length ?? 0)
@@ -128,15 +136,14 @@ export const noComments: Rule.RuleModule = {
       if (kind === 'attribute' || ((kind === 'orphanDoc' || kind === 'jsdoc') && holdsTag(comment))) {
         return null
       }
-      const container = kind === 'jsx' ? nodeAt(sourceCode, comment.range?.[0] ?? 0)?.parent : null
-      const range = container?.range ?? comment.range
-      if (!range) return null
-      const start = sourceCode.getLocFromIndex(range[0])
-      const end = sourceCode.getLocFromIndex(range[1])
-      const before = (lines[start.line - 1] ?? '').slice(0, start.column).trim() !== ''
-      const after = (lines[end.line - 1] ?? '').slice(end.column).trim() !== ''
+      const span = lookup.jsxContainer(comment) ?? comment
+      const side = lookup.sides(comment)
+      const { range, loc } = span
+      if (!range || !loc || !side) return null
+      const { before, after } = side
       if (!before && !after) {
-        return { range: wholeLines(start.line, end.line), text: '', lines: [start.line, end.line] }
+        const bounds: [number, number] = [loc.start.line, loc.end.line]
+        return { range: wholeLines(...bounds), text: '', lines: bounds }
       }
       if (kind === 'jsx') return null
       const previousEnd = sourceCode.getTokenBefore(comment, { includeComments: true })?.range?.[1]
@@ -156,7 +163,7 @@ export const noComments: Rule.RuleModule = {
       'Program:exit'() {
         const reports: { comment: Comment; messageId: string; fix: Removal | null }[] = []
         for (const comment of sourceCode.getAllComments().filter(isComment)) {
-          const kind = classify(comment, sourceCode)
+          const kind = classify(comment, sourceCode, lookup)
           if (kind === 'jsdoc' && jsdoc !== 'never') {
             if (comment.value.includes(EM_DASH))
               reports.push({ comment, messageId: 'emDash', fix: null })

@@ -1,5 +1,6 @@
 import type { AST, Rule } from 'eslint'
 import {
+  createCommentLookup,
   followedOnLine,
   isBanner,
   isComment,
@@ -9,7 +10,6 @@ import {
   spansLines,
 } from './commentKinds'
 import type { Comment, Neighbour } from './commentKinds'
-type Enclosing = { type?: string; parent?: Enclosing; loc?: AST.SourceLocation } | null
 const isBare = (comment: Comment) => comment.type === 'Line' && comment.value.trim() === ''
 const collapse = (text: string) => text.replace(/\s+/gu, ' ').trim()
 const asLine = (body: string) => (body ? `// ${body}` : null)
@@ -78,27 +78,8 @@ export const oneLineComments: Rule.RuleModule = {
   create(context) {
     const sourceCode = context.sourceCode
     const comments = sourceCode.getAllComments().filter(isComment)
-    const enclosing = new Map<Comment, Enclosing>()
-    const enclosingNode = (comment: Comment): Enclosing => {
-      const known = enclosing.get(comment)
-      if (known !== undefined) return known
-      const node = sourceCode.getNodeByRangeIndex(comment.range?.[0] ?? 0) as Enclosing
-      enclosing.set(comment, node)
-      return node
-    }
-    const insideJsx = (comment: Comment) => enclosingNode(comment)?.type?.startsWith('JSX') ?? false
-    const jsxContainer = (comment: Comment) => {
-      const node = comment.type === 'Block' ? enclosingNode(comment) : null
-      return node?.type === 'JSXEmptyExpression' ? (node.parent ?? null) : null
-    }
-    const isOwnLine = (comment: Comment) => {
-      const span = jsxContainer(comment)?.loc ?? comment.loc
-      if (!span) return false
-      const lines = sourceCode.getLines()
-      const before = (lines[span.start.line - 1] ?? '').slice(0, span.start.column)
-      const after = (lines[span.end.line - 1] ?? '').slice(span.end.column)
-      return before.trim() === '' && after.trim() === ''
-    }
+    const { enclosingNode, isOwnLine } = createCommentLookup(sourceCode)
+    const insideJsx = (comment: Comment) => enclosingNode(comment)?.type.startsWith('JSX') ?? false
     const breaksSemicolonInsertion = (comment: Comment, after: Neighbour) => {
       if (insideJsx(comment)) return false
       const before = sourceCode.getTokenBefore(comment, { includeComments: true })
