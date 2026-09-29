@@ -637,6 +637,8 @@ describe('arbitrary Tailwind values', () => {
   it('bans a bracketed value with no allow-list entry', () => {
     const pattern = restrictedPattern()
     expect('text-[11px]'.match(pattern)).not.toBeNull()
+    expect('-mt-[3px]'.match(pattern)).not.toBeNull()
+    expect('hover:-translate-x-[2px]'.match(pattern)).not.toBeNull()
     expect('data-[state=open]:opacity-100'.match(pattern)).toBeNull()
   })
   it('exempts a prefix named in allowArbitraryClasses', () => {
