@@ -126,7 +126,7 @@ describe('createNextConfig', () => {
     expect(settings.react).toEqual({ version: 'detect' })
     expect(settings['import-x/resolver-next']).toHaveLength(1)
   })
-  it('exempts the Next file conventions from the default-export ban only, keeping every other syntax ban on page.tsx', () => {
+  it('exempts the Next file conventions from the default-export ban only, so page.tsx still gets the lucide selector', () => {
     const override = createNextConfig().find((entry) =>
       entry.files?.[0]?.includes('{default,page,layout'),
     )
@@ -136,7 +136,9 @@ describe('createNextConfig', () => {
     expect(selectors).not.toEqual(expect.arrayContaining(['ExportDefaultDeclaration > FunctionDeclaration']))
     expect(selectors).not.toEqual(expect.arrayContaining(['ExportNamedDeclaration > FunctionDeclaration']))
     expect(selectors).toEqual(
-      expect.arrayContaining(["ImportDeclaration[source.value='react'] > ImportDefaultSpecifier"]),
+      expect.arrayContaining([
+        "ImportDeclaration[source.value='lucide-react'][importKind!='type'] > ImportSpecifier[importKind!='type'][imported.name!=/Icon$/][imported.name!='createLucideIcon'][imported.name!='icons'][imported.name!='dynamicIconImports']",
+      ]),
     )
   })
   it.each(['proxy', 'middleware'])('exempts %s, since a repo can be on either name', (name) => {
@@ -473,5 +475,78 @@ describe('comment rules', () => {
         .map(({ messageId }) => messageId)
     expect(lintDoc('error')).toEqual([])
     expect(lintDoc(['error', { jsdoc: 'never' }])).toEqual(['jsdoc'])
+  })
+})
+const mainRestrictedSyntaxSelectors = (config: LinterTypes.Config[]) => {
+  const rule = mainBlock(config).rules?.['no-restricted-syntax'] as [string, ...{ selector: string }[]]
+  return rule.slice(1).map((entry) => (entry as { selector: string }).selector)
+}
+describe('a11y', () => {
+  it('turns on the jsx-a11y recommended rules at error on the Next preset', () => {
+    const rules = mainBlock(createNextConfig()).rules ?? {}
+    expect(rules['jsx-a11y/alt-text']).toBe('error')
+    expect(rules['jsx-a11y/anchor-has-content']).toBe('error')
+  })
+  it('leaves jsx-a11y out of the base preset entirely', () => {
+    const rules = mainBlock(createBaseConfig()).rules ?? {}
+    expect(Object.keys(rules).some((rule) => rule.startsWith('jsx-a11y/'))).toBe(false)
+  })
+  it('maps Link, Image, Button and Input to the native element they render, on the Next preset', () => {
+    const settings = mainBlock(createNextConfig()).settings ?? {}
+    expect(settings['jsx-a11y']).toEqual({
+      components: { Link: 'a', Image: 'img', Button: 'button', Input: 'input' },
+    })
+  })
+})
+describe('new restricted-syntax selectors', () => {
+  it('bans a lucide-react import whose name does not end in Icon, on both presets', () => {
+    expect(mainRestrictedSyntaxSelectors(createBaseConfig())).toEqual(
+      expect.arrayContaining([expect.stringContaining("source.value='lucide-react'")]),
+    )
+  })
+  it('bans an import from next/font/google', () => {
+    expect(mainRestrictedSyntaxSelectors(createNextConfig())).toEqual(
+      expect.arrayContaining(["ImportDeclaration[source.value='next/font/google']"]),
+    )
+  })
+  it('bans cloneElement as a named react import and as React.cloneElement', () => {
+    const selectors = mainRestrictedSyntaxSelectors(createNextConfig())
+    expect(selectors).toEqual(
+      expect.arrayContaining([
+        "ImportDeclaration[source.value='react'] > ImportSpecifier[imported.name='cloneElement']",
+        "MemberExpression[object.name='React'][property.name='cloneElement']",
+      ]),
+    )
+  })
+  it('exempts the createLucideIcon, icons and dynamicIconImports names', () => {
+    const selector = mainRestrictedSyntaxSelectors(createBaseConfig()).find((entry) =>
+      entry.includes("source.value='lucide-react'"),
+    )
+    const rule: LinterTypes.RuleEntry = ['error', { selector, message: 'x' }]
+    const lint = (code: string) => lintWithRule({}, code, { 'no-restricted-syntax': rule })
+    expect(lint("import { createLucideIcon, icons, dynamicIconImports } from 'lucide-react'")).toEqual([])
+    expect(lint("import { Home } from 'lucide-react'")).toHaveLength(1)
+  })
+})
+describe('barrel and feature-root files', () => {
+  it('reports every index.ts/tsx barrel file outside pages/', () => {
+    const override = createNextConfig().find(
+      (entry) => Array.isArray(entry.files) && entry.files[0] === '**/index.{ts,tsx}',
+    )
+    expect(override?.ignores).toEqual(['**/pages/**'])
+    expect(override?.rules?.['no-restricted-syntax']).toMatchObject(['error', { selector: 'Program' }])
+  })
+  it('reports a loose file at a feature root, exempting its own tests', () => {
+    const override = createNextConfig().find(
+      (entry) => Array.isArray(entry.files) && entry.files[0] === '**/features/*/*.{ts,tsx}',
+    )
+    expect(override?.ignores).toEqual(['**/*.test.{ts,tsx}'])
+    expect(override?.rules?.['no-restricted-syntax']).toMatchObject(['error', { selector: 'Program' }])
+  })
+  it('leaves both overrides off the base preset, whose index.ts is an npm entry point, not a barrel', () => {
+    const config = createBaseConfig()
+    expect(config.some((entry) => Array.isArray(entry.files) && entry.files[0] === '**/index.{ts,tsx}')).toBe(
+      false,
+    )
   })
 })

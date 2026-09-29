@@ -112,6 +112,10 @@ type SelectorKey =
   | 'reactNamespaceImport'
   | 'reactTypeImportSpecifier'
   | 'reactTypeImportDeclaration'
+  | 'lucideIcon'
+  | 'nextFontGoogle'
+  | 'cloneElementImport'
+  | 'cloneElementMember'
 const RESTRICTED_SELECTORS: Record<SelectorKey, { selector: string; message: string }> = {
   exportDefaultFunction: {
     selector: 'ExportDefaultDeclaration > FunctionDeclaration',
@@ -144,6 +148,23 @@ const RESTRICTED_SELECTORS: Record<SelectorKey, { selector: string; message: str
     message:
       'Reference React types via the ambient `React.*` namespace, not `import type … from "react"`.',
   },
+  lucideIcon: {
+    selector:
+      "ImportDeclaration[source.value='lucide-react'][importKind!='type'] > ImportSpecifier[importKind!='type'][imported.name!=/Icon$/][imported.name!='createLucideIcon'][imported.name!='icons'][imported.name!='dynamicIconImports']",
+    message: 'Import the `*Icon` name from lucide-react, so a rename never lands on the plain word.',
+  },
+  nextFontGoogle: {
+    selector: "ImportDeclaration[source.value='next/font/google']",
+    message: 'Self-host fonts instead of fetching them from next/font/google.',
+  },
+  cloneElementImport: {
+    selector: "ImportDeclaration[source.value='react'] > ImportSpecifier[imported.name='cloneElement']",
+    message: 'Avoid cloneElement; pass data through props instead of mutating a child element.',
+  },
+  cloneElementMember: {
+    selector: "MemberExpression[object.name='React'][property.name='cloneElement']",
+    message: 'Avoid React.cloneElement; pass data through props instead of mutating a child element.',
+  },
 }
 const ALL_SELECTOR_KEYS = Object.keys(RESTRICTED_SELECTORS) as SelectorKey[]
 const EXPORT_DEFAULT_KEYS: SelectorKey[] = ['exportDefaultFunction', 'exportNamedFunction']
@@ -173,6 +194,12 @@ const reactRules: Linter.RulesRecord = {
 const nextRules: Linter.RulesRecord = {
   '@next/next/no-html-link-for-pages': 'error',
   '@next/next/no-img-element': 'error',
+}
+const JSX_A11Y_COMPONENTS: Record<string, string> = {
+  Link: 'a',
+  Image: 'img',
+  Button: 'button',
+  Input: 'input',
 }
 const importOrderRule = (groups: (string | string[])[]): Linter.RulesRecord => ({
   'import-helpers/order-imports': [
@@ -223,7 +250,7 @@ const buildConfig = ({
       'react-hooks': reactHooks,
       'jsx-a11y': jsxA11y,
     })
-    Object.assign(rules, reactRules, nextRules)
+    Object.assign(rules, reactRules, nextRules, jsxA11y.configs.recommended.rules)
     Object.assign(languageGlobals, globals.browser, {
       React: 'readonly',
       JSX: 'readonly',
@@ -231,6 +258,7 @@ const buildConfig = ({
     })
     settings.react = { version: 'detect' }
     settings['import-x/resolver-next'] = [createTypeScriptImportResolver({ alwaysTryTypes: true })]
+    settings['jsx-a11y'] = { components: JSX_A11Y_COMPONENTS }
     if (tailwindEntryPoint) {
       plugins['better-tailwindcss'] = betterTailwind
       Object.assign(rules, {
@@ -271,6 +299,32 @@ const buildConfig = ({
       'soujvnunes/no-static-jsx-in-client': 'error',
     },
   }
+  const barrelOverride: Linter.Config = {
+    files: ['**/index.{ts,tsx}'],
+    ignores: ['**/pages/**'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: 'Program',
+          message: 'Avoid a barrel index file; import each module by its own path.',
+        },
+      ],
+    },
+  }
+  const featureRootOverride: Linter.Config = {
+    files: ['**/features/*/*.{ts,tsx}'],
+    ignores: ['**/*.test.{ts,tsx}'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: 'Program',
+          message: 'A feature root holds only subfolders; place this file inside one of them.',
+        },
+      ],
+    },
+  }
   const scriptsOverride: Linter.Config = {
     files: ['scripts/**/*.mjs'],
     languageOptions: { globals: { ...globals.node } },
@@ -300,7 +354,9 @@ const buildConfig = ({
     prettier,
     commentsOverride,
     rootConfigOverride,
-    ...(next ? [nextFileConventionsOverride, clientBoundaryOverride] : []),
+    ...(next
+      ? [nextFileConventionsOverride, clientBoundaryOverride, barrelOverride, featureRootOverride]
+      : []),
     scriptsOverride,
     ...extend,
   ]
