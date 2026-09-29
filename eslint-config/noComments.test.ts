@@ -153,6 +153,10 @@ const TYPESCRIPT_KEEPS: [string, string][] = [
     "import x from 'y'\nexport declare namespace N {\n  /** Doc. */\n  const a: string\n}\nexport const b = x",
   ],
   [
+    'a JSDoc on an export of an exported namespace',
+    'export namespace N {\n  /** Doc. */\n  export const a = 1\n  /** Nested. */\n  export namespace M {\n    /** Deep. */\n    export const b = 1\n  }\n}',
+  ],
+  [
     'a JSDoc in a declare namespace a later export list names',
     "import x from 'y'\ndeclare namespace N {\n  /** Doc. */\n  const a: string\n}\nexport { N, x }",
   ],
@@ -204,6 +208,18 @@ const TYPESCRIPT_FIXES: [string, string, string, string[]][] = [
     'a JSDoc in a namespace that is not ambient and a member it does not export',
     'namespace N {\n  /** Doc. */\n  const a = 1\n}',
     'namespace N {\n  const a = 1\n}',
+    ['orphanDoc'],
+  ],
+  [
+    'a JSDoc on an export of a namespace nothing exports',
+    'namespace N {\n  /** Doc. */\n  export const a = 1\n}\nexport const b = 1',
+    'namespace N {\n  export const a = 1\n}\nexport const b = 1',
+    ['orphanDoc'],
+  ],
+  [
+    'a JSDoc on an export of an exported namespace inside one nothing exports',
+    'namespace A {\n  export namespace B {\n    /** Doc. */\n    export const x = 1\n  }\n}\nexport const b = 1',
+    'namespace A {\n  export namespace B {\n    export const x = 1\n  }\n}\nexport const b = 1',
     ['orphanDoc'],
   ],
   [

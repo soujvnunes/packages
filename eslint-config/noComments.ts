@@ -127,11 +127,16 @@ const isBoundary = (node: Node, child: Node) =>
   (node.type === AST_NODE_TYPES.ArrowFunctionExpression && node.body === child) ||
   ((node.type === AST_NODE_TYPES.CallExpression || node.type === AST_NODE_TYPES.NewExpression) &&
     node.arguments.some((argument) => argument === child))
+const isPublished = (statement: Node, deferred: Set<string>): boolean => {
+  const { parent } = statement
+  if (parent?.type !== AST_NODE_TYPES.TSModuleBlock) return true
+  return ambience(parent) === 'public' || reachesExport(parent.parent, deferred)
+}
 const reachesExport = (start: Node, deferred: Set<string>) => {
   let child = start
   let node: Node | undefined = start.parent
   while (node) {
-    if (EXPORTS.has(node.type)) return true
+    if (EXPORTS.has(node.type)) return isPublished(node, deferred)
     if (node.type === AST_NODE_TYPES.TSModuleBlock) {
       const scope = ambience(node)
       if (scope !== 'declared') return scope === 'public'
@@ -163,13 +168,14 @@ const isExportedDoc = (
   const target = decorated.get(token.range[0])
   if (
     target?.type === AST_NODE_TYPES.ClassDeclaration &&
-    (EXPORTS.has(target.parent.type) || isDeferred(target, deferred))
+    ((EXPORTS.has(target.parent.type) && isPublished(target.parent, deferred)) ||
+      isDeferred(target, deferred))
   ) {
     return true
   }
   let node = lookup.nodeAt(token.range[0])
   while (node?.range[0] === token.range[0]) {
-    if (EXPORTS.has(node.type)) return true
+    if (EXPORTS.has(node.type)) return isPublished(node, deferred)
     if (DOCUMENTED.has(node.type)) return reachesExport(node, deferred)
     node = node.parent ?? null
   }
