@@ -166,11 +166,7 @@ const isExportedDoc = (
   const token = sourceCode.getTokenAfter(comment)
   if (!token) return false
   const target = decorated.get(token.range[0])
-  if (
-    target?.type === AST_NODE_TYPES.ClassDeclaration &&
-    ((EXPORTS.has(target.parent.type) && isPublished(target.parent, deferred)) ||
-      isDeferred(target, deferred))
-  ) {
+  if (target?.type === AST_NODE_TYPES.ClassDeclaration && reachesExport(target, deferred)) {
     return true
   }
   let node = lookup.nodeAt(token.range[0])

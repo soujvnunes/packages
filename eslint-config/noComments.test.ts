@@ -247,6 +247,12 @@ const TYPESCRIPT_FIXES: [string, string, string, string[]][] = [
     ['orphanDoc'],
   ],
   [
+    'a JSDoc above a decorated class in a function body that shares a name a top-level export list names',
+    'function g() {\n  /** Doc. */\n  @dec\n  class A {}\n  return A\n}\nconst A = 1\nexport { A }',
+    'function g() {\n  @dec\n  class A {}\n  return A\n}\nconst A = 1\nexport { A }',
+    ['orphanDoc'],
+  ],
+  [
     'a JSDoc above a decorated class that is not exported',
     '/** Doc. */\n@dec\nclass A {}',
     '@dec\nclass A {}',
