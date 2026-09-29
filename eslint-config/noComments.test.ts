@@ -135,7 +135,11 @@ const UNFIXED: [string, string, string[]][] = [
   ['a block in a JSX tag', 'export const A = () => <p /* x */ id="a" />', ['attribute']],
   ['a multi-line block with code on both of its edges', 'a /* x\n */ (b)', ['block']],
   ['a misplaced JSDoc holding a tag', '/** Old. @deprecated use b */\nconst a = 1', ['orphanDoc']],
-  ['a JSDoc on an export holding an em dash', '/** Old — new. */\nexport const a = 1', ['emDash']],
+  [
+    'a JSDoc on an export holding an em dash',
+    `/** Old ${String.fromCodePoint(0x2014)} new. */\nexport const a = 1`,
+    ['emDash'],
+  ],
 ]
 describe.each(ruleSetups)('no-comments under %s', (_setup, setup) => {
   it.each(KEEPS)('keeps %s', (_case, code) => {

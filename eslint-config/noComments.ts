@@ -35,7 +35,7 @@ const CONTAINERS = new Set([
   'TSUnionType',
 ])
 const MEMBER_OPENERS = new Set(['{', ';', ','])
-const EM_DASH = '—'
+const EM_DASH = String.fromCodePoint(0x2014)
 const holdsTag = (comment: Comment) => /(?:^|\s)@\w/u.test(comment.value)
 const nodeAt = (sourceCode: SourceCode, index: number) =>
   sourceCode.getNodeByRangeIndex(index) as Walked
