@@ -45,3 +45,7 @@ pnpm changeset   # record a change for release
 ```
 
 Tests run on Vitest, one project per package, and sit next to the module they cover (`util/ellipses.ts` and `util/ellipses.test.ts`). The `react` project runs in jsdom against React Testing Library; every other project runs in node. Nothing reaches a real database or network: `lib/mongoose` runs against a mocked driver, and `createApi` against a stubbed `fetch`. CI runs `build`, `typecheck`, `test`, `lint`, and `format` on every pull request.
+
+## Release
+
+On every push to `main`, the release workflow opens or updates a "Version Packages" pull request from the pending changesets, and publishes to npm when that pull request merges. It calls `pnpm run version`, never `pnpm version`, which is pnpm's built-in command and would skip `changeset version`. It opens the pull request with the `RELEASE_PAT` secret, because a pull request opened with the default `GITHUB_TOKEN` starts no workflows, so under a required status check it could never merge; it falls back to `GITHUB_TOKEN` when the secret is unset.
