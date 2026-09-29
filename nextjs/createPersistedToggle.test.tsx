@@ -95,7 +95,7 @@ describe('dispatch', () => {
     fireEvent.click(screen.getByText('toggle'))
     expect(document.cookie).toContain('nav=collapsed')
   })
-  it('writes SameSite=Lax with no Secure, so the cookie still persists over plain-http local dev', () => {
+  it('writes SameSite=Lax with no Secure, so the cookie still persists over plain http on a LAN address', () => {
     const written = vi.spyOn(document, 'cookie', 'set')
     render(
       <NavRail.Provider defaultValue="expanded">
