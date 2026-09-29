@@ -546,11 +546,34 @@ describe('barrel and feature-root files', () => {
     )
     expect(override?.ignores).toEqual(['**/pages/**'])
   })
-  it('reports a loose file at a feature root, exempting its own tests', () => {
+  it('reports a loose file at a feature root, exempting its own tests and the Next file conventions', () => {
     const override = createNextConfig().find(
       (entry) => Array.isArray(entry.files) && entry.files[0] === '**/features/*/*.{ts,tsx}',
     )
-    expect(override?.ignores).toEqual(['**/*.test.{ts,tsx}'])
+    expect(override?.ignores).toEqual([
+      '**/*.test.{ts,tsx}',
+      expect.stringContaining('{default,page,layout'),
+    ])
+  })
+  it('lets a route file under a features segment keep export default function, since a page cannot leave its segment', async () => {
+    const eslint = new ESLint({
+      cwd: process.cwd(),
+      overrideConfigFile: true,
+      overrideConfig: createNextConfig(),
+    })
+    const selectorsFor = async (path: string) => {
+      const config = (await eslint.calculateConfigForFile(path)) as LinterTypes.Config
+      const rule = config.rules?.['no-restricted-syntax'] as [unknown, ...{ selector: string }[]]
+      return rule.slice(1).map((entry) => (entry as { selector: string }).selector)
+    }
+    const page = await selectorsFor('app/features/[slug]/page.tsx')
+    expect(page).not.toContain('Program')
+    expect(page).not.toEqual(
+      expect.arrayContaining([
+        expect.stringContaining('ExportDefaultDeclaration > FunctionDeclaration'),
+      ]),
+    )
+    expect(await selectorsFor('app/features/[slug]/helpers.ts')).toContain('Program')
   })
   it.each(['**/index.{ts,tsx}', '**/features/*/*.{ts,tsx}'])(
     'keeps every main-block syntax ban in %s, since an override replaces the whole no-restricted-syntax entry',

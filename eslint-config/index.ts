@@ -171,6 +171,8 @@ const RESTRICTED_SELECTORS: Record<SelectorKey, { selector: string; message: str
 const ALL_SELECTOR_KEYS = Object.keys(RESTRICTED_SELECTORS) as SelectorKey[]
 const EXPORT_DEFAULT_KEYS: SelectorKey[] = ['exportDefaultFunction', 'exportNamedFunction']
 const NON_EXPORT_DEFAULT_KEYS = ALL_SELECTOR_KEYS.filter((key) => !EXPORT_DEFAULT_KEYS.includes(key))
+const NEXT_FILE_CONVENTIONS_GLOB =
+  '**/{default,page,layout,error,loading,forbidden,not-found,template,unauthorized,icon,apple-icon,manifest,opengraph-image,twitter-image,global-error,proxy,middleware,sitemap,robots}.{ts,tsx}'
 const cnTernarySelector = (classMergeName: string) => ({
   selector: `CallExpression[callee.name='${classMergeName}'] > ConditionalExpression`,
   message: 'Avoid a ternary inside `cn()`; use a cva variant or an object entry instead.',
@@ -315,9 +317,7 @@ const buildConfig = ({
     },
   }
   const nextFileConventionsOverride: Linter.Config = {
-    files: [
-      '**/{default,page,layout,error,loading,forbidden,not-found,template,unauthorized,icon,apple-icon,manifest,opengraph-image,twitter-image,global-error,proxy,middleware,sitemap,robots}.{ts,tsx}',
-    ],
+    files: [NEXT_FILE_CONVENTIONS_GLOB],
     rules: {
       'import-x/no-default-export': 'off',
       ...restrictedSyntaxRule(NON_EXPORT_DEFAULT_KEYS, [cnTernarySelector(classMergeName)]),
@@ -349,7 +349,7 @@ const buildConfig = ({
   }
   const featureRootOverride: Linter.Config = {
     files: ['**/features/*/*.{ts,tsx}'],
-    ignores: ['**/*.test.{ts,tsx}'],
+    ignores: ['**/*.test.{ts,tsx}', NEXT_FILE_CONVENTIONS_GLOB],
     rules: programBanRule('A feature root holds only subfolders; place this file inside one of them.'),
   }
   const scriptsOverride: Linter.Config = {
