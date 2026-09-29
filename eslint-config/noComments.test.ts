@@ -444,6 +444,39 @@ describe.each(ruleSetups.slice(1))('no-comments on TypeScript syntax under %s', 
     expect(fixOnce(setup, code)).toBe(output)
   })
 })
+const GLOBAL_DECLARATIONS: [string, string][] = [
+  ['a declare const', '/** Doc. */\ndeclare const __DEV__: boolean'],
+  ['a declare function', '/** Doc. */\ndeclare function track(e: string): void'],
+  ['a type alias', '/** Doc. */\ntype Id = string'],
+  ['a member of interface Window', 'interface Window {\n  /** Doc. */\n  foo: string\n}'],
+]
+describe.each(ruleSetups.slice(1))(
+  'no-comments on a file with no import or export under %s',
+  (_setup, setup) => {
+    const lintAs = (filename: string, code: string) =>
+      lintWithRule(setup, code, RULE, filename)
+        .filter(({ fatal, ruleId }) => fatal ?? ruleId === 'soujvnunes/no-comments')
+        .map(({ fatal, message, messageId }) => (fatal ? message : messageId))
+    it.each(GLOBAL_DECLARATIONS)(
+      'keeps the JSDoc on %s in env.d.ts, which is global',
+      (_case, code) => {
+        expect(lintAs('env.d.ts', code)).toEqual([])
+      },
+    )
+    it.each(GLOBAL_DECLARATIONS)(
+      'keeps the JSDoc on %s in a script file, where it is global too',
+      (_case, code) => {
+        expect(lintAs('component.tsx', code)).toEqual([])
+      },
+    )
+    it.each(GLOBAL_DECLARATIONS)(
+      'reports the JSDoc on %s once an import makes the file a module',
+      (_case, code) => {
+        expect(lintAs('env.d.ts', `import x from 'y'\n${code}\nexport { x }`)).toEqual(['orphanDoc'])
+      },
+    )
+  },
+)
 const JS_TYPE_ANNOTATIONS: [string, string][] = [
   [
     'a @type on a config create-next-app writes',

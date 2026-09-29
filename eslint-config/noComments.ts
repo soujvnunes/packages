@@ -25,7 +25,8 @@ type Kind =
   | 'block'
 type Removal = { range: [number, number]; text: string; lines: [number, number] | null }
 type Node = TSESTree.Node
-type Walk = { deferred: Set<string>; throughCalls: boolean }
+type TopLevel = (statement: Node) => boolean
+type Walk = { topLevel: TopLevel; throughCalls: boolean }
 const EXPORTS = new Set<AST_NODE_TYPES>([
   AST_NODE_TYPES.ExportNamedDeclaration,
   AST_NODE_TYPES.ExportDefaultDeclaration,
@@ -69,6 +70,7 @@ const MODULE_STATEMENTS = new Set<AST_NODE_TYPES>([
 ])
 const MEMBER_OPENERS = new Set(['{', ';', ','])
 const JS_FILE = /\.[cm]?jsx?$/u
+const DECLARATION_FILE = /\.d\.[cm]?ts$/u
 const EM_DASH = String.fromCodePoint(0x2014)
 const identifierName = (node: Node | null | undefined) =>
   node?.type === AST_NODE_TYPES.Identifier ? node.name : undefined
@@ -109,19 +111,17 @@ const boundNames = (node: Node | null): string[] => {
 }
 const isDeferred = (statement: Node, deferred: Set<string>) =>
   declaredIds(statement).some((id) => boundNames(id).some((name) => deferred.has(name)))
-const moduleFiles = new WeakMap<TSESTree.Program, boolean>()
-const isModuleFile = (program: TSESTree.Program) => {
-  const known = moduleFiles.get(program)
-  if (known !== undefined) return known
-  const verdict = program.body.some(
+const isModuleFile = (program: TSESTree.Program) =>
+  program.body.some(
     (statement) =>
       MODULE_STATEMENTS.has(statement.type) ||
       (statement.type === AST_NODE_TYPES.TSImportEqualsDeclaration &&
         statement.moduleReference.type === AST_NODE_TYPES.TSExternalModuleReference),
   )
-  moduleFiles.set(program, verdict)
-  return verdict
-}
+const isAmbient = (statement: Node) =>
+  statement.type === AST_NODE_TYPES.TSInterfaceDeclaration ||
+  statement.type === AST_NODE_TYPES.TSTypeAliasDeclaration ||
+  ('declare' in statement && statement.declare === true)
 const ambience = (block: TSESTree.TSModuleBlock) => {
   let declared = false
   let node: Node | undefined = block.parent
@@ -130,7 +130,6 @@ const ambience = (block: TSESTree.TSModuleBlock) => {
       if (node.kind === 'global' || node.id.type === AST_NODE_TYPES.Literal) return 'public'
       declared ||= node.declare
     }
-    if (node.type === AST_NODE_TYPES.Program && declared && !isModuleFile(node)) return 'public'
     node = node.parent
   }
   return declared ? 'declared' : 'local'
@@ -155,7 +154,7 @@ const reachesExport = (start: Node, walk: Walk) => {
       const scope = ambience(node)
       if (scope !== 'declared') return scope === 'public'
     }
-    if (node.type === AST_NODE_TYPES.Program) return isDeferred(child, walk.deferred)
+    if (node.type === AST_NODE_TYPES.Program) return walk.topLevel(child)
     if (isBoundary(node, child, walk)) return false
     child = node
     node = node.parent
@@ -198,7 +197,7 @@ const classify = (
   sourceCode: SourceCode,
   lookup: Lookup,
   decorated: Map<number, Node>,
-  deferred: Set<string>,
+  topLevel: TopLevel,
 ): Kind => {
   const node = lookup.enclosingNode(comment)
   const inJsx = isJsxNode(node)
@@ -209,7 +208,7 @@ const classify = (
   if (inJsx) return node?.type === AST_NODE_TYPES.JSXEmptyExpression ? 'jsx' : 'attribute'
   if (isDocShaped(comment)) {
     const reaches = (throughCalls: boolean) =>
-      isExportedDoc(comment, sourceCode, lookup, decorated, { deferred, throughCalls })
+      isExportedDoc(comment, sourceCode, lookup, decorated, { topLevel, throughCalls })
     if (reaches(false)) return 'jsdoc'
     return reaches(true) ? 'argumentDoc' : 'orphanDoc'
   }
@@ -264,6 +263,10 @@ export const noComments: Rule.RuleModule = {
     const decorated = new Map<number, Node>()
     const program = sourceCode.ast as unknown as TSESTree.Program
     const deferred = deferredExports(program.body)
+    const globalScope = !isModuleFile(program)
+    const declarationFile = DECLARATION_FILE.test(context.filename)
+    const topLevel: TopLevel = (statement) =>
+      isDeferred(statement, deferred) || (globalScope && (declarationFile || isAmbient(statement)))
     const typedJs = JS_FILE.test(context.filename)
     const jsdoc = (context.options[0] as { jsdoc?: 'exports' | 'never' } | undefined)?.jsdoc
     const lineStart = (line: number) => sourceCode.getIndexFromLoc({ line, column: 0 })
@@ -318,7 +321,7 @@ export const noComments: Rule.RuleModule = {
           const kind: Kind =
             typedJs && isTypeAnnotation(comment)
               ? 'directive'
-              : classify(comment, sourceCode, lookup, decorated, deferred)
+              : classify(comment, sourceCode, lookup, decorated, topLevel)
           if (kind === 'jsdoc' && jsdoc !== 'never') {
             if (comment.value.includes(EM_DASH))
               reports.push({ comment, messageId: 'emDash', fix: null })
