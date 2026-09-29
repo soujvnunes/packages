@@ -545,15 +545,23 @@ describe('barrel and feature-root files', () => {
       (entry) => Array.isArray(entry.files) && entry.files[0] === '**/index.{ts,tsx}',
     )
     expect(override?.ignores).toEqual(['**/pages/**'])
-    expect(override?.rules?.['no-restricted-syntax']).toMatchObject(['error', { selector: 'Program' }])
   })
   it('reports a loose file at a feature root, exempting its own tests', () => {
     const override = createNextConfig().find(
       (entry) => Array.isArray(entry.files) && entry.files[0] === '**/features/*/*.{ts,tsx}',
     )
     expect(override?.ignores).toEqual(['**/*.test.{ts,tsx}'])
-    expect(override?.rules?.['no-restricted-syntax']).toMatchObject(['error', { selector: 'Program' }])
   })
+  it.each(['**/index.{ts,tsx}', '**/features/*/*.{ts,tsx}'])(
+    'keeps every main-block syntax ban in %s, since an override replaces the whole no-restricted-syntax entry',
+    (glob) => {
+      const config = createNextConfig({ classMergeName: 'clsx' })
+      const override = config.find((entry) => Array.isArray(entry.files) && entry.files[0] === glob)
+      const rule = override?.rules?.['no-restricted-syntax'] as [string, ...{ selector: string }[]]
+      const selectors = rule.slice(1).map((entry) => (entry as { selector: string }).selector)
+      expect(selectors).toEqual([...mainRestrictedSyntaxSelectors(config), 'Program'])
+    },
+  )
   it('leaves both overrides off the base preset, whose index.ts is an npm entry point, not a barrel', () => {
     const config = createBaseConfig()
     expect(

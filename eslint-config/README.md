@@ -100,7 +100,7 @@ Measured on a Next app: `lucide-react` and `cloneElement` both read 0 (the app a
 
 ## Barrel files and feature roots, on the Next preset only
 
-Two more `no-restricted-syntax` overrides, each a single `Program` selector so every matching file reports once, whatever it contains:
+Two more `no-restricted-syntax` overrides, each adding a `Program` selector to the full selector list, so every matching file reports once whatever it contains, and the enum, react-import, `lucide-react`, `next/font/google`, `cloneElement` and `cn()` ternary bans still apply inside it:
 
 - `**/index.{ts,tsx}` (outside `**/pages/**`) reports a barrel file outright: import each module by its own path instead of re-exporting through an aggregator.
 - `**/features/*/*.{ts,tsx}` (outside its own `*.test.{ts,tsx}`) reports a file sitting loose at a feature's root: place it inside one of the feature's subfolders.

@@ -337,31 +337,20 @@ const buildConfig = ({
       'soujvnunes/no-static-jsx-in-client': 'error',
     },
   }
+  const programBanRule = (message: string): Linter.RulesRecord =>
+    restrictedSyntaxRule(ALL_SELECTOR_KEYS, [
+      cnTernarySelector(classMergeName),
+      { selector: 'Program', message },
+    ])
   const barrelOverride: Linter.Config = {
     files: ['**/index.{ts,tsx}'],
     ignores: ['**/pages/**'],
-    rules: {
-      'no-restricted-syntax': [
-        'error',
-        {
-          selector: 'Program',
-          message: 'Avoid a barrel index file; import each module by its own path.',
-        },
-      ],
-    },
+    rules: programBanRule('Avoid a barrel index file; import each module by its own path.'),
   }
   const featureRootOverride: Linter.Config = {
     files: ['**/features/*/*.{ts,tsx}'],
     ignores: ['**/*.test.{ts,tsx}'],
-    rules: {
-      'no-restricted-syntax': [
-        'error',
-        {
-          selector: 'Program',
-          message: 'A feature root holds only subfolders; place this file inside one of them.',
-        },
-      ],
-    },
+    rules: programBanRule('A feature root holds only subfolders; place this file inside one of them.'),
   }
   const scriptsOverride: Linter.Config = {
     files: ['scripts/**/*.mjs'],
