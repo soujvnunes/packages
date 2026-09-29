@@ -11,12 +11,10 @@ export interface ApiResponseError {
   timestamp: string
 }
 export type ApiResponse<T> = ApiResponseSuccess<T> | ApiResponseError
-// Build a success envelope, server/action side.
 export const createApiResponseSuccess = <T = null>(data: T = null as T): ApiResponseSuccess<T> => ({
   data,
   success: true,
 })
-// Build the single error envelope callers branch on via `success: false`.
 export const createApiResponseError = ({
   message = 'Not found',
   status = 404,
@@ -28,10 +26,9 @@ export const createApiResponseError = ({
   timestamp: new Date().toISOString(),
 })
 export interface CreateApiOptions {
-  baseURL: string // prepended to every endpoint, e.g. process.env.API_URL
-  headers?: HeadersInit // sent on every request; per-call options.headers win on collision
+  baseURL: string
+  headers?: HeadersInit
 }
-// Server-only, THROW-FREE fetch factory: binds a baseURL + JSON headers and returns a typed api<T>() that always resolves to an ApiResponse envelope, so a non-ok status or a network/parse error becomes createApiResponseError, never a throw. The factory logs nothing: the envelope carries `success` + `message`, so the consumer decides what to log on `success: false` (with its own call-site context). The server owns error policy; a server action reads `.success` and returns the message through useActionState, so no consumer writes a try/catch or an onError callback.
 export const createApi =
   ({ baseURL, headers }: CreateApiOptions) =>
   async <T>(endpoint: string, options?: RequestInit): Promise<ApiResponse<T>> => {

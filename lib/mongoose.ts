@@ -3,6 +3,17 @@ import { connect, type Connection, type ConnectOptions, type Mongoose, type mong
 export interface MongooseConnectionOptions extends ConnectOptions {
   mongoDbURI: string | undefined
 }
+export interface MongooseConnection {
+  connectDb: () => Promise<Connection>
+  getDbClient: () => Promise<mongo.MongoClient>
+  getDB: () => Promise<mongo.Db>
+  /** Connects, then runs the callback (for Server Components & standard async functions). */
+  withDb: <T>(operation: () => Promise<T> | PromiseLike<T>) => Promise<T>
+  /** Wraps a callback so it connects on call (for Server Actions / reusable async functions). */
+  withDbCallback: <Args extends unknown[], Return>(
+    action: (...args: Args) => Promise<Return>,
+  ) => (...args: Args) => Promise<Return>
+}
 const cache = {
   conn: null as Connection | null,
   promise: null as Promise<Mongoose> | null,
@@ -15,13 +26,13 @@ declare global {
 export const createMongooseConnection = ({
   mongoDbURI,
   bufferCommands = false,
-  maxPoolSize = 10, // Limit connections per lambda to prevent exhaustion
-  serverSelectionTimeoutMS = 5000, // Fail fast if DB is down
+  maxPoolSize = 10,
+  serverSelectionTimeoutMS = 5000,
   serverApi = { version: '1' as const, strict: true, deprecationErrors: true },
   ...rest
-}: MongooseConnectionOptions) => {
+}: MongooseConnectionOptions): MongooseConnection => {
   const cached = global.mongoose ?? (global.mongoose = cache)
-  const connectDb = async () => {
+  const connectDb: MongooseConnection['connectDb'] = async () => {
     if (!mongoDbURI) throw Error('Missing database environment variable')
     if (cached.conn) return cached.conn
     cached.promise ??= connect(mongoDbURI, {
@@ -35,7 +46,7 @@ export const createMongooseConnection = ({
       const mongoose = await cached.promise
       cached.conn = mongoose.connection
       if (!cached.poolAttached && mongoose.connection.getClient()) {
-        attachDatabasePool(mongoose.connection.getClient()) // Vercel Fluid Compute connection management
+        attachDatabasePool(mongoose.connection.getClient())
         cached.poolAttached = true
       }
     } catch (error) {
@@ -44,24 +55,21 @@ export const createMongooseConnection = ({
     }
     return cached.conn
   }
-  // Return types are annotated so the emitted .d.ts can name the driver types without a non-portable reference into the transitive `mongodb` package.
-  const getDbClient = async (): Promise<mongo.MongoClient> => {
+  const getDbClient: MongooseConnection['getDbClient'] = async () => {
     const conn = await connectDb()
     return conn.getClient()
   }
-  const getDB = async (): Promise<mongo.Db> => {
+  const getDB: MongooseConnection['getDB'] = async () => {
     const client = await getDbClient()
     return client.db()
   }
-  /** Connects, then runs the callback (for Server Components & standard async functions). */
-  const withDb = async <T>(operation: () => Promise<T> | PromiseLike<T>): Promise<T> => {
+  const withDb: MongooseConnection['withDb'] = async (operation) => {
     await connectDb()
     return operation()
   }
-  /** Wraps a callback so it connects on call (for Server Actions / reusable async functions). */
-  const withDbCallback =
-    <Args extends unknown[], Return>(action: (...args: Args) => Promise<Return>) =>
-    async (...args: Args): Promise<Return> => {
+  const withDbCallback: MongooseConnection['withDbCallback'] =
+    (action) =>
+    async (...args) => {
       await connectDb()
       return action(...args)
     }

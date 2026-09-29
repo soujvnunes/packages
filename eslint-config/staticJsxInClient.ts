@@ -58,7 +58,6 @@ export const staticJsxInClient = ESLintUtils.RuleCreator.withoutDocs({
         const line = directive.loc.start.line
         if (keyword === 'eslint-disable-line') return covers && comment.loc.start.line === line
         if (keyword === 'eslint-disable-next-line') return covers && comment.loc.end.line === line - 1
-        // ESLint honours a file-wide disable only in a block comment.
         return (
           covers && comment.type === AST_TOKEN_TYPES.Block && comment.range[1] <= directive.range[0]
         )
@@ -115,14 +114,12 @@ export const staticJsxInClient = ESLintUtils.RuleCreator.withoutDocs({
     }
     const report = (loc: TSESTree.SourceLocation, count: number) =>
       context.report({ loc, messageId: 'static', data: { count: String(count) } })
-    // Reports the outermost static subtree only, so a static card is one finding rather than one per nested element.
     const visit = (node: Jsx) => {
       const { isStatic: isStaticNode, count } = judge(node)
       if (isStaticNode) {
         if (count >= minElements) report(node.loc, count)
         return
       }
-      // A run of static siblings under a dynamic parent can be passed in as `children` just the same, so it is judged as one block.
       const position = childPosition(node)
       let run: Jsx[] = []
       const flush = () => {

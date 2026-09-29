@@ -26,7 +26,6 @@ const DEFAULT_IGNORES: string[] = [
   '*.config.mjs',
   'next-env.d.ts',
 ]
-// Generic skeleton, no project paths. Consumers pass their own `@/...` groups between `module` and `parent` via the `importGroups` option.
 const DEFAULT_IMPORT_GROUPS: (string | string[])[] = [
   '/^react/',
   '/^next/',
@@ -59,7 +58,6 @@ const typescriptRules: Linter.RulesRecord = {
   '@typescript-eslint/prefer-nullish-coalescing': 'error',
   'no-shadow': 'off',
   '@typescript-eslint/no-shadow': 'error',
-  // Type-aware, so they need the project service wired below.
   '@typescript-eslint/no-floating-promises': 'error',
   '@typescript-eslint/no-misused-promises': 'error',
   '@typescript-eslint/await-thenable': 'error',
@@ -76,7 +74,6 @@ const importRules: Linter.RulesRecord = {
   'unused-imports/no-unused-imports': 'error',
   'unused-imports/no-unused-vars': 'off',
 }
-// `detect-object-injection` is deliberately absent: it predates TS narrowing and fires on every `obj[key]`, including a key already narrowed to a literal union and a plain array index. `noUncheckedIndexedAccess` plus an `Object.hasOwn` guard cover the real case with types instead of a heuristic.
 const securityRules: Linter.RulesRecord = {
   'security/detect-non-literal-regexp': 'error',
   'security/detect-unsafe-regex': 'error',
@@ -105,7 +102,6 @@ const generalRules: Linter.RulesRecord = {
   'no-eval': 'error',
   'no-implied-eval': 'error',
   'no-script-url': 'error',
-  // Blank lines between statements are stripped, not required, with no exceptions. Import-group separators go too, so `import-helpers/order-imports` runs with `newlinesBetween: 'never'` and `import-x/newline-after-import` is off; grouping and order still hold, they are just not spelled with whitespace.
   'padding-line-between-statements': ['error', { blankLine: 'never', prev: '*', next: '*' }],
 }
 const restrictedSyntaxRule: Linter.RulesRecord = {
@@ -209,7 +205,6 @@ const buildConfig = ({
     ...importOrderRule(importGroups),
   }
   const languageGlobals: Record<string, unknown> = { ...globals.node, ...globals.es2021 }
-  // Base (pure TS libs) stays on import-x's built-in node resolver. Next apps get the TS resolver wired below: this package bundles `eslint-import-resolver-typescript` and passes the resolver object via `resolver-next`, so consumers resolve `@/...` aliases + `.d.ts` types out of the box with no install and no `extend` (the object form sidesteps pnpm's bare-name resolution).
   const settings: Record<string, unknown> = {}
   if (next) {
     Object.assign(plugins, {
@@ -225,9 +220,7 @@ const buildConfig = ({
       NodeJS: 'readonly',
     })
     settings.react = { version: 'detect' }
-    // `alwaysTryTypes` resolves `@types/*` for value imports; the resolver finds tsconfig.json from cwd. A consumer with a non-standard tsconfig path can still append its own via `extend`.
     settings['import-x/resolver-next'] = [createTypeScriptImportResolver({ alwaysTryTypes: true })]
-    // Opt-in, and only when the Tailwind v4 CSS entry is set so the rule can resolve the theme. Just the correctness rules run here. The stylistic ones (class order, whitespace) would fight `prettier-plugin-tailwindcss`, which already owns ordering.
     if (tailwindEntryPoint) {
       plugins['better-tailwindcss'] = betterTailwind
       Object.assign(rules, {
@@ -238,28 +231,23 @@ const buildConfig = ({
       settings['better-tailwindcss'] = { entryPoint: tailwindEntryPoint }
     }
   }
-  // Root config files + scripts legitimately default-export, so always exempt them (a base TS lib has e.g. `vitest.config.ts` / `tsup.config.ts`, which aren't in DEFAULT_IGNORES).
   const rootConfigOverride: Linter.Config = {
     files: ['*.{mjs,js,ts,mts,cts}'],
     rules: { 'import-x/no-default-export': 'off', 'no-restricted-syntax': 'off' },
   }
-  // Next.js framework file conventions (page, layout, error, and so on) must default-export. Next only. Both `proxy` (Next 16, Node runtime) and `middleware` (the earlier name, still valid on the edge runtime) are listed, since a repo can be on either.
   const nextFileConventionsOverride: Linter.Config = {
     files: [
       '**/{default,page,layout,error,loading,forbidden,not-found,template,unauthorized,icon,apple-icon,manifest,opengraph-image,twitter-image,global-error,proxy,middleware,sitemap,robots}.{ts,tsx}',
     ],
     rules: { 'import-x/no-default-export': 'off', 'no-restricted-syntax': 'off' },
   }
-  // Its own block, with a wider glob: the main block above is `**/*.{js,jsx,ts,tsx}`, so a rule placed there never reaches a `.mjs`, `.cjs`, `.mts` or `.cts` file. It carries its own `plugins` and `linterOptions` for the same reason, since neither reaches those files either.
-  const oneLineCommentsOverride: Linter.Config = {
+  const commentsOverride: Linter.Config = {
     files: ['**/*.{js,jsx,mjs,cjs,ts,tsx,mts,cts}'],
     plugins: { soujvnunes: soujvnunesPlugin },
-    rules: { 'soujvnunes/one-line-comments': 'error' },
+    rules: { 'soujvnunes/one-line-comments': 'error', 'soujvnunes/no-comments': 'error' },
   }
-  // Next only, and JSX files only: both rules read a `'use client'` module, which only a React Server Components app has.
   const clientBoundaryOverride: Linter.Config = {
     files: ['**/*.{jsx,tsx}'],
-    // Next requires these two conventions to be client components and hands them functions, so the directive is never needless and no server parent exists to take their markup.
     ignores: ['**/{error,global-error}.{jsx,tsx}'],
     plugins: { soujvnunes: soujvnunesPlugin },
     rules: {
@@ -267,7 +255,6 @@ const buildConfig = ({
       'soujvnunes/no-static-jsx-in-client': 'error',
     },
   }
-  // Node scripts own stdout, so printing IS their job.
   const scriptsOverride: Linter.Config = {
     files: ['scripts/**/*.mjs'],
     languageOptions: { globals: { ...globals.node } },
@@ -280,7 +267,6 @@ const buildConfig = ({
     {
       files: ['**/*.{js,jsx,ts,tsx}'],
       plugins,
-      // Every rule here is an error, never a warning: a rule worth keeping is worth failing on, and a deliberate exception is an `eslint-disable` comment, which records the decision where the code is. `reportUnusedDisableDirectives` closes the loop by failing on a disable comment that suppresses nothing.
       linterOptions: { reportUnusedDisableDirectives: 'error' },
       languageOptions: {
         parserOptions: {
@@ -296,7 +282,7 @@ const buildConfig = ({
       rules,
     },
     prettier,
-    oneLineCommentsOverride,
+    commentsOverride,
     rootConfigOverride,
     ...(next ? [nextFileConventionsOverride, clientBoundaryOverride] : []),
     scriptsOverride,

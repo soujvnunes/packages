@@ -1,5 +1,4 @@
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
-// Type positions are erased before anything runs, so they hold nothing to judge.
 const SKIPPED_KEYS = new Set(['typeAnnotation', 'typeArguments', 'typeParameters', 'returnType'])
 const isNode = (value: unknown): value is TSESTree.Node =>
   typeof value === 'object' && value !== null && 'type' in value && typeof value.type === 'string'

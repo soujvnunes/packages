@@ -17,9 +17,7 @@ const STYLESHEET = /\.(?:css|scss|sass|less)$/u
 const CLIENT_CALLS = new Set(['use', 'createContext', 'createPortal', 'flushSync'])
 const CLIENT_MODULES = new Set(['next/dynamic', 'client-only'])
 const CLASS_BASES = new Set(['Component', 'PureComponent'])
-// Calls known to build a value and do nothing else, so running one at module level is as safe on the server as a literal.
 const PURE_CALLS = new Set(['cva', 'tv'])
-// Node types whose evaluation runs nothing beyond evaluating their children; a function's body is not run on import, and a member read or a call is judged on its own.
 const INERT_TYPES = new Set<string>([
   AST_NODE_TYPES.Literal,
   AST_NODE_TYPES.TemplateLiteral,
@@ -59,7 +57,6 @@ const TYPE_DECLARATIONS = new Set<string>([
   AST_NODE_TYPES.TSTypeAliasDeclaration,
   AST_NODE_TYPES.TSDeclareFunction,
 ])
-// Names a browser defines and Node does not, so reading one at render or in an effect is a real reason for the directive; the three added by hand are ones recent Node defines too, while no server render can use them for the visitor.
 const BROWSER_GLOBALS = new Set([
   ...Object.keys(globals.browser).filter(
     (name) => !Object.hasOwn(globals.node, name) && !Object.hasOwn(globals.builtin, name),
@@ -68,7 +65,6 @@ const BROWSER_GLOBALS = new Set([
   'localStorage',
   'sessionStorage',
 ])
-// A type annotation that names a DOM type (`HTMLDivElement`) reads nothing at runtime; espree's references carry no flag and are all values.
 const isValueReference = (reference: TSESLint.Scope.Reference) => reference.isValueReference !== false
 const verdicts = new WeakMap<TSESTree.Program, boolean>()
 const analyze = (sourceCode: Readonly<TSESLint.SourceCode>) => {
@@ -87,7 +83,6 @@ const analyze = (sourceCode: Readonly<TSESLint.SourceCode>) => {
             (def.type === DefinitionType.Variable && isComponentInit(def.node.init)))),
     )
   }
-  // A read off a local binding, with every computed key along the chain inert too; a read off an import may reach into a client reference.
   const isLocalRead = (node: TSESTree.MemberExpression) => {
     let root: TSESTree.Node = node
     while (root.type === AST_NODE_TYPES.MemberExpression) {
@@ -153,7 +148,6 @@ const analyze = (sourceCode: Readonly<TSESLint.SourceCode>) => {
         const isTypeOnly =
           statement.specifiers.length > 0 &&
           statement.specifiers.every((specifier) => specifier.exportKind === 'type')
-        // A value re-exported from another module is how a boundary goes around a dependency that ships no directive.
         if (statement.source) return isTypeOnly
         if (statement.declaration) return exportsOnlyComponents(statement.declaration)
         return statement.specifiers.every(
@@ -175,7 +169,6 @@ const analyze = (sourceCode: Readonly<TSESLint.SourceCode>) => {
         return TYPE_DECLARATIONS.has(statement.type)
     }
   }
-  // Both names a call goes by, local and imported (`import { useState as state }`, `import { store as useStore }`), since either can mark a client API.
   const callNames = (callee: TSESTree.Node) => {
     if (callee.type !== AST_NODE_TYPES.Identifier) return [calleeName(callee)]
     return [callee.name, importedName(variableOf(callee, callee.name))]
@@ -208,7 +201,6 @@ const analyze = (sourceCode: Readonly<TSESLint.SourceCode>) => {
           return (isTag ? isFunctionAttribute(key) : key !== 'className') && !isData(value.expression)
         })
       }
-      // A child of a component is its `children` prop, which can carry a function; a child of a tag or a fragment renders in place and cannot.
       case AST_NODE_TYPES.JSXExpressionContainer:
         return (
           node.parent.type === AST_NODE_TYPES.JSXElement &&

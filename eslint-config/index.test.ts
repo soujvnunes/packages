@@ -1,11 +1,10 @@
-import { Linter, RuleTester } from 'eslint'
+import { Linter } from 'eslint'
 import type { Linter as LinterTypes } from 'eslint'
 import { describe, expect, it } from 'vitest'
-import { oneLineComments } from './oneLineComments'
+import { lintWithRule } from './lintWithRule'
 import { soujvnunesPlugin } from './plugin'
 import { createBaseConfig, createNextConfig, type ConfigOptions } from './index'
 const TAILWIND_ENTRY = './app/tailwind.config.css'
-// The one block carrying this package's own plugins, rules and settings, as opposed to the recommended sets it spreads in.
 const mainBlock = (config: LinterTypes.Config[]) => {
   const block = config.find((entry) => entry.files?.[0] === '**/*.{js,jsx,ts,tsx}')
   if (!block) throw new Error('The main config block is missing from the flat config.')
@@ -193,17 +192,51 @@ describe('tailwindEntryPoint', () => {
 })
 describe('one-line-comments', () => {
   const jsx = { parserOptions: { ecmaFeatures: { jsx: true } } }
-  const ruleTester = new RuleTester({
-    languageOptions: { ecmaVersion: 'latest', sourceType: 'module' },
-  })
-  // RuleTester applies one pass of fixes, so a rewrite that converges over two passes is checked through the Linter.
+  type Options = LinterTypes.LanguageOptions | undefined
+  type Invalid = {
+    code: string
+    output: string | null
+    errors: { messageId: string }[]
+    languageOptions?: LinterTypes.LanguageOptions
+  }
+  const RULE: LinterTypes.RulesRecord = { 'soujvnunes/one-line-comments': 'error' }
+  const verify = (code: string, languageOptions: Options) =>
+    lintWithRule(languageOptions ?? {}, code, RULE, 'a.js').filter(
+      ({ fatal, ruleId }) => fatal ?? ruleId === 'soujvnunes/one-line-comments',
+    )
+  const fixOnce = (code: string, languageOptions: Options) => {
+    let output = ''
+    let cursor = 0
+    for (const { fix: edit } of verify(code, languageOptions)) {
+      if (!edit || edit.range[0] < cursor) continue
+      output += code.slice(cursor, edit.range[0]) + edit.text
+      cursor = edit.range[1]
+    }
+    return output + code.slice(cursor)
+  }
+  const run = (tests: {
+    valid: (string | { code: string; languageOptions: LinterTypes.LanguageOptions })[]
+    invalid: Invalid[]
+  }) => {
+    for (const test of tests.valid) {
+      const { code, languageOptions } = typeof test === 'string' ? { code: test } : test
+      expect(verify(code, languageOptions), code).toEqual([])
+    }
+    for (const { code, output, errors, languageOptions } of tests.invalid) {
+      const messageIds = verify(code, languageOptions).map(({ fatal, message, messageId }) => ({
+        messageId: fatal ? message : messageId,
+      }))
+      expect(messageIds, code).toEqual(errors)
+      expect(fixOnce(code, languageOptions), code).toBe(output ?? code)
+    }
+  }
   const fix = (code: string) =>
     new Linter().verifyAndFix(code, {
       plugins: { soujvnunes: soujvnunesPlugin },
       rules: { 'soujvnunes/one-line-comments': 'error' },
     }).output
-  it('passes its own RuleTester suite', () => {
-    ruleTester.run('one-line-comments', oneLineComments, {
+  it('passes its own suite of valid and invalid cases', () => {
+    run({
       valid: [
         '// One line, however long it runs, which is the whole point and stays legal at any length.',
         'const a = 1\n// A comment separated from another by code.\nconst b = 2\n// Another one.',
@@ -231,6 +264,7 @@ describe('one-line-comments', () => {
         'const a = /* @__NOINLINE__ */ f()',
         '/*# sourceMappingURL=a.js.map */',
         '/*! Preserved banner, which has no line form. */\nconst a = 1',
+        "const key = 'x' /* test key, gitleaks:allow */",
         '#!/usr/bin/env node\n// the interpreter line is not a comment line\nconst a = 1',
         {
           code: 'const a = (\n  <p /* on the tag */ id="x">\n    {/* one */}\n    text\n    {/** two */}\n  </p>\n)',
@@ -242,6 +276,12 @@ describe('one-line-comments', () => {
           code: '// First line.\n// Second line.\nconst a = 1',
           output: '// First line. Second line.\nconst a = 1',
           errors: [{ messageId: 'adjacent' }],
+        },
+        {
+          code: 'const a = (\n  <p>{\n    // a\n    // b\n  }</p>\n)',
+          output: 'const a = (\n  <p>{\n    // a b\n  }</p>\n)',
+          errors: [{ messageId: 'adjacent' }],
+          languageOptions: jsx,
         },
         {
           code: '// One.\n// Two.\n// Three.\nconst a = 1',
@@ -268,6 +308,16 @@ describe('one-line-comments', () => {
           code: '// First paragraph.\n//\n// Second paragraph.\nconst a = 1',
           output: null,
           errors: [{ messageId: 'paragraphs' }],
+        },
+        {
+          code: '/*\n * Long rationale here\n * mention gitleaks:allow\n */\nconst a = 1',
+          output: '// Long rationale here mention gitleaks:allow\nconst a = 1',
+          errors: [{ messageId: 'block' }],
+        },
+        {
+          code: '// Long rationale here\n// mention gitleaks:allow\nconst a = 1',
+          output: '// Long rationale here mention gitleaks:allow\nconst a = 1',
+          errors: [{ messageId: 'adjacent' }],
         },
         {
           code: '/**\n * Shared Prettier config.\n */\nconst a = 1',
@@ -391,10 +441,32 @@ describe('one-line-comments', () => {
   it('rewrites a plain block as a line comment, then joins it with its neighbour on the next pass', () => {
     expect(fix('// one\n/* two */\nconst a = 1')).toBe('// one two\nconst a = 1')
   })
-  it('is wired into the shared config at error, on a glob that reaches .mjs and .cjs', () => {
-    const block = createBaseConfig().find((entry) => entry.rules?.['soujvnunes/one-line-comments'])
-    expect(block?.rules?.['soujvnunes/one-line-comments']).toBe('error')
-    expect(block?.plugins).toHaveProperty('soujvnunes')
-    expect(block?.files?.[0]).toBe('**/*.{js,jsx,mjs,cjs,ts,tsx,mts,cts}')
+})
+describe('comment rules', () => {
+  it.each([
+    ['base', createBaseConfig],
+    ['next', createNextConfig],
+  ])(
+    '%s turns on one-line-comments and no-comments at error, on a glob that reaches .mjs and .cjs',
+    (_name, create) => {
+      const block = create().find((entry) => entry.rules?.['soujvnunes/no-comments'])
+      expect(block?.rules).toEqual({
+        'soujvnunes/one-line-comments': 'error',
+        'soujvnunes/no-comments': 'error',
+      })
+      expect(block?.plugins?.soujvnunes).toBe(soujvnunesPlugin)
+      expect(block?.files).toEqual(['**/*.{js,jsx,mjs,cjs,ts,tsx,mts,cts}'])
+    },
+  )
+  it("reports the JSDoc on an export too under jsdoc: 'never'", () => {
+    const lintDoc = (options: LinterTypes.RuleEntry) =>
+      new Linter()
+        .verify('/** Doc. */\nexport const a = 1', {
+          plugins: { soujvnunes: soujvnunesPlugin },
+          rules: { 'soujvnunes/no-comments': options },
+        })
+        .map(({ messageId }) => messageId)
+    expect(lintDoc('error')).toEqual([])
+    expect(lintDoc(['error', { jsdoc: 'never' }])).toEqual(['jsdoc'])
   })
 })

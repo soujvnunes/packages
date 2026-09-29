@@ -2,7 +2,6 @@ import { buildSchema, prop } from '@typegoose/typegoose'
 import mongooseLeanVirtuals from 'mongoose-lean-virtuals'
 import { describe, expect, it } from 'vitest'
 import { BaseModel, BaseTimestampedModel } from './typegoose'
-// Types are explicit because the test runner's transform emits no decorator metadata for `@prop()` to infer from.
 class Address extends BaseModel {
   @prop({ type: () => String })
   public street?: string
@@ -11,7 +10,6 @@ class Entry extends BaseTimestampedModel {
   @prop({ type: () => String })
   public title?: string
 }
-// `plugins` is on the Schema at runtime but absent from mongoose's public types.
 const hasLeanVirtuals = (schema: ReturnType<typeof buildSchema>) =>
   (schema as unknown as { plugins: { fn: unknown }[] }).plugins.some(
     (entry) => entry.fn === mongooseLeanVirtuals,

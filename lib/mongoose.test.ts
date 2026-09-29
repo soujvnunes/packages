@@ -11,7 +11,6 @@ const client = { db: vi.fn(() => ({ name: 'test' })) }
 const connection = { getClient: () => client }
 const connectOptions = () => connectMock.mock.calls[0]?.[1]
 beforeEach(() => {
-  // The factory caches on globalThis to survive lambda reuse, so each test needs a fresh cache.
   global.mongoose = { conn: null, promise: null, poolAttached: false }
   connectMock.mockResolvedValue({ connection } as never)
 })

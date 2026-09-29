@@ -32,7 +32,6 @@ describe('createApiResponseError', () => {
   })
 })
 describe('createApi', () => {
-  // Bound once and reused, the way a consumer holds `export const api = createApi({ … })`.
   const api = createApi({ baseURL: 'https://api.test' })
   it('prepends the baseURL to the endpoint', async () => {
     fetchMock.mockResolvedValue(ok(createApiResponseSuccess({ id: '1' })))

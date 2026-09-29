@@ -10,7 +10,6 @@ const Boom = ({ throws = true }: { throws?: boolean }) => {
   return <span>recovered</span>
 }
 beforeEach(() => {
-  // React and componentDidCatch both report a caught render error; silence them so a passing run stays readable.
   vi.spyOn(console, 'error').mockImplementation(() => {})
 })
 afterEach(() => {
