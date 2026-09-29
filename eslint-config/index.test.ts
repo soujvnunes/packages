@@ -1,7 +1,7 @@
-import { Linter, RuleTester } from 'eslint'
+import { Linter } from 'eslint'
 import type { Linter as LinterTypes } from 'eslint'
 import { describe, expect, it } from 'vitest'
-import { oneLineComments } from './oneLineComments'
+import { lintWithRule } from './lintWithRule'
 import { soujvnunesPlugin } from './plugin'
 import { createBaseConfig, createNextConfig, type ConfigOptions } from './index'
 const TAILWIND_ENTRY = './app/tailwind.config.css'
@@ -192,16 +192,51 @@ describe('tailwindEntryPoint', () => {
 })
 describe('one-line-comments', () => {
   const jsx = { parserOptions: { ecmaFeatures: { jsx: true } } }
-  const ruleTester = new RuleTester({
-    languageOptions: { ecmaVersion: 'latest', sourceType: 'module' },
-  })
+  type Options = LinterTypes.LanguageOptions | undefined
+  type Invalid = {
+    code: string
+    output: string | null
+    errors: { messageId: string }[]
+    languageOptions?: LinterTypes.LanguageOptions
+  }
+  const RULE: LinterTypes.RulesRecord = { 'soujvnunes/one-line-comments': 'error' }
+  const verify = (code: string, languageOptions: Options) =>
+    lintWithRule(languageOptions ?? {}, code, RULE, 'a.js').filter(
+      ({ fatal, ruleId }) => fatal ?? ruleId === 'soujvnunes/one-line-comments',
+    )
+  const fixOnce = (code: string, languageOptions: Options) => {
+    let output = ''
+    let cursor = 0
+    for (const { fix: edit } of verify(code, languageOptions)) {
+      if (!edit || edit.range[0] < cursor) continue
+      output += code.slice(cursor, edit.range[0]) + edit.text
+      cursor = edit.range[1]
+    }
+    return output + code.slice(cursor)
+  }
+  const run = (tests: {
+    valid: (string | { code: string; languageOptions: LinterTypes.LanguageOptions })[]
+    invalid: Invalid[]
+  }) => {
+    for (const test of tests.valid) {
+      const { code, languageOptions } = typeof test === 'string' ? { code: test } : test
+      expect(verify(code, languageOptions), code).toEqual([])
+    }
+    for (const { code, output, errors, languageOptions } of tests.invalid) {
+      const messageIds = verify(code, languageOptions).map(({ fatal, message, messageId }) => ({
+        messageId: fatal ? message : messageId,
+      }))
+      expect(messageIds, code).toEqual(errors)
+      expect(fixOnce(code, languageOptions), code).toBe(output ?? code)
+    }
+  }
   const fix = (code: string) =>
     new Linter().verifyAndFix(code, {
       plugins: { soujvnunes: soujvnunesPlugin },
       rules: { 'soujvnunes/one-line-comments': 'error' },
     }).output
-  it('passes its own RuleTester suite', () => {
-    ruleTester.run('one-line-comments', oneLineComments, {
+  it('passes its own suite of valid and invalid cases', () => {
+    run({
       valid: [
         '// One line, however long it runs, which is the whole point and stays legal at any length.',
         'const a = 1\n// A comment separated from another by code.\nconst b = 2\n// Another one.',

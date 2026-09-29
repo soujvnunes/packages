@@ -1,4 +1,4 @@
-import type { AST, Rule } from 'eslint'
+import { AST_TOKEN_TYPES, ESLintUtils } from '@typescript-eslint/utils'
 import {
   createCommentLookup,
   followedOnLine,
@@ -10,7 +10,8 @@ import {
   spansLines,
 } from './commentKinds'
 import type { Comment, Neighbour } from './commentKinds'
-const isBare = (comment: Comment) => comment.type === 'Line' && comment.value.trim() === ''
+const isBare = (comment: Comment) =>
+  comment.type === AST_TOKEN_TYPES.Line && comment.value.trim() === ''
 const collapse = (text: string) => text.replace(/\s+/gu, ' ').trim()
 const asLine = (body: string) => (body ? `// ${body}` : null)
 const blockLines = (comment: Comment) =>
@@ -50,10 +51,9 @@ const collapsedBlock = (comment: Comment, lines: string[]) => {
 }
 const isJsDoc = (comment: Comment, after: Neighbour) => {
   if (!isComment(after)) return true
-  const next = after as unknown as Comment
-  return isDirective(next) || (isDocShaped(next) && /^\*+\s*@/u.test(comment.value))
+  return isDirective(after) || (isDocShaped(after) && /^\*+\s*@/u.test(comment.value))
 }
-export const oneLineComments: Rule.RuleModule = {
+export const oneLineComments = ESLintUtils.RuleCreator.withoutDocs({
   meta: {
     type: 'layout',
     docs: {
@@ -75,6 +75,7 @@ export const oneLineComments: Rule.RuleModule = {
         '`/**` is JSDoc, and JSDoc sits directly above the code it documents. Move it there, join it with the doc under it, or write it as `//`.',
     },
   },
+  defaultOptions: [],
   create(context) {
     const sourceCode = context.sourceCode
     const comments = sourceCode.getAllComments().filter(isComment)
@@ -84,15 +85,13 @@ export const oneLineComments: Rule.RuleModule = {
       if (insideJsx(comment)) return false
       const before = sourceCode.getTokenBefore(comment, { includeComments: true })
       return (
-        !!before?.loc &&
-        before.loc.end.line === comment.loc?.start.line &&
-        followedOnLine(comment, after)
+        !!before && before.loc.end.line === comment.loc.start.line && followedOnLine(comment, after)
       )
     }
     const blockVerdict = (comment: Comment, after: Neighbour) => {
       const lines = blockLines(comment)
       const keepBlock = insideJsx(comment) || isDocShaped(comment) || isBanner(comment)
-      const messageId = spansLines(comment) ? 'block' : 'notDoc'
+      const messageId: 'block' | 'notDoc' = spansLines(comment) ? 'block' : 'notDoc'
       if (
         !insideJsx(comment) &&
         !isBanner(comment) &&
@@ -109,12 +108,18 @@ export const oneLineComments: Rule.RuleModule = {
       'Program:exit'() {
         const docs = new Set<Comment>()
         for (const comment of comments) {
-          if (comment.type !== 'Block' || isDirective(comment) || isAllowMarker(comment)) continue
+          if (
+            comment.type !== AST_TOKEN_TYPES.Block ||
+            isDirective(comment) ||
+            isAllowMarker(comment)
+          ) {
+            continue
+          }
           const after = sourceCode.getTokenAfter(comment, { includeComments: true })
           if (spansLines(comment)) {
             const { messageId, text } = blockVerdict(comment, after)
             context.report({
-              loc: comment.loc as AST.SourceLocation,
+              loc: comment.loc,
               messageId,
               fix:
                 text && !breaksSemicolonInsertion(comment, after)
@@ -126,12 +131,12 @@ export const oneLineComments: Rule.RuleModule = {
           if (insideJsx(comment) || isBanner(comment)) continue
           if (isDocShaped(comment)) {
             if (isJsDoc(comment, after)) docs.add(comment)
-            else context.report({ loc: comment.loc as AST.SourceLocation, messageId: 'orphanDoc' })
+            else context.report({ loc: comment.loc, messageId: 'orphanDoc' })
             continue
           }
           const { messageId, text } = blockVerdict(comment, after)
           context.report({
-            loc: comment.loc as AST.SourceLocation,
+            loc: comment.loc,
             messageId,
             fix: text ? (fixer) => fixer.replaceText(comment, text) : null,
           })
@@ -146,8 +151,8 @@ export const oneLineComments: Rule.RuleModule = {
           if (current.length < 2 || current.some(isDirective)) return
           const first = current[0]
           const last = current[current.length - 1]
-          if (!first?.loc || !last?.loc) return
-          const block = current.some((comment) => comment.type === 'Block')
+          if (!first || !last) return
+          const block = current.some((comment) => comment.type === AST_TOKEN_TYPES.Block)
           const texts = current.map((comment) => (isBare(comment) ? '' : comment.value.trim() || ' '))
           const paragraphs = proseParagraphs(texts, false) > 1
           const text = asLine(collapse(texts.join(' ')))
@@ -157,14 +162,12 @@ export const oneLineComments: Rule.RuleModule = {
             fix:
               paragraphs || block || !text
                 ? null
-                : (fixer) =>
-                    fixer.replaceTextRange([first.range?.[0] ?? 0, last.range?.[1] ?? 0], text),
+                : (fixer) => fixer.replaceTextRange([first.range[0], last.range[1]], text),
           })
         }
         for (const comment of joinable) {
           const previous = run[run.length - 1]
-          const touching =
-            previous && (previous.loc?.end.line ?? 0) + 1 === (comment.loc?.start.line ?? 0)
+          const touching = previous && previous.loc.end.line + 1 === comment.loc.start.line
           if (!touching) flush()
           run.push(comment)
         }
@@ -172,4 +175,4 @@ export const oneLineComments: Rule.RuleModule = {
       },
     }
   },
-}
+})

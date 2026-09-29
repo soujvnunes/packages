@@ -1,5 +1,5 @@
-import { AST_NODE_TYPES, type TSESTree } from '@typescript-eslint/utils'
-import type { AST, Rule, SourceCode } from 'eslint'
+import { AST_NODE_TYPES, AST_TOKEN_TYPES, ESLintUtils } from '@typescript-eslint/utils'
+import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
 import {
   createCommentLookup,
   holdsTag,
@@ -12,6 +12,7 @@ import {
 } from './commentKinds'
 import type { Comment, Enclosing } from './commentKinds'
 type Lookup = ReturnType<typeof createCommentLookup>
+type SourceCode = Readonly<TSESLint.SourceCode>
 type Kind =
   | 'directive'
   | 'banner'
@@ -169,11 +170,7 @@ const isExportedDoc = (
   walk: Walk,
 ) => {
   const before = sourceCode.getTokenBefore(comment)
-  if (
-    before?.loc &&
-    before.loc.end.line === comment.loc?.start.line &&
-    !MEMBER_OPENERS.has(before.value)
-  ) {
+  if (before?.loc.end.line === comment.loc.start.line && !MEMBER_OPENERS.has(before.value)) {
     return false
   }
   const token = sourceCode.getTokenAfter(comment)
@@ -212,9 +209,24 @@ const classify = (
     if (reaches(false)) return 'jsdoc'
     return reaches(true) ? 'argumentDoc' : 'orphanDoc'
   }
-  return comment.type === 'Line' ? 'line' : 'block'
+  return comment.type === AST_TOKEN_TYPES.Line ? 'line' : 'block'
 }
-const MESSAGE_IDS: Record<Kind, string | null> = {
+const MESSAGES = {
+  line: 'Comments are not allowed in code. Delete this `//` comment: a reason the code cannot carry belongs in the README. Only tool directives and a JSDoc on an exported symbol stay.',
+  block:
+    'Comments are not allowed in code. Delete this block comment: a reason the code cannot carry belongs in the README. Only tool directives and a JSDoc on an exported symbol stay.',
+  orphanDoc:
+    'A JSDoc is allowed only directly above an exported symbol, or a member of an exported class, interface, type or enum. Delete this one.',
+  argumentDoc:
+    "This JSDoc sits in an argument of an exported call or `new`, so it is published only when the callee returns its argument's type, as `Object.freeze` or a generic identity helper does. The rule cannot see the signature: delete it unless the callee keeps it.",
+  jsdoc: 'This config allows no JSDoc. Delete it.',
+  jsx: 'Comments are not allowed in JSX. Delete this `{/* */}` container; only a tool directive stays.',
+  attribute: 'Comments are not allowed inside a JSX tag. Delete this one.',
+  emDash: 'This JSDoc holds an em dash. Write a comma, a colon, parentheses or two sentences instead.',
+}
+type MessageId = keyof typeof MESSAGES
+type Options = [{ jsdoc?: 'exports' | 'never' }]
+const MESSAGE_IDS: Record<Kind, MessageId | null> = {
   directive: null,
   banner: null,
   jsxDirective: null,
@@ -226,7 +238,7 @@ const MESSAGE_IDS: Record<Kind, string | null> = {
   line: 'line',
   block: 'block',
 }
-export const noComments: Rule.RuleModule = {
+export const noComments = ESLintUtils.RuleCreator.withoutDocs<Options, MessageId>({
   meta: {
     type: 'suggestion',
     docs: {
@@ -237,38 +249,25 @@ export const noComments: Rule.RuleModule = {
     schema: [
       {
         type: 'object',
-        properties: { jsdoc: { enum: ['exports', 'never'] } },
+        properties: { jsdoc: { type: 'string', enum: ['exports', 'never'] } },
         additionalProperties: false,
       },
     ],
-    messages: {
-      line: 'Comments are not allowed in code. Delete this `//` comment: a reason the code cannot carry belongs in the README. Only tool directives and a JSDoc on an exported symbol stay.',
-      block:
-        'Comments are not allowed in code. Delete this block comment: a reason the code cannot carry belongs in the README. Only tool directives and a JSDoc on an exported symbol stay.',
-      orphanDoc:
-        'A JSDoc is allowed only directly above an exported symbol, or a member of an exported class, interface, type or enum. Delete this one.',
-      argumentDoc:
-        "This JSDoc sits in an argument of an exported call or `new`, so it is published only when the callee returns its argument's type, as `Object.freeze` or a generic identity helper does. The rule cannot see the signature: delete it unless the callee keeps it.",
-      jsdoc: 'This config allows no JSDoc. Delete it.',
-      jsx: 'Comments are not allowed in JSX. Delete this `{/* */}` container; only a tool directive stays.',
-      attribute: 'Comments are not allowed inside a JSX tag. Delete this one.',
-      emDash:
-        'This JSDoc holds an em dash. Write a comma, a colon, parentheses or two sentences instead.',
-    },
+    messages: MESSAGES,
   },
-  create(context) {
+  defaultOptions: [{}],
+  create(context, [{ jsdoc }]) {
     const sourceCode = context.sourceCode
     const { lines, text } = sourceCode
     const lookup = createCommentLookup(sourceCode)
     const decorated = new Map<number, Node>()
-    const program = sourceCode.ast as unknown as TSESTree.Program
+    const program = sourceCode.ast
     const deferred = deferredExports(program.body)
     const globalScope = !isModuleFile(program)
     const declarationFile = DECLARATION_FILE.test(context.filename)
     const topLevel: TopLevel = (statement) =>
       isDeferred(statement, deferred) || (globalScope && (declarationFile || isAmbient(statement)))
     const typedJs = JS_FILE.test(context.filename)
-    const jsdoc = (context.options[0] as { jsdoc?: 'exports' | 'never' } | undefined)?.jsdoc
     const lineStart = (line: number) => sourceCode.getIndexFromLoc({ line, column: 0 })
     const lineEnd = (line: number) => lineStart(line) + (lines[line - 1]?.length ?? 0)
     const wholeLines = (first: number, last: number): [number, number] => {
@@ -287,15 +286,14 @@ export const noComments: Rule.RuleModule = {
       const span = lookup.jsxContainer(comment) ?? comment
       const side = lookup.sides(comment)
       const { range, loc } = span
-      if (!range || !loc || !side) return null
       const { before, after } = side
       if (!before && !after) {
         const bounds: [number, number] = [loc.start.line, loc.end.line]
         return { range: wholeLines(...bounds), text: '', lines: bounds }
       }
       if (kind === 'jsx') return null
-      const previousEnd = sourceCode.getTokenBefore(comment, { includeComments: true })?.range?.[1]
-      const nextStart = sourceCode.getTokenAfter(comment, { includeComments: true })?.range?.[0]
+      const previousEnd = sourceCode.getTokenBefore(comment, { includeComments: true })?.range[1]
+      const nextStart = sourceCode.getTokenAfter(comment, { includeComments: true })?.range[0]
       if (before && after) {
         if (spansLines(comment) || previousEnd === undefined || nextStart === undefined) return null
         return { range: [previousEnd, nextStart], text: ' ', lines: null }
@@ -308,15 +306,14 @@ export const noComments: Rule.RuleModule = {
       return nextStart === undefined ? null : { range: [range[0], nextStart], text: '', lines: null }
     }
     return {
-      Decorator(node: Rule.Node) {
-        const decorator = node as unknown as TSESTree.Decorator
+      Decorator(decorator) {
         const { parent } = decorator
         if ('decorators' in parent && parent.decorators[0] === decorator) {
           decorated.set(decorator.range[0], parent)
         }
       },
       'Program:exit'() {
-        const reports: { comment: Comment; messageId: string; fix: Removal | null }[] = []
+        const reports: { comment: Comment; messageId: MessageId; fix: Removal | null }[] = []
         for (const comment of sourceCode.getAllComments().filter(isComment)) {
           const kind: Kind =
             typedJs && isTypeAnnotation(comment)
@@ -352,7 +349,7 @@ export const noComments: Rule.RuleModule = {
         flush()
         for (const { comment, messageId, fix } of reports) {
           context.report({
-            loc: comment.loc as AST.SourceLocation,
+            loc: comment.loc,
             messageId,
             fix: fix ? (fixer) => fixer.replaceTextRange(fix.range, fix.text) : null,
           })
@@ -360,4 +357,4 @@ export const noComments: Rule.RuleModule = {
       },
     }
   },
-}
+})
