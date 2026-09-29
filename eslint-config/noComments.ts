@@ -3,8 +3,8 @@ import {
   createCommentLookup,
   isBanner,
   isComment,
-  isDirective,
   isDocShaped,
+  isToolDirective,
   spansLines,
 } from './commentKinds'
 import type { Comment, Enclosing } from './commentKinds'
@@ -85,7 +85,7 @@ const classify = (
 ): Kind => {
   const node = lookup.enclosingNode(comment)
   const inJsx = isJsxNode(node)
-  if (isDirective(comment)) return inJsx ? 'jsxDirective' : 'directive'
+  if (isToolDirective(comment)) return inJsx ? 'jsxDirective' : 'directive'
   if (isBanner(comment)) return 'banner'
   if (inJsx) return node?.type === 'JSXEmptyExpression' ? 'jsx' : 'attribute'
   if (isDocShaped(comment)) {
