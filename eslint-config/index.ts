@@ -234,7 +234,7 @@ export interface ConfigOptions {
   allowArbitraryClasses?: string[]
   /** The `cn()`-like helper name a ternary passed straight to it is banned inside of. */
   classMergeName?: string
-  /** Modules next.config.* loads, beside next.config.* itself, restricted with the same repo's `no-restricted-imports` patterns (`['@/*']`) as the config file: relative imports only. */
+  /** Modules next.config.* loads, beside a next.config.ts, .mts or .cts itself (the .js and .mjs forms sit in the default ignores), restricted with the same repo's `no-restricted-imports` patterns (`['@/*']`) as the config file: relative imports only. */
   nextConfigModules?: string[]
   /** Globs wired to `soujvnunes/one-export-per-file`, the probe-only one-value-export-per-module rule. Unwired (no globs) leaves the rule exported but off. */
   strictExportGlobs?: string[]
@@ -371,7 +371,7 @@ const buildConfig = ({
     },
   }
   const nextConfigModulesOverride: Linter.Config = {
-    files: ['next.config.{js,mjs,ts,mts,cts}', ...nextConfigModules],
+    files: ['next.config.{ts,mts,cts}', ...nextConfigModules],
     rules: { 'no-restricted-imports': ['error', { patterns: ['@/*'] }] },
   }
   const strictExportsOverride: Linter.Config = {

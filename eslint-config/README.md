@@ -47,7 +47,7 @@ export default createBaseConfig()
 | `tailwindEntryPoint` | (none) | Tailwind v4 CSS entry path. When set on the Next preset, wires `eslint-plugin-better-tailwindcss` correctness rules such as `no-unknown-classes`, which flags a class not registered in the theme, and `no-restricted-classes`, which flags an arbitrary-value class such as `text-[11px]`. The stylistic rules stay off, since `prettier-plugin-tailwindcss` already owns class order |
 | `allowArbitraryClasses` | `[]` | Utility prefixes exempt from the arbitrary-Tailwind-value ban, for a shape with no theme token (`['grid-cols']` for `grid-cols-[200px_1fr]`). Read only when `tailwindEntryPoint` is set |
 | `classMergeName` | `'cn'` | The class-merge helper name a ternary passed straight to it is banned inside of |
-| `nextConfigModules` | `[]` | Modules `next.config.*` loads, restricted to relative imports (`no-restricted-imports` on `['@/*']`) the same as the config file itself, on the Next preset |
+| `nextConfigModules` | `[]` | Modules `next.config.*` loads, restricted to relative imports (`no-restricted-imports` on `['@/*']`) the same as a `next.config.ts`, `.mts` or `.cts` itself, on the Next preset |
 | `strictExportGlobs` | `[]` | Globs wired to `soujvnunes/one-export-per-file`. With no globs the rule stays exported but off |
 | `extend` | `[]` | Extra flat-config objects appended at the end |
 
@@ -117,7 +117,7 @@ Both are Next-preset only, since a plain TypeScript library's `index.ts` is its 
 
 ## Module boundaries
 
-- `nextConfigModules` restricts `next.config.*` and the modules it names to relative imports only (`no-restricted-imports` on `['@/*']`), on the Next preset. A config file that imports through the `@/...` alias resolves it differently at build time than the app does, so anything the config loads stays relative.
+- `nextConfigModules` restricts a `next.config.ts`, `.mts` or `.cts` and the modules it names to relative imports only (`no-restricted-imports` on `['@/*']`), on the Next preset. A `next.config.js` or `.mjs` is not linted at all, since `*.config.js` and `*.config.mjs` are in the default ignores; the modules it names still are. A config file that imports through the `@/...` alias resolves it differently at build time than the app does, so anything the config loads stays relative.
 - `**/utils/**` restricts `server-only`, `next/*`, `react`, `@/lib/*` and `@/app/*` on both presets: a pure helper module takes data in and data out, never a server-only boundary or a framework import.
 
 ## `max-lines`: 300, skipping blank lines and comments

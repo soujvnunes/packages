@@ -1,4 +1,4 @@
-import { Linter } from 'eslint'
+import { ESLint, Linter } from 'eslint'
 import type { Linter as LinterTypes } from 'eslint'
 import { describe, expect, it } from 'vitest'
 import { lintWithRule } from './lintWithRule'
@@ -633,10 +633,20 @@ describe('module boundaries', () => {
     const override = config.find(
       (entry) => Array.isArray(entry.files) && entry.files.includes('src/env.ts'),
     )
-    expect(override?.files).toEqual(
-      expect.arrayContaining(['next.config.{js,mjs,ts,mts,cts}', 'src/env.ts']),
-    )
+    expect(override?.files).toEqual(expect.arrayContaining(['next.config.{ts,mts,cts}', 'src/env.ts']))
     expect(override?.rules?.['no-restricted-imports']).toEqual(['error', { patterns: ['@/*'] }])
+  })
+  it('names only next.config files the default ignores leave lintable, since *.config.js and *.config.mjs are ignored', async () => {
+    const eslint = new ESLint({
+      cwd: process.cwd(),
+      overrideConfigFile: true,
+      overrideConfig: createNextConfig({ nextConfigModules: ['src/env.ts'] }),
+    })
+    await expect(eslint.isPathIgnored('next.config.js')).resolves.toBe(true)
+    await expect(eslint.isPathIgnored('next.config.mjs')).resolves.toBe(true)
+    for (const path of ['next.config.ts', 'next.config.mts', 'next.config.cts', 'src/env.ts']) {
+      await expect(eslint.isPathIgnored(path)).resolves.toBe(false)
+    }
   })
   it('adds no override when nextConfigModules is left empty', () => {
     const config = createNextConfig()
