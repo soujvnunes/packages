@@ -56,7 +56,13 @@ const BOUNDARIES = new Set<AST_NODE_TYPES>([
   AST_NODE_TYPES.Program,
   AST_NODE_TYPES.BlockStatement,
   AST_NODE_TYPES.StaticBlock,
-  AST_NODE_TYPES.TSModuleBlock,
+])
+const MODULE_STATEMENTS = new Set<AST_NODE_TYPES>([
+  AST_NODE_TYPES.ImportDeclaration,
+  AST_NODE_TYPES.ExportNamedDeclaration,
+  AST_NODE_TYPES.ExportDefaultDeclaration,
+  AST_NODE_TYPES.ExportAllDeclaration,
+  AST_NODE_TYPES.TSExportAssignment,
 ])
 const MEMBER_OPENERS = new Set(['{', ';', ','])
 const JS_FILE = /\.[cm]?jsx?$/u
@@ -90,15 +96,31 @@ const isDeferred = (statement: Node, deferred: Set<string>) =>
     return !!name && deferred.has(name)
   })
 const holdsTag = (comment: Comment) => /(?:^|\s)@\w/u.test(comment.value)
-const isAmbient = (block: Node) => {
+const moduleFiles = new WeakMap<TSESTree.Program, boolean>()
+const isModuleFile = (program: TSESTree.Program) => {
+  const known = moduleFiles.get(program)
+  if (known !== undefined) return known
+  const verdict = program.body.some(
+    (statement) =>
+      MODULE_STATEMENTS.has(statement.type) ||
+      (statement.type === AST_NODE_TYPES.TSImportEqualsDeclaration &&
+        statement.moduleReference.type === AST_NODE_TYPES.TSExternalModuleReference),
+  )
+  moduleFiles.set(program, verdict)
+  return verdict
+}
+const ambience = (block: TSESTree.TSModuleBlock) => {
+  let declared = false
   let node: Node | undefined = block.parent
   while (node) {
-    if (node.type === AST_NODE_TYPES.TSModuleDeclaration && (node.declare || node.kind === 'global')) {
-      return true
+    if (node.type === AST_NODE_TYPES.TSModuleDeclaration) {
+      if (node.kind === 'global' || node.id.type === AST_NODE_TYPES.Literal) return 'public'
+      declared ||= node.declare
     }
+    if (node.type === AST_NODE_TYPES.Program && declared && !isModuleFile(node)) return 'public'
     node = node.parent
   }
-  return false
+  return declared ? 'declared' : 'local'
 }
 const isBoundary = (node: Node, child: Node) =>
   BOUNDARIES.has(node.type) ||
@@ -110,7 +132,10 @@ const reachesExport = (start: Node, deferred: Set<string>) => {
   let node: Node | undefined = start.parent
   while (node) {
     if (EXPORTS.has(node.type)) return true
-    if (node.type === AST_NODE_TYPES.TSModuleBlock && isAmbient(node)) return true
+    if (node.type === AST_NODE_TYPES.TSModuleBlock) {
+      const scope = ambience(node)
+      if (scope !== 'declared') return scope === 'public'
+    }
     if (node.type === AST_NODE_TYPES.Program) return isDeferred(child, deferred)
     if (isBoundary(node, child)) return false
     child = node

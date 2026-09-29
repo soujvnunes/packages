@@ -145,6 +145,18 @@ const TYPESCRIPT_KEEPS: [string, string][] = [
     "declare module 'x' {\n  namespace Y {\n    /** Doc. */\n    const a: string\n  }\n}",
   ],
   [
+    'a JSDoc in a declare namespace of a file with no import or export, which is global',
+    'declare namespace API {\n  /** Doc. */\n  interface User {\n    /** Id. */\n    id: string\n  }\n}',
+  ],
+  [
+    'a JSDoc in an exported declare namespace of a module file',
+    "import x from 'y'\nexport declare namespace N {\n  /** Doc. */\n  const a: string\n}\nexport const b = x",
+  ],
+  [
+    'a JSDoc in a declare namespace a later export list names',
+    "import x from 'y'\ndeclare namespace N {\n  /** Doc. */\n  const a: string\n}\nexport { N, x }",
+  ],
+  [
     'a JSDoc on a constructor parameter property of an exported class',
     'export class A {\n  constructor(\n    /** The URL. */\n    public readonly url: string,\n  ) {}\n}',
   ],
@@ -192,6 +204,12 @@ const TYPESCRIPT_FIXES: [string, string, string, string[]][] = [
     'a JSDoc in a namespace that is not ambient and a member it does not export',
     'namespace N {\n  /** Doc. */\n  const a = 1\n}',
     'namespace N {\n  const a = 1\n}',
+    ['orphanDoc'],
+  ],
+  [
+    'a JSDoc in a declare namespace of a module file that nothing exports',
+    "import x from 'y'\ndeclare namespace N {\n  /** Doc. */\n  const a: string\n}\nexport const b = x",
+    "import x from 'y'\ndeclare namespace N {\n  const a: string\n}\nexport const b = x",
     ['orphanDoc'],
   ],
   [
