@@ -53,12 +53,13 @@ describe('shared shape', () => {
     const config = createBaseConfig({ tsconfigRootDir: '/repo' })
     expect(mainBlock(config).languageOptions?.parserOptions).toMatchObject({ tsconfigRootDir: '/repo' })
   })
-  it('exempts root config files from the default-export and syntax bans', () => {
+  it('exempts root config files from the default-export ban, keeping the syntax bans that are not about export shape', () => {
     const override = createBaseConfig().find((entry) => entry.files?.[0] === '*.{mjs,js,ts,mts,cts}')
-    expect(override?.rules).toMatchObject({
-      'import-x/no-default-export': 'off',
-      'no-restricted-syntax': 'off',
-    })
+    expect(override?.rules?.['import-x/no-default-export']).toBe('off')
+    const rule = override?.rules?.['no-restricted-syntax'] as [string, ...{ selector: string }[]]
+    const selectors = rule.slice(1).map((entry) => (entry as { selector: string }).selector)
+    expect(selectors).not.toEqual(expect.arrayContaining(['ExportDefaultDeclaration > FunctionDeclaration']))
+    expect(selectors).toEqual(expect.arrayContaining(['TSEnumDeclaration']))
   })
 })
 describe('import order', () => {
@@ -125,14 +126,18 @@ describe('createNextConfig', () => {
     expect(settings.react).toEqual({ version: 'detect' })
     expect(settings['import-x/resolver-next']).toHaveLength(1)
   })
-  it('exempts the Next file conventions, which must default-export', () => {
+  it('exempts the Next file conventions from the default-export ban only, keeping every other syntax ban on page.tsx', () => {
     const override = createNextConfig().find((entry) =>
       entry.files?.[0]?.includes('{default,page,layout'),
     )
-    expect(override?.rules).toMatchObject({
-      'import-x/no-default-export': 'off',
-      'no-restricted-syntax': 'off',
-    })
+    expect(override?.rules?.['import-x/no-default-export']).toBe('off')
+    const rule = override?.rules?.['no-restricted-syntax'] as [string, ...{ selector: string; message: string }[]]
+    const selectors = rule.slice(1).map((entry) => (entry as { selector: string }).selector)
+    expect(selectors).not.toEqual(expect.arrayContaining(['ExportDefaultDeclaration > FunctionDeclaration']))
+    expect(selectors).not.toEqual(expect.arrayContaining(['ExportNamedDeclaration > FunctionDeclaration']))
+    expect(selectors).toEqual(
+      expect.arrayContaining(["ImportDeclaration[source.value='react'] > ImportDefaultSpecifier"]),
+    )
   })
   it.each(['proxy', 'middleware'])('exempts %s, since a repo can be on either name', (name) => {
     const override = createNextConfig().find((entry) =>

@@ -104,43 +104,53 @@ const generalRules: Linter.RulesRecord = {
   'no-script-url': 'error',
   'padding-line-between-statements': ['error', { blankLine: 'never', prev: '*', next: '*' }],
 }
-const restrictedSyntaxRule: Linter.RulesRecord = {
-  'no-restricted-syntax': [
-    'error',
-    {
-      selector: 'ExportDefaultDeclaration > FunctionDeclaration',
-      message:
-        'Avoid `export default function`; use `export const` instead for tree-shakeable modules.',
-    },
-    {
-      selector: 'ExportNamedDeclaration > FunctionDeclaration',
-      message: 'Use `export const` instead of `export function` for tree-shakeable modules.',
-    },
-    {
-      selector: 'TSEnumDeclaration',
-      message: 'Avoid enums; use const assertions or union types instead.',
-    },
-    {
-      selector: "ImportDeclaration[source.value='react'] > ImportDefaultSpecifier",
-      message:
-        'Do not import the React default. Use the ambient `React.*` namespace (the react-jsx runtime needs no React import).',
-    },
-    {
-      selector: "ImportDeclaration[source.value='react'] > ImportNamespaceSpecifier",
-      message: 'Do not `import * as React`. Use the ambient `React.*` namespace.',
-    },
-    {
-      selector: "ImportDeclaration[source.value='react'] > ImportSpecifier[importKind='type']",
-      message:
-        'Reference React types via the ambient `React.*` namespace, not a named `{ type X }` import from react.',
-    },
-    {
-      selector: "ImportDeclaration[importKind='type'][source.value='react']",
-      message:
-        'Reference React types via the ambient `React.*` namespace, not `import type … from "react"`.',
-    },
-  ],
+type SelectorKey =
+  | 'exportDefaultFunction'
+  | 'exportNamedFunction'
+  | 'tsEnum'
+  | 'reactDefaultImport'
+  | 'reactNamespaceImport'
+  | 'reactTypeImportSpecifier'
+  | 'reactTypeImportDeclaration'
+const RESTRICTED_SELECTORS: Record<SelectorKey, { selector: string; message: string }> = {
+  exportDefaultFunction: {
+    selector: 'ExportDefaultDeclaration > FunctionDeclaration',
+    message: 'Avoid `export default function`; use `export const` instead for tree-shakeable modules.',
+  },
+  exportNamedFunction: {
+    selector: 'ExportNamedDeclaration > FunctionDeclaration',
+    message: 'Use `export const` instead of `export function` for tree-shakeable modules.',
+  },
+  tsEnum: {
+    selector: 'TSEnumDeclaration',
+    message: 'Avoid enums; use const assertions or union types instead.',
+  },
+  reactDefaultImport: {
+    selector: "ImportDeclaration[source.value='react'] > ImportDefaultSpecifier",
+    message:
+      'Do not import the React default. Use the ambient `React.*` namespace (the react-jsx runtime needs no React import).',
+  },
+  reactNamespaceImport: {
+    selector: "ImportDeclaration[source.value='react'] > ImportNamespaceSpecifier",
+    message: 'Do not `import * as React`. Use the ambient `React.*` namespace.',
+  },
+  reactTypeImportSpecifier: {
+    selector: "ImportDeclaration[source.value='react'] > ImportSpecifier[importKind='type']",
+    message:
+      'Reference React types via the ambient `React.*` namespace, not a named `{ type X }` import from react.',
+  },
+  reactTypeImportDeclaration: {
+    selector: "ImportDeclaration[importKind='type'][source.value='react']",
+    message:
+      'Reference React types via the ambient `React.*` namespace, not `import type … from "react"`.',
+  },
 }
+const ALL_SELECTOR_KEYS = Object.keys(RESTRICTED_SELECTORS) as SelectorKey[]
+const EXPORT_DEFAULT_KEYS: SelectorKey[] = ['exportDefaultFunction', 'exportNamedFunction']
+const NON_EXPORT_DEFAULT_KEYS = ALL_SELECTOR_KEYS.filter((key) => !EXPORT_DEFAULT_KEYS.includes(key))
+const restrictedSyntaxRule = (keys: SelectorKey[]): Linter.RulesRecord => ({
+  'no-restricted-syntax': ['error', ...keys.map((key) => RESTRICTED_SELECTORS[key])],
+})
 const reactRules: Linter.RulesRecord = {
   'react/prop-types': 'off',
   'react/react-in-jsx-scope': 'off',
@@ -201,7 +211,7 @@ const buildConfig = ({
     ...importRules,
     ...securityRules,
     ...generalRules,
-    ...restrictedSyntaxRule,
+    ...restrictedSyntaxRule(ALL_SELECTOR_KEYS),
     ...importOrderRule(importGroups),
   }
   const languageGlobals: Record<string, unknown> = { ...globals.node, ...globals.es2021 }
@@ -233,13 +243,19 @@ const buildConfig = ({
   }
   const rootConfigOverride: Linter.Config = {
     files: ['*.{mjs,js,ts,mts,cts}'],
-    rules: { 'import-x/no-default-export': 'off', 'no-restricted-syntax': 'off' },
+    rules: {
+      'import-x/no-default-export': 'off',
+      ...restrictedSyntaxRule(NON_EXPORT_DEFAULT_KEYS),
+    },
   }
   const nextFileConventionsOverride: Linter.Config = {
     files: [
       '**/{default,page,layout,error,loading,forbidden,not-found,template,unauthorized,icon,apple-icon,manifest,opengraph-image,twitter-image,global-error,proxy,middleware,sitemap,robots}.{ts,tsx}',
     ],
-    rules: { 'import-x/no-default-export': 'off', 'no-restricted-syntax': 'off' },
+    rules: {
+      'import-x/no-default-export': 'off',
+      ...restrictedSyntaxRule(NON_EXPORT_DEFAULT_KEYS),
+    },
   }
   const commentsOverride: Linter.Config = {
     files: ['**/*.{js,jsx,mjs,cjs,ts,tsx,mts,cts}'],
