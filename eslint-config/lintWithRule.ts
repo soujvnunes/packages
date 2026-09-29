@@ -1,15 +1,16 @@
 import { Linter } from 'eslint'
 import { soujvnunesPlugin } from './plugin'
-/** Lints one `.tsx` snippet with one of this package's rules through the plugin, the way a consumer's flat config runs it. */
+/** Lints one snippet, named `component.tsx` unless `filename` says otherwise, with one of this package's rules through the plugin, the way a consumer's flat config runs it. */
 export const lintWithRule = (
   languageOptions: Linter.LanguageOptions,
   code: string,
   rule: Linter.RulesRecord,
+  filename = 'component.tsx',
 ): Linter.LintMessage[] =>
   new Linter().verify(
     code,
     {
-      files: ['**/*.tsx'],
+      files: ['**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}'],
       plugins: { soujvnunes: soujvnunesPlugin },
       languageOptions: {
         ecmaVersion: 'latest',
@@ -20,5 +21,5 @@ export const lintWithRule = (
       linterOptions: { reportUnusedDisableDirectives: 'off' },
       rules: rule,
     },
-    'component.tsx',
+    filename,
   )

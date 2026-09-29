@@ -5,6 +5,7 @@ import {
   isComment,
   isDocShaped,
   isToolDirective,
+  isTypeAnnotation,
   spansLines,
 } from './commentKinds'
 import type { Comment, Enclosing } from './commentKinds'
@@ -47,6 +48,7 @@ const DOCUMENTED = new Set([
 ])
 const BOUNDARIES = new Set(['Program', 'BlockStatement', 'StaticBlock', 'TSModuleBlock'])
 const MEMBER_OPENERS = new Set(['{', ';', ','])
+const JS_FILE = /\.[cm]?jsx?$/u
 const EM_DASH = String.fromCodePoint(0x2014)
 type Named = { type: string; name?: string } | null | undefined
 type Walked = NonNullable<Enclosing> & {
@@ -204,6 +206,7 @@ export const noComments: Rule.RuleModule = {
     const lookup = createCommentLookup(sourceCode)
     const decorated = new Map<number, Enclosing>()
     const deferred = deferredExports(sourceCode.ast.body)
+    const typedJs = JS_FILE.test(context.filename)
     const jsdoc = (context.options[0] as { jsdoc?: 'exports' | 'never' } | undefined)?.jsdoc
     const lineStart = (line: number) => sourceCode.getIndexFromLoc({ line, column: 0 })
     const lineEnd = (line: number) => lineStart(line) + (lines[line - 1]?.length ?? 0)
@@ -247,7 +250,10 @@ export const noComments: Rule.RuleModule = {
       'Program:exit'() {
         const reports: { comment: Comment; messageId: string; fix: Removal | null }[] = []
         for (const comment of sourceCode.getAllComments().filter(isComment)) {
-          const kind = classify(comment, sourceCode, lookup, decorated, deferred)
+          const kind: Kind =
+            typedJs && isTypeAnnotation(comment)
+              ? 'directive'
+              : classify(comment, sourceCode, lookup, decorated, deferred)
           if (kind === 'jsdoc' && jsdoc !== 'never') {
             if (comment.value.includes(EM_DASH))
               reports.push({ comment, messageId: 'emDash', fix: null })

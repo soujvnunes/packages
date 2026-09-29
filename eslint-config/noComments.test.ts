@@ -345,6 +345,36 @@ describe.each(ruleSetups.slice(1))('no-comments on TypeScript syntax under %s', 
     expect(fixOnce(setup, code)).toBe(output)
   })
 })
+const JS_TYPE_ANNOTATIONS: [string, string][] = [
+  [
+    'a @type on a config create-next-app writes',
+    "/** @type {import('next').NextConfig} */\nconst nextConfig = {}\nexport default nextConfig",
+  ],
+  ['an inline @type cast', 'const a = /** @type {string} */ (b)'],
+  ['a @typedef', '/** @typedef {{ a: string }} Shape */\nconst a = 1'],
+  ['a @satisfies', "/** @satisfies {import('x').Config} */\nconst a = {}"],
+  [
+    'a @param and @returns on a local function',
+    '/** @param {string} a @returns {string} */\nfunction f(a) {\n  return a\n}',
+  ],
+]
+describe.each(ruleSetups)('no-comments in a JS file under %s', (_setup, setup) => {
+  const lintAs = (filename: string, code: string) =>
+    lintWithRule(setup, code, RULE, filename)
+      .filter(({ fatal, ruleId }) => fatal ?? ruleId === 'soujvnunes/no-comments')
+      .map(({ fatal, message, messageId }) => (fatal ? message : messageId))
+  it.each(JS_TYPE_ANNOTATIONS)('keeps %s, which checkJs reads as a type', (_case, code) => {
+    expect(lintAs('next.config.mjs', code)).toEqual([])
+  })
+  it('still reports a prose JSDoc on a local const', () => {
+    expect(lintAs('next.config.mjs', '/** Doc. */\nconst a = 1')).toEqual(['orphanDoc'])
+  })
+  it('reports the same @type annotation in a TypeScript file, where the type lives in the code', () => {
+    expect(lintAs('component.tsx', '/** @typedef {{ a: string }} Shape */\nconst a = 1')).toEqual([
+      'orphanDoc',
+    ])
+  })
+})
 describe('no-comments beside one-line-comments', () => {
   it('converges to code plus the JSDoc on the export, collapsed to one line', () => {
     const code = '// a\n// b\n/*\n * c\n */\nconst a = 1 // d\n/**\n * Doc.\n */\nexport const b = 2\n'
