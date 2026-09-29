@@ -110,6 +110,18 @@ const TYPESCRIPT_KEEPS: [string, string][] = [
     'export class A {\n  /** Field. */\n  @prop() b = 1\n  /** Method. */\n  @dec c() {}\n}',
   ],
   [
+    'a JSDoc on a constructor parameter property of an exported class',
+    'export class A {\n  constructor(\n    /** The URL. */\n    public readonly url: string,\n  ) {}\n}',
+  ],
+  [
+    'a JSDoc on an auto-accessor of an exported class',
+    'export class A {\n  /** The size. */\n  accessor size = 1\n}',
+  ],
+  [
+    'a JSDoc on an abstract auto-accessor of an exported class',
+    'export abstract class A {\n  /** The size. */\n  abstract accessor size: number\n}',
+  ],
+  [
     'a JSDoc in an object value on an exported class property, which declaration emit publishes',
     'export class A {\n  b = {\n    /** Doc. */\n    c: 1,\n  }\n}',
   ],
@@ -139,6 +151,12 @@ const TYPESCRIPT_FIXES: [string, string, string, string[]][] = [
     'a JSDoc in a type literal inside an exported function body',
     'export function f() {\n  const a: {\n    /** Doc. */\n    b: number\n  } = { b: 1 }\n  return a\n}',
     'export function f() {\n  const a: {\n    b: number\n  } = { b: 1 }\n  return a\n}',
+    ['orphanDoc'],
+  ],
+  [
+    'a JSDoc on a constructor parameter property of a class that is not exported',
+    'class A {\n  constructor(\n    /** The URL. */\n    public readonly url: string,\n  ) {}\n}',
+    'class A {\n  constructor(\n    public readonly url: string,\n  ) {}\n}',
     ['orphanDoc'],
   ],
   [
