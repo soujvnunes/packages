@@ -346,21 +346,9 @@ const FIXES: [string, string, string, string[]][] = [
     ['orphanDoc'],
   ],
   [
-    'a JSDoc on a key of an object passed to an exported call, whose type is the return type',
-    'export default defineConfig({\n  /** Doc. */\n  plugins: [],\n})',
-    'export default defineConfig({\n  plugins: [],\n})',
-    ['orphanDoc'],
-  ],
-  [
-    'a JSDoc on a field of a class passed to an exported call',
-    'export const A = mixin(class {\n  /** Doc. */\n  b = 1\n})',
-    'export const A = mixin(class {\n  b = 1\n})',
-    ['orphanDoc'],
-  ],
-  [
-    'a JSDoc on a key of an object passed to an exported new',
-    'export const a = new Store({\n  /** Doc. */\n  b: 1,\n})',
-    'export const a = new Store({\n  b: 1,\n})',
+    'a JSDoc on a key of an object passed to a call that is not exported',
+    'const config = defineConfig({\n  /** Doc. */\n  plugins: [],\n})',
+    'const config = defineConfig({\n  plugins: [],\n})',
     ['orphanDoc'],
   ],
   [
@@ -407,6 +395,26 @@ const UNFIXED: [string, string, string[]][] = [
     'a JSDoc @internal with prose on a local',
     '/** @internal This helper exists because of a long story */\nconst a = 1',
     ['orphanDoc'],
+  ],
+  [
+    'a JSDoc on a key of an object passed to an exported call, which only the callee signature publishes or drops',
+    'export default defineConfig({\n  /** Doc. */\n  plugins: [],\n})',
+    ['argumentDoc'],
+  ],
+  [
+    'a JSDoc on a key of an object Object.freeze exports, whose return type keeps it',
+    'export const A = Object.freeze({\n  /** Doc. */\n  b: 1,\n})',
+    ['argumentDoc'],
+  ],
+  [
+    'a JSDoc on a field of a class passed to an exported call',
+    'export const A = mixin(class {\n  /** Doc. */\n  b = 1\n})',
+    ['argumentDoc'],
+  ],
+  [
+    'a JSDoc on a key of an object passed to an exported new',
+    'export const a = new Store({\n  /** Doc. */\n  b: 1,\n})',
+    ['argumentDoc'],
   ],
   [
     'a JSDoc on an export holding an em dash',

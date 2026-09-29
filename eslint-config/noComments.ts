@@ -17,6 +17,7 @@ type Kind =
   | 'banner'
   | 'jsdoc'
   | 'orphanDoc'
+  | 'argumentDoc'
   | 'jsx'
   | 'jsxDirective'
   | 'attribute'
@@ -24,6 +25,7 @@ type Kind =
   | 'block'
 type Removal = { range: [number, number]; text: string; lines: [number, number] | null }
 type Node = TSESTree.Node
+type Walk = { deferred: Set<string>; throughCalls: boolean }
 const EXPORTS = new Set<AST_NODE_TYPES>([
   AST_NODE_TYPES.ExportNamedDeclaration,
   AST_NODE_TYPES.ExportDefaultDeclaration,
@@ -133,27 +135,28 @@ const ambience = (block: TSESTree.TSModuleBlock) => {
   }
   return declared ? 'declared' : 'local'
 }
-const isBoundary = (node: Node, child: Node) =>
+const isBoundary = (node: Node, child: Node, walk: Walk) =>
   BOUNDARIES.has(node.type) ||
   (node.type === AST_NODE_TYPES.ArrowFunctionExpression && node.body === child) ||
-  ((node.type === AST_NODE_TYPES.CallExpression || node.type === AST_NODE_TYPES.NewExpression) &&
+  (!walk.throughCalls &&
+    (node.type === AST_NODE_TYPES.CallExpression || node.type === AST_NODE_TYPES.NewExpression) &&
     node.arguments.some((argument) => argument === child))
-const isPublished = (statement: Node, deferred: Set<string>): boolean => {
+const isPublished = (statement: Node, walk: Walk): boolean => {
   const { parent } = statement
   if (parent?.type !== AST_NODE_TYPES.TSModuleBlock) return true
-  return ambience(parent) === 'public' || reachesExport(parent.parent, deferred)
+  return ambience(parent) === 'public' || reachesExport(parent.parent, walk)
 }
-const reachesExport = (start: Node, deferred: Set<string>) => {
+const reachesExport = (start: Node, walk: Walk) => {
   let child = start
   let node: Node | undefined = start.parent
   while (node) {
-    if (EXPORTS.has(node.type)) return isPublished(node, deferred)
+    if (EXPORTS.has(node.type)) return isPublished(node, walk)
     if (node.type === AST_NODE_TYPES.TSModuleBlock) {
       const scope = ambience(node)
       if (scope !== 'declared') return scope === 'public'
     }
-    if (node.type === AST_NODE_TYPES.Program) return isDeferred(child, deferred)
-    if (isBoundary(node, child)) return false
+    if (node.type === AST_NODE_TYPES.Program) return isDeferred(child, walk.deferred)
+    if (isBoundary(node, child, walk)) return false
     child = node
     node = node.parent
   }
@@ -164,7 +167,7 @@ const isExportedDoc = (
   sourceCode: SourceCode,
   lookup: Lookup,
   decorated: Map<number, Node>,
-  deferred: Set<string>,
+  walk: Walk,
 ) => {
   const before = sourceCode.getTokenBefore(comment)
   if (
@@ -177,13 +180,13 @@ const isExportedDoc = (
   const token = sourceCode.getTokenAfter(comment)
   if (!token) return false
   const target = decorated.get(token.range[0])
-  if (target?.type === AST_NODE_TYPES.ClassDeclaration && reachesExport(target, deferred)) {
+  if (target?.type === AST_NODE_TYPES.ClassDeclaration && reachesExport(target, walk)) {
     return true
   }
   let node = lookup.nodeAt(token.range[0])
   while (node?.range[0] === token.range[0]) {
-    if (EXPORTS.has(node.type)) return isPublished(node, deferred)
-    if (DOCUMENTED.has(node.type)) return reachesExport(node, deferred)
+    if (EXPORTS.has(node.type)) return isPublished(node, walk)
+    if (DOCUMENTED.has(node.type)) return reachesExport(node, walk)
     node = node.parent ?? null
   }
   return false
@@ -205,7 +208,10 @@ const classify = (
   if (isBanner(comment)) return 'banner'
   if (inJsx) return node?.type === AST_NODE_TYPES.JSXEmptyExpression ? 'jsx' : 'attribute'
   if (isDocShaped(comment)) {
-    return isExportedDoc(comment, sourceCode, lookup, decorated, deferred) ? 'jsdoc' : 'orphanDoc'
+    const reaches = (throughCalls: boolean) =>
+      isExportedDoc(comment, sourceCode, lookup, decorated, { deferred, throughCalls })
+    if (reaches(false)) return 'jsdoc'
+    return reaches(true) ? 'argumentDoc' : 'orphanDoc'
   }
   return comment.type === 'Line' ? 'line' : 'block'
 }
@@ -215,6 +221,7 @@ const MESSAGE_IDS: Record<Kind, string | null> = {
   jsxDirective: null,
   jsdoc: 'jsdoc',
   orphanDoc: 'orphanDoc',
+  argumentDoc: 'argumentDoc',
   jsx: 'jsx',
   attribute: 'attribute',
   line: 'line',
@@ -241,6 +248,8 @@ export const noComments: Rule.RuleModule = {
         'Comments are not allowed in code. Delete this block comment: a reason the code cannot carry belongs in the README. Only tool directives and a JSDoc on an exported symbol stay.',
       orphanDoc:
         'A JSDoc is allowed only directly above an exported symbol, or a member of an exported class, interface, type or enum. Delete this one.',
+      argumentDoc:
+        "This JSDoc sits in an argument of an exported call or `new`, so it is published only when the callee returns its argument's type, as `Object.freeze` or a generic identity helper does. The rule cannot see the signature: delete it unless the callee keeps it.",
       jsdoc: 'This config allows no JSDoc. Delete it.',
       jsx: 'Comments are not allowed in JSX. Delete this `{/* */}` container; only a tool directive stays.',
       attribute: 'Comments are not allowed inside a JSX tag. Delete this one.',
@@ -265,7 +274,11 @@ export const noComments: Rule.RuleModule = {
       return [0, text.length]
     }
     const removal = (comment: Comment, kind: Kind): Removal | null => {
-      if (kind === 'attribute' || ((kind === 'orphanDoc' || kind === 'jsdoc') && holdsTag(comment))) {
+      if (
+        kind === 'attribute' ||
+        kind === 'argumentDoc' ||
+        ((kind === 'orphanDoc' || kind === 'jsdoc') && holdsTag(comment))
+      ) {
         return null
       }
       const span = lookup.jsxContainer(comment) ?? comment
