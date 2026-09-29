@@ -110,6 +110,18 @@ const TYPESCRIPT_KEEPS: [string, string][] = [
     'export class A {\n  /** Field. */\n  @prop() b = 1\n  /** Method. */\n  @dec c() {}\n}',
   ],
   [
+    'a JSDoc in a declare global block',
+    'declare global {\n  /** Doc. */\n  var a: string\n}\nexport {}',
+  ],
+  [
+    'a JSDoc on an interface member in a declare module augmentation',
+    "declare module 'x' {\n  interface A {\n    /** Doc. */\n    b: string\n  }\n}",
+  ],
+  [
+    'a JSDoc in a namespace nested in a declare module block',
+    "declare module 'x' {\n  namespace Y {\n    /** Doc. */\n    const a: string\n  }\n}",
+  ],
+  [
     'a JSDoc on a constructor parameter property of an exported class',
     'export class A {\n  constructor(\n    /** The URL. */\n    public readonly url: string,\n  ) {}\n}',
   ],
@@ -151,6 +163,12 @@ const TYPESCRIPT_FIXES: [string, string, string, string[]][] = [
     'a JSDoc in a type literal inside an exported function body',
     'export function f() {\n  const a: {\n    /** Doc. */\n    b: number\n  } = { b: 1 }\n  return a\n}',
     'export function f() {\n  const a: {\n    b: number\n  } = { b: 1 }\n  return a\n}',
+    ['orphanDoc'],
+  ],
+  [
+    'a JSDoc in a namespace that is not ambient and a member it does not export',
+    'namespace N {\n  /** Doc. */\n  const a = 1\n}',
+    'namespace N {\n  const a = 1\n}',
     ['orphanDoc'],
   ],
   [

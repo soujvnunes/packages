@@ -48,8 +48,16 @@ const DOCUMENTED = new Set([
 const BOUNDARIES = new Set(['Program', 'BlockStatement', 'StaticBlock', 'TSModuleBlock'])
 const MEMBER_OPENERS = new Set(['{', ';', ','])
 const EM_DASH = String.fromCodePoint(0x2014)
-type Walked = NonNullable<Enclosing> & { body?: unknown }
+type Walked = NonNullable<Enclosing> & { body?: unknown; declare?: boolean; kind?: string }
 const holdsTag = (comment: Comment) => /(?:^|\s)@\w/u.test(comment.value)
+const isAmbient = (block: Walked) => {
+  let node: Walked | undefined = block.parent ?? undefined
+  while (node) {
+    if (node.type === 'TSModuleDeclaration' && (node.declare || node.kind === 'global')) return true
+    node = node.parent ?? undefined
+  }
+  return false
+}
 const isBoundary = (node: Walked, child: Walked) =>
   BOUNDARIES.has(node.type) || (node.type === 'ArrowFunctionExpression' && node.body === child)
 const reachesExport = (start: Walked) => {
@@ -57,6 +65,7 @@ const reachesExport = (start: Walked) => {
   let node: Walked | undefined = start.parent ?? undefined
   while (node) {
     if (EXPORTS.has(node.type)) return true
+    if (node.type === 'TSModuleBlock' && isAmbient(node)) return true
     if (isBoundary(node, child)) return false
     child = node
     node = node.parent ?? undefined
