@@ -59,6 +59,7 @@ const KEEPS: [string, string][] = [
   ['webpackChunkName', "const m = import(/* webpackChunkName: 'x' */ './x')"],
   ['a block @internal', '/* @internal */\nexport const a = 1'],
   ['a line @internal', '// @internal\nexport const a = 1'],
+  ['a JSDoc @internal with prose above an export', '/** @internal Doc. */\nexport const a = 1'],
   ['a /*! banner', '/*! banner */\nconst a = 1'],
   ['an interpreter line', '#!/usr/bin/env node\nconst a = 1'],
   ['a JSDoc above export const', '/** Doc. */\nexport const a = 1'],
@@ -249,6 +250,12 @@ const FIXES: [string, string, string, string[]][] = [
   ],
   ['a // opening with #', '// #1 reason we do this\nconst a = 1', 'const a = 1', ['line']],
   [
+    'a // @internal with prose after it and no declaration under it',
+    'function f() {\n  // @internal we do this because of a long story\n  return 1\n}',
+    'function f() {\n  return 1\n}',
+    ['line'],
+  ],
+  [
     'a multi-line block that mentions gitleaks:allow, which gitleaks reads only on the line of a finding',
     '/*\n * Long rationale here\n * mention gitleaks:allow\n */\nconst a = 1',
     'const a = 1',
@@ -322,6 +329,11 @@ const UNFIXED: [string, string, string[]][] = [
   [
     'a misplaced JSDoc that opens with a tag no tool reads',
     '/** @description any prose here */\nconst a = 1',
+    ['orphanDoc'],
+  ],
+  [
+    'a JSDoc @internal with prose on a local',
+    '/** @internal This helper exists because of a long story */\nconst a = 1',
     ['orphanDoc'],
   ],
   [
