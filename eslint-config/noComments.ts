@@ -20,7 +20,7 @@ type Kind =
   | 'line'
   | 'block'
 type Removal = { range: [number, number]; text: string; lines: [number, number] | null }
-const EXPORTS = new Set(['ExportNamedDeclaration', 'ExportDefaultDeclaration'])
+const EXPORTS = new Set(['ExportNamedDeclaration', 'ExportDefaultDeclaration', 'ExportAllDeclaration'])
 const MEMBERS = new Set([
   'PropertyDefinition',
   'MethodDefinition',
@@ -28,10 +28,16 @@ const MEMBERS = new Set([
   'TSMethodSignature',
   'TSAbstractPropertyDefinition',
   'TSAbstractMethodDefinition',
+  'TSEnumMember',
+  'TSIndexSignature',
+  'TSCallSignatureDeclaration',
+  'TSConstructSignatureDeclaration',
 ])
 const CONTAINERS = new Set([
   'ClassBody',
   'ClassDeclaration',
+  'PropertyDefinition',
+  'TSAbstractPropertyDefinition',
   'TSInterfaceBody',
   'TSInterfaceDeclaration',
   'TSTypeLiteral',
@@ -40,6 +46,8 @@ const CONTAINERS = new Set([
   'TSPropertySignature',
   'TSIntersectionType',
   'TSUnionType',
+  'TSEnumBody',
+  'TSEnumDeclaration',
 ])
 const MEMBER_OPENERS = new Set(['{', ';', ','])
 const EM_DASH = String.fromCodePoint(0x2014)

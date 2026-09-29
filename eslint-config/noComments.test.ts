@@ -58,6 +58,8 @@ const KEEPS: [string, string][] = [
   ['a JSDoc above export const', '/** Doc. */\nexport const a = 1'],
   ['a JSDoc above export function', '/** Doc. */\nexport function f() {}'],
   ['a JSDoc above export default', '/** Doc. */\nexport default 1'],
+  ['a JSDoc above export * from', "/** Doc. */\nexport * from './x'"],
+  ['a JSDoc above export * as', "/** Doc. */\nexport * as x from './x'"],
   [
     'a JSDoc on an exported class, its fields and its methods',
     '/** Doc. */\nexport class A {\n  /** Field. */\n  b = 1\n  /** Method. */\n  c() {}\n}',
@@ -85,6 +87,19 @@ const TYPESCRIPT_KEEPS: [string, string][] = [
     'a JSDoc on exported type literal members',
     '/** Doc. */\nexport type A = {\n  /** Field. */\n  b: string\n  /** Nested. */\n  c: {\n    /** Deep. */\n    d: number\n  }\n}',
   ],
+  ['a JSDoc on an exported enum member', 'export enum E {\n  /** Red. */\n  R,\n}'],
+  [
+    'a JSDoc on index, call and construct signatures of an exported interface',
+    'export interface A {\n  /** Index. */\n  [k: string]: unknown\n  /** Call. */\n  (x: number): string\n  /** Construct. */\n  new (x: number): A\n}',
+  ],
+  [
+    'a JSDoc on an exported class index signature',
+    'export class A {\n  /** Index. */\n  [k: string]: unknown\n}',
+  ],
+  [
+    'a JSDoc in a type literal on an exported class property',
+    'export class A {\n  b: {\n    /** Deep. */\n    c: number\n  } = { c: 1 }\n}',
+  ],
   [
     'a JSDoc above an exported class whose decorators sit before export',
     '/** Doc. */\n@dec\n@other({ a: 1 })\nexport abstract class A {}',
@@ -96,6 +111,12 @@ const TYPESCRIPT_KEEPS: [string, string][] = [
   ],
 ]
 const TYPESCRIPT_FIXES: [string, string, string, string[]][] = [
+  [
+    'a JSDoc in an object value on an exported class property',
+    'export class A {\n  b = {\n    /** Doc. */\n    c: 1,\n  }\n}',
+    'export class A {\n  b = {\n    c: 1,\n  }\n}',
+    ['orphanDoc'],
+  ],
   [
     'a JSDoc above a decorated class that is not exported',
     '/** Doc. */\n@dec\nclass A {}',
