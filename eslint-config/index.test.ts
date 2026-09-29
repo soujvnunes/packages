@@ -389,10 +389,32 @@ describe('one-line-comments', () => {
   it('rewrites a plain block as a line comment, then joins it with its neighbour on the next pass', () => {
     expect(fix('// one\n/* two */\nconst a = 1')).toBe('// one two\nconst a = 1')
   })
-  it('is wired into the shared config at error, on a glob that reaches .mjs and .cjs', () => {
-    const block = createBaseConfig().find((entry) => entry.rules?.['soujvnunes/one-line-comments'])
-    expect(block?.rules?.['soujvnunes/one-line-comments']).toBe('error')
-    expect(block?.plugins).toHaveProperty('soujvnunes')
-    expect(block?.files?.[0]).toBe('**/*.{js,jsx,mjs,cjs,ts,tsx,mts,cts}')
+})
+describe('comment rules', () => {
+  it.each([
+    ['base', createBaseConfig],
+    ['next', createNextConfig],
+  ])(
+    '%s turns on one-line-comments and no-comments at error, on a glob that reaches .mjs and .cjs',
+    (_name, create) => {
+      const block = create().find((entry) => entry.rules?.['soujvnunes/no-comments'])
+      expect(block?.rules).toEqual({
+        'soujvnunes/one-line-comments': 'error',
+        'soujvnunes/no-comments': 'error',
+      })
+      expect(block?.plugins?.soujvnunes).toBe(soujvnunesPlugin)
+      expect(block?.files).toEqual(['**/*.{js,jsx,mjs,cjs,ts,tsx,mts,cts}'])
+    },
+  )
+  it("reports the JSDoc on an export too under jsdoc: 'never'", () => {
+    const lintDoc = (options: LinterTypes.RuleEntry) =>
+      new Linter()
+        .verify('/** Doc. */\nexport const a = 1', {
+          plugins: { soujvnunes: soujvnunesPlugin },
+          rules: { 'soujvnunes/no-comments': options },
+        })
+        .map(({ messageId }) => messageId)
+    expect(lintDoc('error')).toEqual([])
+    expect(lintDoc(['error', { jsdoc: 'never' }])).toEqual(['jsdoc'])
   })
 })

@@ -241,10 +241,10 @@ const buildConfig = ({
     ],
     rules: { 'import-x/no-default-export': 'off', 'no-restricted-syntax': 'off' },
   }
-  const oneLineCommentsOverride: Linter.Config = {
+  const commentsOverride: Linter.Config = {
     files: ['**/*.{js,jsx,mjs,cjs,ts,tsx,mts,cts}'],
     plugins: { soujvnunes: soujvnunesPlugin },
-    rules: { 'soujvnunes/one-line-comments': 'error' },
+    rules: { 'soujvnunes/one-line-comments': 'error', 'soujvnunes/no-comments': 'error' },
   }
   const clientBoundaryOverride: Linter.Config = {
     files: ['**/*.{jsx,tsx}'],
@@ -282,7 +282,7 @@ const buildConfig = ({
       rules,
     },
     prettier,
-    oneLineCommentsOverride,
+    commentsOverride,
     rootConfigOverride,
     ...(next ? [nextFileConventionsOverride, clientBoundaryOverride] : []),
     scriptsOverride,
