@@ -378,6 +378,15 @@ describe.each(ruleSetups)('no-comments in a JS file under %s', (_setup, setup) =
   it('still reports a prose JSDoc on a local const', () => {
     expect(lintAs('next.config.mjs', '/** Doc. */\nconst a = 1')).toEqual(['orphanDoc'])
   })
+  it.each([
+    [
+      'an untyped @param',
+      '/** @param a explains the whole design of the module */\nfunction f(a) {\n  return a\n}',
+    ],
+    ['an untyped @returns', '/** @returns nothing, this is prose */\nfunction f() {}'],
+  ])('reports %s, which gives checkJs no type to read', (_case, code) => {
+    expect(lintAs('next.config.mjs', code)).toEqual(['orphanDoc'])
+  })
   it('reports the same @type annotation in a TypeScript file, where the type lives in the code', () => {
     expect(lintAs('component.tsx', '/** @typedef {{ a: string }} Shape */\nconst a = 1')).toEqual([
       'orphanDoc',

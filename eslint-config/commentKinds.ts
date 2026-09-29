@@ -9,22 +9,24 @@ const ANYWHERE = /\bgitleaks:allow\b/u
 const BLOCK_DIRECTIVE = /^\s*(?:eslint\s|eslint-env\b|global\s|globals\s|exported\s)/u
 const PRAGMA =
   /^\s*(?:@ts-(?:expect-error|ignore|nocheck|check)\b|@jsx(?:Frag|ImportSource|Runtime)?\b|[@#]__[A-Z_]+__|[@#]\s*source(?:Mapping)?URL=|@jest-environment\b|@vite-ignore\b|@refresh\s+reset\b|@license\b|@preserve\b|@format\b|@prettier\b|@internal\b|node:coverage\s)/u
-const TYPE_TAGS = new Set([
-  'type',
-  'typedef',
-  'callback',
-  'satisfies',
-  'template',
-  'param',
-  'returns',
-  'return',
-  'import',
-  'enum',
-  'extends',
-  'augments',
-  'implements',
-  'this',
-  'overload',
+const TYPED = /^\s*\{/u
+const NAMED = /^\s*[{\w$]/u
+const TYPE_TAGS = new Map<string, RegExp>([
+  ['type', TYPED],
+  ['param', TYPED],
+  ['returns', TYPED],
+  ['return', TYPED],
+  ['satisfies', TYPED],
+  ['enum', TYPED],
+  ['this', TYPED],
+  ['typedef', NAMED],
+  ['callback', NAMED],
+  ['template', NAMED],
+  ['extends', NAMED],
+  ['augments', NAMED],
+  ['implements', NAMED],
+  ['import', /^\s*[{*\w$]/u],
+  ['overload', /^/u],
 ])
 const ANNOTATION = /^\s*[@#]/u
 const BLOCK_ANNOTATION = /^\s*[\w-]+:\S/u
@@ -49,8 +51,11 @@ export const isToolDirective = (comment: Comment) => {
     (comment.type === 'Block' && BLOCK_DIRECTIVE.test(comment.value))
   )
 }
-export const isTypeAnnotation = (comment: Comment) =>
-  isDocShaped(comment) && TYPE_TAGS.has(/(?:^|\s)@(\w+)/u.exec(comment.value)?.[1] ?? '')
+export const isTypeAnnotation = (comment: Comment) => {
+  const tag = isDocShaped(comment) ? /(?:^|\s)@(\w+)/u.exec(comment.value) : null
+  const shape = TYPE_TAGS.get(tag?.[1] ?? '')
+  return !!tag && !!shape && shape.test(comment.value.slice(tag.index + tag[0].length))
+}
 export const spansLines = (comment: Comment) =>
   (comment.loc?.start.line ?? 0) !== (comment.loc?.end.line ?? 0)
 export const followedOnLine = (comment: Comment, after: Neighbour) =>
