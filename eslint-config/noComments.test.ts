@@ -72,6 +72,23 @@ const TYPESCRIPT_KEEPS: [string, string][] = [
     'a JSDoc on exported type literal members',
     '/** Doc. */\nexport type A = {\n  /** Field. */\n  b: string\n  /** Nested. */\n  c: {\n    /** Deep. */\n    d: number\n  }\n}',
   ],
+  [
+    'a JSDoc above an exported class whose decorators sit before export',
+    '/** Doc. */\n@dec\n@other({ a: 1 })\nexport abstract class A {}',
+  ],
+  ['a JSDoc above a decorated default export', '/** Doc. */\n@dec\nexport default class A {}'],
+  [
+    'a JSDoc on decorated members of an exported class',
+    'export class A {\n  /** Field. */\n  @prop() b = 1\n  /** Method. */\n  @dec c() {}\n}',
+  ],
+]
+const TYPESCRIPT_FIXES: [string, string, string, string[]][] = [
+  [
+    'a JSDoc above a decorated class that is not exported',
+    '/** Doc. */\n@dec\nclass A {}',
+    '@dec\nclass A {}',
+    ['orphanDoc'],
+  ],
 ]
 const FIXES: [string, string, string, string[]][] = [
   ['an own-line // on the first line', '// x\nconst a = 1', 'const a = 1', ['line']],
@@ -157,6 +174,10 @@ describe.each(ruleSetups)('no-comments under %s', (_setup, setup) => {
 describe.each(ruleSetups.slice(1))('no-comments on TypeScript syntax under %s', (_setup, setup) => {
   it.each(TYPESCRIPT_KEEPS)('keeps %s', (_case, code) => {
     expect(lint(setup, code)).toEqual([])
+  })
+  it.each(TYPESCRIPT_FIXES)('removes %s', (_case, code, output, messageIds) => {
+    expect(lint(setup, code)).toEqual(messageIds)
+    expect(fixOnce(setup, code)).toBe(output)
   })
 })
 describe('no-comments beside one-line-comments', () => {

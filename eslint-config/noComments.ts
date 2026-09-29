@@ -49,7 +49,12 @@ const insideExport = (node: Enclosing) => {
   while (current && CONTAINERS.has(current.type)) current = current.parent ?? null
   return !!current && EXPORTS.has(current.type)
 }
-const isExportedDoc = (comment: Comment, sourceCode: SourceCode, lookup: Lookup) => {
+const isExportedDoc = (
+  comment: Comment,
+  sourceCode: SourceCode,
+  lookup: Lookup,
+  decorated: Map<number, Enclosing>,
+) => {
   const before = sourceCode.getTokenBefore(comment)
   if (
     before?.loc &&
@@ -60,6 +65,8 @@ const isExportedDoc = (comment: Comment, sourceCode: SourceCode, lookup: Lookup)
   }
   const token = sourceCode.getTokenAfter(comment)
   if (!token) return false
+  const target = decorated.get(token.range[0])
+  if (target?.type === 'ClassDeclaration' && EXPORTS.has(target.parent?.type ?? '')) return true
   let node = lookup.nodeAt(token.range[0])
   while (node?.range?.[0] === token.range[0]) {
     if (EXPORTS.has(node.type)) return true
@@ -70,14 +77,19 @@ const isExportedDoc = (comment: Comment, sourceCode: SourceCode, lookup: Lookup)
 }
 const isJsxNode = (node: Enclosing) =>
   !!node && node.type.startsWith('JSX') && node.type !== 'JSXExpressionContainer'
-const classify = (comment: Comment, sourceCode: SourceCode, lookup: Lookup): Kind => {
+const classify = (
+  comment: Comment,
+  sourceCode: SourceCode,
+  lookup: Lookup,
+  decorated: Map<number, Enclosing>,
+): Kind => {
   const node = lookup.enclosingNode(comment)
   const inJsx = isJsxNode(node)
   if (isDirective(comment)) return inJsx ? 'jsxDirective' : 'directive'
   if (isBanner(comment)) return 'banner'
   if (inJsx) return node?.type === 'JSXEmptyExpression' ? 'jsx' : 'attribute'
   if (isDocShaped(comment)) {
-    return isExportedDoc(comment, sourceCode, lookup) ? 'jsdoc' : 'orphanDoc'
+    return isExportedDoc(comment, sourceCode, lookup, decorated) ? 'jsdoc' : 'orphanDoc'
   }
   return comment.type === 'Line' ? 'line' : 'block'
 }
@@ -124,6 +136,7 @@ export const noComments: Rule.RuleModule = {
     const sourceCode = context.sourceCode
     const { lines, text } = sourceCode
     const lookup = createCommentLookup(sourceCode)
+    const decorated = new Map<number, Enclosing>()
     const jsdoc = (context.options[0] as { jsdoc?: 'exports' | 'never' } | undefined)?.jsdoc
     const lineStart = (line: number) => sourceCode.getIndexFromLoc({ line, column: 0 })
     const lineEnd = (line: number) => lineStart(line) + (lines[line - 1]?.length ?? 0)
@@ -160,10 +173,13 @@ export const noComments: Rule.RuleModule = {
       return nextStart === undefined ? null : { range: [range[0], nextStart], text: '', lines: null }
     }
     return {
+      Decorator(node: Rule.Node) {
+        if (node.range) decorated.set(node.range[0], node.parent as Enclosing)
+      },
       'Program:exit'() {
         const reports: { comment: Comment; messageId: string; fix: Removal | null }[] = []
         for (const comment of sourceCode.getAllComments().filter(isComment)) {
-          const kind = classify(comment, sourceCode, lookup)
+          const kind = classify(comment, sourceCode, lookup, decorated)
           if (kind === 'jsdoc' && jsdoc !== 'never') {
             if (comment.value.includes(EM_DASH))
               reports.push({ comment, messageId: 'emDash', fix: null })
