@@ -6,6 +6,8 @@ Next.js utilities as **subpath exports**, so you import a subpath and install on
 
 `createPersistedToggle({ name, cookie, values })` returns `{ State, Dispatch, Provider, isValue }`: a client `Provider` seeded from a server-read cookie whose dispatch writes the cookie back and calls `router.refresh()`, so the server re-renders from it. It gives you split State/Dispatch contexts (built on `@soujvnunes/react/createHookedContext`, an installed dependency). Omitting the dispatch argument cycles `values` (the toggle), and `isValue` narrows a raw cookie for the server seed-leaf.
 
+The cookie is written URI-encoded with `path=/` and `SameSite=Lax`, and without `Secure`: it holds a UI preference rather than a secret, and `Secure` would drop it over plain-http local dev.
+
 ```bash
 pnpm add @soujvnunes/nextjs react next
 ```

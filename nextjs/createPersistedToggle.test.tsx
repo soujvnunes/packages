@@ -95,6 +95,20 @@ describe('dispatch', () => {
     fireEvent.click(screen.getByText('toggle'))
     expect(document.cookie).toContain('nav=collapsed')
   })
+  it('writes SameSite=Lax with no Secure, so the cookie still persists over plain-http local dev', () => {
+    const written = vi.spyOn(document, 'cookie', 'set')
+    render(
+      <NavRail.Provider defaultValue="expanded">
+        <Reader />
+      </NavRail.Provider>,
+    )
+    fireEvent.click(screen.getByText('toggle'))
+    const cookie = String(written.mock.lastCall?.[0])
+    written.mockRestore()
+    expect(cookie).toMatch(/^nav=collapsed;/u)
+    expect(cookie).toContain('SameSite=Lax')
+    expect(cookie).not.toMatch(/;\s*secure/iu)
+  })
   it('refreshes the route so the server re-renders from the cookie', () => {
     render(
       <NavRail.Provider defaultValue="expanded">
