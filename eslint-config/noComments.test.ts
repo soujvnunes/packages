@@ -443,6 +443,16 @@ const JS_TYPE_ANNOTATIONS: [string, string][] = [
   ['an inline @type cast', 'const a = /** @type {string} */ (b)'],
   ['a compact @type with no space after the opener', '/**@type {number}*/\nconst a = 1'],
   ['a @typedef', '/** @typedef {{ a: string }} Shape */\nconst a = 1'],
+  [
+    'a @typedef with only a name, its shape on the lines under it',
+    '/**\n * @typedef Shape\n * @property {string} a\n */\nconst a = 1',
+  ],
+  ['a @callback', '/**\n * @callback Handler\n * @param {string} a\n */\nconst a = 1'],
+  ['a @template list', '/** @template K, V */\nfunction f() {}'],
+  ['a constrained @template', '/** @template {string} K */\nfunction f() {}'],
+  ['a bare @extends', '/** @extends Base<string> */\nclass A extends Base {}'],
+  ['an @import of named types', "/** @import { A, B } from './x' */\nconst a = 1"],
+  ['an @import of a namespace', "/** @import * as x from './x' */\nconst a = 1"],
   ['a @satisfies', "/** @satisfies {import('x').Config} */\nconst a = {}"],
   [
     'a @param and @returns on a local function',
@@ -475,6 +485,17 @@ describe.each(ruleSetups)('no-comments in a JS file under %s', (_setup, setup) =
       '/** @param a explains the whole design of the module */\nfunction f(a) {\n  return a\n}',
     ],
     ['an untyped @returns', '/** @returns nothing, this is prose */\nfunction f() {}'],
+    ['a @typedef followed by prose', '/** @typedef the shape we pass around */\nconst a = 1'],
+    ['a @callback followed by prose', '/** @callback called once the job ends */\nconst a = 1'],
+    ['a @template followed by prose', '/** @template the reason we keep this helper */\nconst a = 1'],
+    ['an @extends followed by prose', '/** @extends the base because of history */\nclass A {}'],
+    ['an @augments followed by prose', '/** @augments the base because of history */\nclass A {}'],
+    ['an @implements followed by prose', '/** @implements the contract we promised */\nclass A {}'],
+    ['an @import followed by prose', '/** @import this came from the old module */\nconst a = 1'],
+    [
+      'an @overload with no typed tag after it',
+      '/** @overload kept for old callers */\nfunction f() {}',
+    ],
   ])('reports %s, which gives checkJs no type to read', (_case, code) => {
     expect(lintAs('next.config.mjs', code)).toEqual(['orphanDoc'])
   })

@@ -10,23 +10,35 @@ const BLOCK_DIRECTIVE = /^\s*(?:eslint\s|eslint-env\b|global\s|globals\s|exporte
 const PRAGMA =
   /^\s*(?:@ts-(?:expect-error|ignore|nocheck|check)\b|@jsx(?:Frag|ImportSource|Runtime)?\b|[@#]__[A-Z_]+__|[@#]\s*source(?:Mapping)?URL=|@jest-environment\b|@vite-ignore\b|@refresh\s+reset\b|@license\b|@preserve\b|@format\b|@prettier\b|@internal\s*$|node:coverage\s)/u
 const TYPED = /^\s*\{/u
-const NAMED = /^\s*[{\w$]/u
-const TYPE_TAGS = new Map<string, RegExp>([
-  ['type', TYPED],
-  ['param', TYPED],
-  ['returns', TYPED],
-  ['return', TYPED],
-  ['satisfies', TYPED],
-  ['enum', TYPED],
-  ['this', TYPED],
-  ['typedef', NAMED],
-  ['callback', NAMED],
-  ['template', NAMED],
-  ['extends', NAMED],
-  ['augments', NAMED],
-  ['implements', NAMED],
-  ['import', /^\s*[{*\w$]/u],
-  ['overload', /^/u],
+const NAME = /^[\w$]+$/u
+const IMPORT_CLAUSE = /^\s*(?:\{[^}]*\}|\*\s*as\s+[\w$]+|[\w$]+)\s+from\s+['"]/u
+const TYPED_TAG = /(?:^|\s)@(?:param|returns?)\s*\{/u
+const firstLine = (rest: string) => (rest.split(/\r?\n/u)[0] ?? '').trim()
+const typed = (rest: string) => TYPED.test(rest)
+const named = (rest: string) => typed(rest) || NAME.test(firstLine(rest))
+const nameList = (rest: string) =>
+  typed(rest) ||
+  firstLine(rest)
+    .split(',')
+    .every((part) => NAME.test(part.trim()))
+const heritage = (rest: string) =>
+  typed(rest) || /^[\w$.]+$/u.test(firstLine(rest).replace(/<.*>$/u, ''))
+const TYPE_TAGS = new Map<string, (rest: string) => boolean>([
+  ['type', typed],
+  ['param', typed],
+  ['returns', typed],
+  ['return', typed],
+  ['satisfies', typed],
+  ['enum', typed],
+  ['this', typed],
+  ['typedef', named],
+  ['callback', named],
+  ['template', nameList],
+  ['extends', heritage],
+  ['augments', heritage],
+  ['implements', heritage],
+  ['import', (rest) => IMPORT_CLAUSE.test(rest)],
+  ['overload', (rest) => TYPED_TAG.test(rest)],
 ])
 const ANNOTATION = /^\s*[@#]/u
 const BLOCK_ANNOTATION = /^\s*[\w-]+:\S/u
@@ -54,7 +66,7 @@ export const isTypeAnnotation = (comment: Comment) => {
   const text = pragmaText(comment)
   const tag = isDocShaped(comment) ? /(?:^|\s)@(\w+)/u.exec(text) : null
   const shape = TYPE_TAGS.get(tag?.[1] ?? '')
-  return !!tag && !!shape && shape.test(text.slice(tag.index + tag[0].length))
+  return !!tag && !!shape && shape(text.slice(tag.index + tag[0].length))
 }
 export const spansLines = (comment: Comment) =>
   (comment.loc?.start.line ?? 0) !== (comment.loc?.end.line ?? 0)
