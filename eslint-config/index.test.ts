@@ -619,3 +619,58 @@ describe('arbitrary Tailwind values', () => {
     )
   })
 })
+describe('module boundaries', () => {
+  it('restricts next.config.* and the listed modules to relative imports only', () => {
+    const config = createNextConfig({ nextConfigModules: ['src/env.ts'] })
+    const override = config.find(
+      (entry) => Array.isArray(entry.files) && entry.files.includes('src/env.ts'),
+    )
+    expect(override?.files).toEqual(
+      expect.arrayContaining(['next.config.{js,mjs,ts,mts,cts}', 'src/env.ts']),
+    )
+    expect(override?.rules?.['no-restricted-imports']).toEqual(['error', { patterns: ['@/*'] }])
+  })
+  it('adds no override when nextConfigModules is left empty', () => {
+    const config = createNextConfig()
+    expect(
+      config.some((entry) => Array.isArray(entry.files) && entry.files[0]?.startsWith('next.config')),
+    ).toBe(false)
+  })
+  it('keeps utils/ pure: server-only, next, react and the app/lib aliases are all restricted', () => {
+    const override = createBaseConfig().find(
+      (entry) => Array.isArray(entry.files) && entry.files[0] === '**/utils/**',
+    )
+    expect(override?.rules?.['no-restricted-imports']).toEqual([
+      'error',
+      { patterns: ['server-only', 'next/*', 'react', '@/lib/*', '@/app/*'] },
+    ])
+  })
+})
+describe('max-lines', () => {
+  it('caps a module at 300 lines, skipping blank lines and comments', () => {
+    expect(mainBlock(createBaseConfig()).rules?.['max-lines']).toEqual([
+      'error',
+      { max: 300, skipBlankLines: true, skipComments: true },
+    ])
+  })
+  it('exempts test files and the copy/ folder', () => {
+    const override = createBaseConfig().find(
+      (entry) => Array.isArray(entry.files) && entry.files.includes('**/copy/**'),
+    )
+    expect(override?.files).toEqual(expect.arrayContaining(['**/*.test.*', '**/copy/**']))
+    expect(override?.rules).toEqual({ 'max-lines': 'off' })
+  })
+})
+describe('strictExportGlobs', () => {
+  it('leaves soujvnunes/one-export-per-file unwired with no globs', () => {
+    const rules = createBaseConfig().flatMap((entry) => Object.keys(entry.rules ?? {}))
+    expect(rules).not.toContain('soujvnunes/one-export-per-file')
+  })
+  it('wires it at error on the globs given', () => {
+    const override = createBaseConfig({ strictExportGlobs: ['src/features/*/index.ts'] }).find(
+      (entry) => entry.rules?.['soujvnunes/one-export-per-file'],
+    )
+    expect(override?.files).toEqual(['src/features/*/index.ts'])
+    expect(override?.rules).toEqual({ 'soujvnunes/one-export-per-file': 'error' })
+  })
+})

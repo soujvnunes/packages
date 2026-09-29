@@ -34,6 +34,7 @@ const DEFAULT_IMPORT_GROUPS: (string | string[])[] = [
   'sibling',
   'index',
 ]
+const MAX_LINES = 300
 const typescriptRules: Linter.RulesRecord = {
   '@typescript-eslint/no-unused-vars': [
     'error',
@@ -103,6 +104,7 @@ const generalRules: Linter.RulesRecord = {
   'no-implied-eval': 'error',
   'no-script-url': 'error',
   'padding-line-between-statements': ['error', { blankLine: 'never', prev: '*', next: '*' }],
+  'max-lines': ['error', { max: MAX_LINES, skipBlankLines: true, skipComments: true }],
 }
 type SelectorKey =
   | 'exportDefaultFunction'
@@ -232,6 +234,10 @@ export interface ConfigOptions {
   allowArbitraryClasses?: string[]
   /** The `cn()`-like helper name a ternary passed straight to it is banned inside of. */
   classMergeName?: string
+  /** Modules next.config.* loads, beside next.config.* itself, restricted with the same repo's `no-restricted-imports` patterns (`['@/*']`) as the config file: relative imports only. */
+  nextConfigModules?: string[]
+  /** Globs wired to `soujvnunes/one-export-per-file`, the probe-only one-value-export-per-module rule. Unwired (no globs) leaves the rule exported but off. */
+  strictExportGlobs?: string[]
   /** Extra flat-config objects appended at the end. */
   extend?: Linter.Config[]
 }
@@ -243,6 +249,8 @@ const buildConfig = ({
   tailwindEntryPoint,
   allowArbitraryClasses = [],
   classMergeName = 'cn',
+  nextConfigModules = [],
+  strictExportGlobs = [],
   extend = [],
 }: ConfigOptions & { next?: boolean } = {}) => {
   const plugins: Record<string, unknown> = {
@@ -360,6 +368,28 @@ const buildConfig = ({
     languageOptions: { globals: { ...globals.node } },
     rules: { 'no-console': 'off' },
   }
+  const maxLinesExemptOverride: Linter.Config = {
+    files: ['**/*.test.*', '**/copy/**'],
+    rules: { 'max-lines': 'off' },
+  }
+  const pureUtilsOverride: Linter.Config = {
+    files: ['**/utils/**'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        { patterns: ['server-only', 'next/*', 'react', '@/lib/*', '@/app/*'] },
+      ],
+    },
+  }
+  const nextConfigModulesOverride: Linter.Config = {
+    files: ['next.config.{js,mjs,ts,mts,cts}', ...nextConfigModules],
+    rules: { 'no-restricted-imports': ['error', { patterns: ['@/*'] }] },
+  }
+  const strictExportsOverride: Linter.Config = {
+    files: strictExportGlobs,
+    plugins: { soujvnunes: soujvnunesPlugin },
+    rules: { 'soujvnunes/one-export-per-file': 'error' },
+  }
   return [
     { ignores: [...DEFAULT_IGNORES, ...ignores] },
     js.configs.recommended,
@@ -387,7 +417,11 @@ const buildConfig = ({
     ...(next
       ? [nextFileConventionsOverride, clientBoundaryOverride, barrelOverride, featureRootOverride]
       : []),
+    maxLinesExemptOverride,
+    pureUtilsOverride,
     scriptsOverride,
+    ...(next && nextConfigModules.length ? [nextConfigModulesOverride] : []),
+    ...(strictExportGlobs.length ? [strictExportsOverride] : []),
     ...extend,
   ]
 }
