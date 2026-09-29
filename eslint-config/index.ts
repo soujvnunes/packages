@@ -221,7 +221,7 @@ const importOrderRule = (groups: (string | string[])[]): Linter.RulesRecord => (
 const escapeForRegExp = (value: string): string => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 const arbitraryTailwindValuePattern = (allow: string[]): string => {
   const exempt = allow.length ? `(?!(?:${allow.map(escapeForRegExp).join('|')})-)` : ''
-  return `(?:^|:)${exempt}!?[a-zA-Z][a-zA-Z0-9-]*-\\[[^\\]]+\\](?:/[a-zA-Z0-9.]+)?!?$`
+  return `(?:^|:)!?${exempt}[a-zA-Z][a-zA-Z0-9-]*-\\[[^\\]]+\\](?:/[a-zA-Z0-9.]+)?!?$`
 }
 export interface ConfigOptions {
   /** Extra ignore globs, merged after the defaults. */

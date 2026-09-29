@@ -642,6 +642,8 @@ describe('arbitrary Tailwind values', () => {
   it('exempts a prefix named in allowArbitraryClasses', () => {
     const pattern = restrictedPattern({ allowArbitraryClasses: ['grid-cols'] })
     expect('grid-cols-[200px_1fr]'.match(pattern)).toBeNull()
+    expect('!grid-cols-[200px_1fr]'.match(pattern)).toBeNull()
+    expect('md:!grid-cols-[200px_1fr]'.match(pattern)).toBeNull()
     expect('text-[11px]'.match(pattern)).not.toBeNull()
   })
   it('does nothing when tailwindEntryPoint is unset', () => {
