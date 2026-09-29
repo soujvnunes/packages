@@ -194,6 +194,18 @@ const TYPESCRIPT_FIXES: [string, string, string, string[]][] = [
     ['orphanDoc'],
   ],
   [
+    'a JSDoc between two decorators of an exported class, which TypeScript does not attach',
+    '@dec\n/** Doc. */\n@other\nexport class A {}',
+    '@dec\n@other\nexport class A {}',
+    ['orphanDoc'],
+  ],
+  [
+    'a JSDoc between two decorators of a member of an exported class',
+    'export class A {\n  @dec\n  /** Doc. */\n  @other\n  b = 1\n}',
+    'export class A {\n  @dec\n  @other\n  b = 1\n}',
+    ['orphanDoc'],
+  ],
+  [
     'a JSDoc above a decorated class that is not exported',
     '/** Doc. */\n@dec\nclass A {}',
     '@dec\nclass A {}',

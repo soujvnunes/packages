@@ -241,7 +241,8 @@ export const noComments: Rule.RuleModule = {
     }
     return {
       Decorator(node: Rule.Node) {
-        if (node.range) decorated.set(node.range[0], node.parent as Enclosing)
+        const parent = node.parent as Enclosing & { decorators?: unknown[] }
+        if (node.range && parent?.decorators?.[0] === node) decorated.set(node.range[0], parent)
       },
       'Program:exit'() {
         const reports: { comment: Comment; messageId: string; fix: Removal | null }[] = []
