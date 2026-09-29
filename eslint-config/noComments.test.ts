@@ -357,6 +357,15 @@ const JS_TYPE_ANNOTATIONS: [string, string][] = [
     'a @param and @returns on a local function',
     '/** @param {string} a @returns {string} */\nfunction f(a) {\n  return a\n}',
   ],
+  ['an @enum', "/** @enum {string} */\nconst Color = { Red: 'red' }"],
+  ['an @extends', '/** @extends {Base<string>} */\nclass A extends Base {}'],
+  ['an @augments', '/** @augments {Base<string>} */\nclass A extends Base {}'],
+  ['an @implements', '/** @implements {I} */\nclass A {}'],
+  ['a @this', '/** @this {Window} */\nfunction f() {}'],
+  [
+    'an @overload',
+    '/** @overload @param {string} a @returns {string} */\nfunction f(a) {\n  return a\n}',
+  ],
 ]
 describe.each(ruleSetups)('no-comments in a JS file under %s', (_setup, setup) => {
   const lintAs = (filename: string, code: string) =>

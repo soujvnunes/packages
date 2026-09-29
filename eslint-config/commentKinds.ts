@@ -19,6 +19,12 @@ const TYPE_TAGS = new Set([
   'returns',
   'return',
   'import',
+  'enum',
+  'extends',
+  'augments',
+  'implements',
+  'this',
+  'overload',
 ])
 const ANNOTATION = /^\s*[@#]/u
 const BLOCK_ANNOTATION = /^\s*[\w-]+:\S/u
