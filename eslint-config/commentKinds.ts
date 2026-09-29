@@ -102,7 +102,11 @@ export const createCommentLookup = (sourceCode: SourceCode) => {
   const isAllowMarker = (comment: Comment) => {
     if (spansLines(comment) || !ALLOW_MARKER.test(comment.value)) return false
     const before = sourceCode.getTokenBefore(comment)
-    return !!before?.loc && before.loc.end.line === comment.loc?.start.line
+    const after = sourceCode.getTokenAfter(comment)
+    return (
+      (!!before?.loc && before.loc.end.line === comment.loc?.start.line) ||
+      (!!after?.loc && after.loc.start.line === comment.loc?.end.line)
+    )
   }
   return { nodeAt, enclosingNode, jsxContainer, sides, isOwnLine, isAllowMarker }
 }

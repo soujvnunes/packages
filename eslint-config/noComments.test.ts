@@ -54,6 +54,7 @@ const KEEPS: [string, string][] = [
   ['@prettier', '/** @prettier */\nconst a = 1'],
   ['gitleaks:allow', "const key = 'x' // gitleaks:allow"],
   ['gitleaks:allow after other text', "const key = 'x' // test key, gitleaks:allow"],
+  ['a gitleaks:allow block before the code on its line', "/* gitleaks:allow */ const key = 'x'"],
   ['turbopackIgnore', 'const m = import(/* turbopackIgnore: true */ path)'],
   ['turbopackOptional', "const m = import(/* turbopackOptional: true */ './x')"],
   ['webpackChunkName', "const m = import(/* webpackChunkName: 'x' */ './x')"],
