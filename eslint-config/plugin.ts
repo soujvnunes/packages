@@ -1,4 +1,5 @@
 import { needlessUseClient } from './needlessUseClient'
+import { noComments } from './noComments'
 import { oneLineComments } from './oneLineComments'
 import { staticJsxInClient } from './staticJsxInClient'
 // The shape typescript-eslint publishes its own plugin under, an upcast with no assertion: ESLint's plugin type rejects the RuleContext of a typescript-eslint rule, so `rules` is there at runtime for ESLint to read and absent from the type.
@@ -8,6 +9,7 @@ const plugin = {
   meta: { name: '@soujvnunes/eslint-config' },
   rules: {
     'one-line-comments': oneLineComments,
+    'no-comments': noComments,
     'no-needless-use-client': needlessUseClient,
     'no-static-jsx-in-client': staticJsxInClient,
   },

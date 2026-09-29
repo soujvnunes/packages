@@ -4,7 +4,7 @@ export type Comment = ReturnType<SourceCode['getAllComments']>[number]
 export type Neighbour = ReturnType<SourceCode['getTokenAfter']>
 // A comment carrying machine semantics is exempt, run and all: joining puts prose in front of the keyword and the tool stops seeing the directive, and rewriting its delimiters hides it from a tool that reads one form only. There is no correct one-line form for a mixed run either, since TypeScript skips intervening comment lines when matching `@ts-expect-error` and ESLint does not, so both would have to be first.
 const DIRECTIVE =
-  /^\s*(?:eslint-disable\b|eslint-enable\b|\/\s*<|prettier-ignore|biome-ignore|(?:istanbul|c8|v8)\s+ignore\b|webpack[A-Z])/u
+  /^\s*(?:eslint-disable\b|eslint-enable\b|\/\s*<|prettier-ignore|biome-ignore|(?:istanbul|c8|v8)\s+ignore\b|webpack[A-Z]|gitleaks:allow\b|@vitest-environment\b)/u
 // `global`, `globals`, `exported`, `eslint` and `eslint-env` are directives ONLY in a block comment, so matching them on a line comment would exempt ordinary prose: `// global state lives here` is not a directive.
 const BLOCK_DIRECTIVE = /^\s*(?:eslint\s|eslint-env\b|global\s|globals\s|exported\s)/u
 // Machine-read annotations open with a sigil (`@ts-expect-error`, `@jsxFrag`, `@__PURE__`, `#__NO_SIDE_EFFECTS__`, `# sourceMappingURL=`) or a `tool:` prefix (`node:coverage`), where prose opens with a word. Gating on the shape rather than on a list is what keeps a pragma the list never heard of from being welded into prose or rewritten into a form its tool cannot read. The list above keeps the word-shaped ones, and `\/\s*<` is every triple-slash directive (`reference`, `amd-module`, `amd-dependency`), whose value starts with the third slash.
