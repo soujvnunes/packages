@@ -58,7 +58,9 @@ describe('shared shape', () => {
     expect(override?.rules?.['import-x/no-default-export']).toBe('off')
     const rule = override?.rules?.['no-restricted-syntax'] as [string, ...{ selector: string }[]]
     const selectors = rule.slice(1).map((entry) => (entry as { selector: string }).selector)
-    expect(selectors).not.toEqual(expect.arrayContaining(['ExportDefaultDeclaration > FunctionDeclaration']))
+    expect(selectors).not.toEqual(
+      expect.arrayContaining(['ExportDefaultDeclaration > FunctionDeclaration']),
+    )
     expect(selectors).toEqual(expect.arrayContaining(['TSEnumDeclaration']))
   })
 })
@@ -131,10 +133,17 @@ describe('createNextConfig', () => {
       entry.files?.[0]?.includes('{default,page,layout'),
     )
     expect(override?.rules?.['import-x/no-default-export']).toBe('off')
-    const rule = override?.rules?.['no-restricted-syntax'] as [string, ...{ selector: string; message: string }[]]
+    const rule = override?.rules?.['no-restricted-syntax'] as [
+      string,
+      ...{ selector: string; message: string }[],
+    ]
     const selectors = rule.slice(1).map((entry) => (entry as { selector: string }).selector)
-    expect(selectors).not.toEqual(expect.arrayContaining(['ExportDefaultDeclaration > FunctionDeclaration']))
-    expect(selectors).not.toEqual(expect.arrayContaining(['ExportNamedDeclaration > FunctionDeclaration']))
+    expect(selectors).not.toEqual(
+      expect.arrayContaining(['ExportDefaultDeclaration > FunctionDeclaration']),
+    )
+    expect(selectors).not.toEqual(
+      expect.arrayContaining(['ExportNamedDeclaration > FunctionDeclaration']),
+    )
     expect(selectors).toEqual(
       expect.arrayContaining([
         "ImportDeclaration[source.value='lucide-react'][importKind!='type'] > ImportSpecifier[importKind!='type'][imported.name!=/Icon$/][imported.name!='createLucideIcon'][imported.name!='icons'][imported.name!='dynamicIconImports']",
@@ -524,7 +533,9 @@ describe('new restricted-syntax selectors', () => {
     )
     const rule: LinterTypes.RuleEntry = ['error', { selector, message: 'x' }]
     const lint = (code: string) => lintWithRule({}, code, { 'no-restricted-syntax': rule })
-    expect(lint("import { createLucideIcon, icons, dynamicIconImports } from 'lucide-react'")).toEqual([])
+    expect(lint("import { createLucideIcon, icons, dynamicIconImports } from 'lucide-react'")).toEqual(
+      [],
+    )
     expect(lint("import { Home } from 'lucide-react'")).toHaveLength(1)
   })
 })
@@ -545,8 +556,66 @@ describe('barrel and feature-root files', () => {
   })
   it('leaves both overrides off the base preset, whose index.ts is an npm entry point, not a barrel', () => {
     const config = createBaseConfig()
-    expect(config.some((entry) => Array.isArray(entry.files) && entry.files[0] === '**/index.{ts,tsx}')).toBe(
-      false,
+    expect(
+      config.some((entry) => Array.isArray(entry.files) && entry.files[0] === '**/index.{ts,tsx}'),
+    ).toBe(false)
+  })
+})
+describe('cn() ternary', () => {
+  it("bans a ternary passed straight to cn() on the Next preset's main block", () => {
+    expect(mainRestrictedSyntaxSelectors(createNextConfig())).toEqual(
+      expect.arrayContaining(["CallExpression[callee.name='cn'] > ConditionalExpression"]),
+    )
+  })
+  it('reads the callee name from classMergeName', () => {
+    expect(mainRestrictedSyntaxSelectors(createNextConfig({ classMergeName: 'clsx' }))).toEqual(
+      expect.arrayContaining(["CallExpression[callee.name='clsx'] > ConditionalExpression"]),
+    )
+  })
+  it('is absent on the base preset, which has no Tailwind layer to merge classes for', () => {
+    expect(mainRestrictedSyntaxSelectors(createBaseConfig())).not.toEqual(
+      expect.arrayContaining([expect.stringContaining("callee.name='cn'")]),
+    )
+  })
+  it('still reaches page.tsx and next.config.ts, the two overrides the file-convention composition could have dropped it from', () => {
+    const page = createNextConfig().find((entry) => entry.files?.[0]?.includes('{default,page,layout'))
+    const root = createNextConfig().find((entry) => entry.files?.[0] === '*.{mjs,js,ts,mts,cts}')
+    const selectorsOf = (entry?: LinterTypes.Config) =>
+      ((entry?.rules?.['no-restricted-syntax'] as [string, ...{ selector: string }[]]) ?? []).map(
+        (item) => (typeof item === 'object' ? item.selector : item),
+      )
+    expect(selectorsOf(page)).toEqual(
+      expect.arrayContaining(["CallExpression[callee.name='cn'] > ConditionalExpression"]),
+    )
+    expect(selectorsOf(root)).toEqual(
+      expect.arrayContaining(["CallExpression[callee.name='cn'] > ConditionalExpression"]),
+    )
+  })
+})
+describe('arbitrary Tailwind values', () => {
+  const restrictedPattern = (options?: ConfigOptions) => {
+    const config = createNextConfig({ tailwindEntryPoint: TAILWIND_ENTRY, ...options })
+    const rule = mainBlock(config).rules?.['better-tailwindcss/no-restricted-classes'] as [
+      string,
+      { restrict: { pattern: string }[] },
+    ]
+    const [restriction] = rule[1].restrict
+    if (!restriction) throw new Error('no-restricted-classes was wired with an empty restrict list')
+    return restriction.pattern
+  }
+  it('bans a bracketed value with no allow-list entry', () => {
+    const pattern = restrictedPattern()
+    expect('text-[11px]'.match(pattern)).not.toBeNull()
+    expect('data-[state=open]:opacity-100'.match(pattern)).toBeNull()
+  })
+  it('exempts a prefix named in allowArbitraryClasses', () => {
+    const pattern = restrictedPattern({ allowArbitraryClasses: ['grid-cols'] })
+    expect('grid-cols-[200px_1fr]'.match(pattern)).toBeNull()
+    expect('text-[11px]'.match(pattern)).not.toBeNull()
+  })
+  it('does nothing when tailwindEntryPoint is unset', () => {
+    expect(mainBlock(createNextConfig()).rules).not.toHaveProperty(
+      'better-tailwindcss/no-restricted-classes',
     )
   })
 })

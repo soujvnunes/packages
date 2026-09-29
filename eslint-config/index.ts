@@ -169,8 +169,15 @@ const RESTRICTED_SELECTORS: Record<SelectorKey, { selector: string; message: str
 const ALL_SELECTOR_KEYS = Object.keys(RESTRICTED_SELECTORS) as SelectorKey[]
 const EXPORT_DEFAULT_KEYS: SelectorKey[] = ['exportDefaultFunction', 'exportNamedFunction']
 const NON_EXPORT_DEFAULT_KEYS = ALL_SELECTOR_KEYS.filter((key) => !EXPORT_DEFAULT_KEYS.includes(key))
-const restrictedSyntaxRule = (keys: SelectorKey[]): Linter.RulesRecord => ({
-  'no-restricted-syntax': ['error', ...keys.map((key) => RESTRICTED_SELECTORS[key])],
+const cnTernarySelector = (classMergeName: string) => ({
+  selector: `CallExpression[callee.name='${classMergeName}'] > ConditionalExpression`,
+  message: 'Avoid a ternary inside `cn()`; use a cva variant or an object entry instead.',
+})
+const restrictedSyntaxRule = (
+  keys: SelectorKey[],
+  extra: { selector: string; message: string }[] = [],
+): Linter.RulesRecord => ({
+  'no-restricted-syntax': ['error', ...keys.map((key) => RESTRICTED_SELECTORS[key]), ...extra],
 })
 const reactRules: Linter.RulesRecord = {
   'react/prop-types': 'off',
@@ -207,6 +214,11 @@ const importOrderRule = (groups: (string | string[])[]): Linter.RulesRecord => (
     { newlinesBetween: 'never', groups, alphabetize: { order: 'asc', ignoreCase: true } },
   ],
 })
+const escapeForRegExp = (value: string): string => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+const arbitraryTailwindValuePattern = (allow: string[]): string => {
+  const exempt = allow.length ? `(?!(?:${allow.map(escapeForRegExp).join('|')})-)` : ''
+  return `(?:^|:)${exempt}!?[a-zA-Z][a-zA-Z0-9-]*-\\[[^\\]]+\\](?:/[a-zA-Z0-9.]+)?!?$`
+}
 export interface ConfigOptions {
   /** Extra ignore globs, merged after the defaults. */
   ignores?: string[]
@@ -216,6 +228,10 @@ export interface ConfigOptions {
   tsconfigRootDir?: string
   /** Path to the Tailwind v4 CSS entry (the file with `@import "tailwindcss"` + `@theme`, e.g. `./app/tailwind.config.css`). When set on the Next preset, it wires the bundled `eslint-plugin-better-tailwindcss` correctness rules, chiefly `no-unknown-classes`, which flags a class not registered in the theme (a dead token `tsc`/build cannot see; see DESIGN-TOKENS). Leave it unset and the plugin stays off, since without the entry the rule cannot resolve the theme and would flag every class. */
   tailwindEntryPoint?: string
+  /** Utility prefixes exempt from the arbitrary-Tailwind-value ban, for a shape with no theme token (e.g. `['grid-cols', 'grid-rows']` for `grid-cols-[200px_1fr]`). Only read when `tailwindEntryPoint` is set. */
+  allowArbitraryClasses?: string[]
+  /** The `cn()`-like helper name a ternary passed straight to it is banned inside of. */
+  classMergeName?: string
   /** Extra flat-config objects appended at the end. */
   extend?: Linter.Config[]
 }
@@ -225,6 +241,8 @@ const buildConfig = ({
   importGroups = DEFAULT_IMPORT_GROUPS,
   tsconfigRootDir = process.cwd(),
   tailwindEntryPoint,
+  allowArbitraryClasses = [],
+  classMergeName = 'cn',
   extend = [],
 }: ConfigOptions & { next?: boolean } = {}) => {
   const plugins: Record<string, unknown> = {
@@ -238,7 +256,7 @@ const buildConfig = ({
     ...importRules,
     ...securityRules,
     ...generalRules,
-    ...restrictedSyntaxRule(ALL_SELECTOR_KEYS),
+    ...restrictedSyntaxRule(ALL_SELECTOR_KEYS, next ? [cnTernarySelector(classMergeName)] : []),
     ...importOrderRule(importGroups),
   }
   const languageGlobals: Record<string, unknown> = { ...globals.node, ...globals.es2021 }
@@ -265,6 +283,18 @@ const buildConfig = ({
         'better-tailwindcss/no-unknown-classes': 'error',
         'better-tailwindcss/no-conflicting-classes': 'error',
         'better-tailwindcss/no-concatenated-classes': 'error',
+        'better-tailwindcss/no-restricted-classes': [
+          'error',
+          {
+            restrict: [
+              {
+                pattern: arbitraryTailwindValuePattern(allowArbitraryClasses),
+                message:
+                  'Avoid an arbitrary Tailwind value ($0); use a theme token, or list its prefix in allowArbitraryClasses when it has none (e.g. grid-cols-[...]).',
+              },
+            ],
+          },
+        ],
       })
       settings['better-tailwindcss'] = { entryPoint: tailwindEntryPoint }
     }
@@ -273,7 +303,7 @@ const buildConfig = ({
     files: ['*.{mjs,js,ts,mts,cts}'],
     rules: {
       'import-x/no-default-export': 'off',
-      ...restrictedSyntaxRule(NON_EXPORT_DEFAULT_KEYS),
+      ...restrictedSyntaxRule(NON_EXPORT_DEFAULT_KEYS, next ? [cnTernarySelector(classMergeName)] : []),
     },
   }
   const nextFileConventionsOverride: Linter.Config = {
@@ -282,7 +312,7 @@ const buildConfig = ({
     ],
     rules: {
       'import-x/no-default-export': 'off',
-      ...restrictedSyntaxRule(NON_EXPORT_DEFAULT_KEYS),
+      ...restrictedSyntaxRule(NON_EXPORT_DEFAULT_KEYS, [cnTernarySelector(classMergeName)]),
     },
   }
   const commentsOverride: Linter.Config = {
