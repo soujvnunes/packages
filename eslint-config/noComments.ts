@@ -2,6 +2,7 @@ import { AST_NODE_TYPES, type TSESTree } from '@typescript-eslint/utils'
 import type { AST, Rule, SourceCode } from 'eslint'
 import {
   createCommentLookup,
+  holdsTag,
   isBanner,
   isComment,
   isDocShaped,
@@ -106,7 +107,6 @@ const boundNames = (node: Node | null): string[] => {
 }
 const isDeferred = (statement: Node, deferred: Set<string>) =>
   declaredIds(statement).some((id) => boundNames(id).some((name) => deferred.has(name)))
-const holdsTag = (comment: Comment) => /(?:^|\s)@\w/u.test(comment.value)
 const moduleFiles = new WeakMap<TSESTree.Program, boolean>()
 const isModuleFile = (program: TSESTree.Program) => {
   const known = moduleFiles.get(program)

@@ -393,6 +393,11 @@ const UNFIXED: [string, string, string[]][] = [
   ['a multi-line block with code on both of its edges', 'a /* x\n */ (b)', ['block']],
   ['a misplaced JSDoc holding a tag', '/** Old. @deprecated use b */\nconst a = 1', ['orphanDoc']],
   [
+    'a misplaced compact JSDoc opening with a tag',
+    '/**@deprecated use b*/\nconst a = 1',
+    ['orphanDoc'],
+  ],
+  [
     'a misplaced JSDoc that opens with a tag no tool reads',
     '/** @description any prose here */\nconst a = 1',
     ['orphanDoc'],
@@ -436,6 +441,7 @@ const JS_TYPE_ANNOTATIONS: [string, string][] = [
     "/** @type {import('next').NextConfig} */\nconst nextConfig = {}\nexport default nextConfig",
   ],
   ['an inline @type cast', 'const a = /** @type {string} */ (b)'],
+  ['a compact @type with no space after the opener', '/**@type {number}*/\nconst a = 1'],
   ['a @typedef', '/** @typedef {{ a: string }} Shape */\nconst a = 1'],
   ['a @satisfies', "/** @satisfies {import('x').Config} */\nconst a = {}"],
   [

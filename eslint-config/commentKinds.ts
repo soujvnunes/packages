@@ -49,10 +49,12 @@ export const isToolDirective = (comment: Comment) => {
     (comment.type === 'Block' && BLOCK_DIRECTIVE.test(comment.value))
   )
 }
+export const holdsTag = (comment: Comment) => /(?:^|\s)@\w/u.test(pragmaText(comment))
 export const isTypeAnnotation = (comment: Comment) => {
-  const tag = isDocShaped(comment) ? /(?:^|\s)@(\w+)/u.exec(comment.value) : null
+  const text = pragmaText(comment)
+  const tag = isDocShaped(comment) ? /(?:^|\s)@(\w+)/u.exec(text) : null
   const shape = TYPE_TAGS.get(tag?.[1] ?? '')
-  return !!tag && !!shape && shape.test(comment.value.slice(tag.index + tag[0].length))
+  return !!tag && !!shape && shape.test(text.slice(tag.index + tag[0].length))
 }
 export const spansLines = (comment: Comment) =>
   (comment.loc?.start.line ?? 0) !== (comment.loc?.end.line ?? 0)
