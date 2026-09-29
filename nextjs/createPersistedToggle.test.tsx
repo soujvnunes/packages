@@ -28,6 +28,7 @@ const clearCookies = () => {
 beforeEach(clearCookies)
 afterEach(() => {
   refresh.mockClear()
+  vi.restoreAllMocks()
   cleanup()
 })
 describe('isValue', () => {
@@ -104,7 +105,6 @@ describe('dispatch', () => {
     )
     fireEvent.click(screen.getByText('toggle'))
     const cookie = String(written.mock.lastCall?.[0])
-    written.mockRestore()
     expect(cookie).toMatch(/^nav=collapsed;/u)
     expect(cookie).toContain('SameSite=Lax')
     expect(cookie).not.toMatch(/;\s*secure/iu)
