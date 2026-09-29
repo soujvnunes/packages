@@ -158,6 +158,14 @@ const TYPESCRIPT_KEEPS: [string, string][] = [
     'declare namespace API {\n  /** Doc. */\n  interface User {\n    /** Id. */\n    id: string\n  }\n}',
   ],
   [
+    'a JSDoc in a declare namespace beside an internal import alias, which leaves the file global',
+    'import A = N.a\ndeclare namespace N {\n  /** Doc. */\n  const a: string\n}',
+  ],
+  [
+    'a JSDoc in a UMD declare namespace that export = names',
+    'declare namespace N {\n  /** Doc. */\n  const a: string\n}\nexport = N',
+  ],
+  [
     'a JSDoc in an exported declare namespace of a module file',
     "import x from 'y'\nexport declare namespace N {\n  /** Doc. */\n  const a: string\n}\nexport const b = x",
   ],
@@ -235,6 +243,12 @@ const TYPESCRIPT_FIXES: [string, string, string, string[]][] = [
     'a JSDoc in a declare namespace of a module file that nothing exports',
     "import x from 'y'\ndeclare namespace N {\n  /** Doc. */\n  const a: string\n}\nexport const b = x",
     "import x from 'y'\ndeclare namespace N {\n  const a: string\n}\nexport const b = x",
+    ['orphanDoc'],
+  ],
+  [
+    'a JSDoc in a declare namespace of a file an import require makes a module',
+    "import fs = require('fs')\ndeclare namespace N {\n  /** Doc. */\n  const a: string\n}",
+    "import fs = require('fs')\ndeclare namespace N {\n  const a: string\n}",
     ['orphanDoc'],
   ],
   [
