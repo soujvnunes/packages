@@ -1,6 +1,6 @@
 # @soujvnunes/eslint-config
 
-Shared flat ESLint config as factories. It bundles the plugin set (typescript-eslint, import-x, import-helpers, unused-imports, security, and for the Next preset react, react-hooks, jsx-a11y, `@next/next`), so you only bring `eslint` and `typescript`. The Next preset also bundles the TypeScript import resolver (`eslint-import-resolver-typescript`, wired via `import-x/resolver-next`), so `@/...` path aliases and `.d.ts` types resolve out of the box, with no extra install and no `settings` wiring.
+Shared flat ESLint config as factories. It bundles the plugin set (typescript-eslint, import-x, import-helpers, unused-imports, security, and for the Next preset react, react-hooks, jsx-a11y, `@next/next`), so you only bring `eslint` and `typescript`. The Next preset also bundles the TypeScript import resolver (`eslint-import-resolver-typescript`, wired via `import-x/resolver-next`), so `@/...` path aliases and `.d.ts` types resolve out of the box, with no extra install and no `settings` wiring. The resolver is passed as an object, which sidesteps pnpm's bare-name resolution, and runs with `alwaysTryTypes`, so a value import resolves its `@types/*` package; it finds `tsconfig.json` from the working directory, and a repo with a tsconfig elsewhere appends its own resolver through `extend`. The base preset stays on import-x's built-in node resolver.
 
 ## Install
 
@@ -44,10 +44,17 @@ export default createBaseConfig()
 | `importGroups` | react, next, module, parent, sibling, index | Full import-order groups; insert your `@/...` paths |
 | `ignores` | (none) | Extra ignore globs, merged after the built-in defaults |
 | `tsconfigRootDir` | `process.cwd()` | Root for typescript-eslint's project service |
-| `tailwindEntryPoint` | (none) | Tailwind v4 CSS entry path. When set on the Next preset, wires `eslint-plugin-better-tailwindcss` correctness rules such as `no-unknown-classes`, which flags a class not registered in the theme |
+| `tailwindEntryPoint` | (none) | Tailwind v4 CSS entry path. When set on the Next preset, wires `eslint-plugin-better-tailwindcss` correctness rules such as `no-unknown-classes`, which flags a class not registered in the theme. The stylistic rules stay off, since `prettier-plugin-tailwindcss` already owns class order |
 | `extend` | `[]` | Extra flat-config objects appended at the end |
 
 Type-aware rules use typescript-eslint's **project service**, so no `parserOptions.project` wiring is needed. It discovers the nearest `tsconfig.json` per file.
+
+## Built-in exemptions
+
+- A config file or script at the repo root (`*.{mjs,js,ts,mts,cts}`) may default-export, so `import-x/no-default-export` and `no-restricted-syntax` are off there.
+- On the Next preset, the file conventions Next requires to default-export (`page`, `layout`, `error`, `loading`, `not-found`, `proxy`, `middleware`, `sitemap`, `robots` and the rest) get the same exemption. `proxy` and `middleware` are both listed, since a repo can be on either name.
+- `scripts/**/*.mjs` gets Node globals and `no-console` off, because printing is a script's job.
+- The comment rules run in a block of their own on `**/*.{js,jsx,mjs,cjs,ts,tsx,mts,cts}`, with their own `plugins`, since the main block's glob stops at `.js`, `.jsx`, `.ts` and `.tsx` and would never reach an `.mjs`, `.cjs`, `.mts` or `.cts` file.
 
 ## Style rules worth knowing before you adopt
 
