@@ -99,6 +99,14 @@ const KEEPS: [string, string][] = [
   ['location', "'use client'\nexport const Path = () => <p>{location.pathname}</p>"],
   ['localStorage', "'use client'\nexport const Saved = () => <p>{localStorage.getItem('k')}</p>"],
   [
+    'sessionStorage, which recent Node defines too',
+    "'use client'\nexport const Draft = () => <p>{sessionStorage.getItem('k')}</p>",
+  ],
+  [
+    'navigator, which recent Node defines too',
+    "'use client'\nexport const Agent = () => <p>{navigator.userAgent}</p>",
+  ],
+  [
     'a defaulted function prop',
     "'use client'\nimport { Chart } from 'chart'\nexport const Stats = ({ format = (v) => `${v}%` }) => <Chart format={format} />",
   ],
