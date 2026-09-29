@@ -90,11 +90,22 @@ const declaredIds = (statement: Node): (Node | null)[] => {
   }
   return 'id' in statement ? [statement.id] : []
 }
+const boundNames = (node: Node | null): string[] => {
+  if (node?.type === AST_NODE_TYPES.Identifier) return [node.name]
+  if (node?.type === AST_NODE_TYPES.ObjectPattern) {
+    return node.properties.flatMap((property) =>
+      boundNames(property.type === AST_NODE_TYPES.RestElement ? property.argument : property.value),
+    )
+  }
+  if (node?.type === AST_NODE_TYPES.ArrayPattern) {
+    return node.elements.flatMap((element) => boundNames(element))
+  }
+  if (node?.type === AST_NODE_TYPES.AssignmentPattern) return boundNames(node.left)
+  if (node?.type === AST_NODE_TYPES.RestElement) return boundNames(node.argument)
+  return []
+}
 const isDeferred = (statement: Node, deferred: Set<string>) =>
-  declaredIds(statement).some((id) => {
-    const name = identifierName(id)
-    return !!name && deferred.has(name)
-  })
+  declaredIds(statement).some((id) => boundNames(id).some((name) => deferred.has(name)))
 const holdsTag = (comment: Comment) => /(?:^|\s)@\w/u.test(comment.value)
 const moduleFiles = new WeakMap<TSESTree.Program, boolean>()
 const isModuleFile = (program: TSESTree.Program) => {

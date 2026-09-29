@@ -82,6 +82,14 @@ const KEEPS: [string, string][] = [
   ['a JSDoc on a const a later export list names', '/** Doc. */\nconst a = 1\nexport { a }'],
   ['a JSDoc on a const a later export list renames', '/** Doc. */\nconst a = 1\nexport { a as b }'],
   [
+    'a JSDoc on a destructured const a later export list names',
+    '/** Doc. */\nconst { a } = o\nexport { a }',
+  ],
+  [
+    'a JSDoc on a nested destructured const a later export list names',
+    '/** Doc. */\nconst [x, { b = 1, ...c }, ...d] = o\nexport { c }',
+  ],
+  [
     'a JSDoc above a directive above an export',
     '/** Doc. */\n// eslint-disable-next-line no-var\nexport var a = 1',
   ],
