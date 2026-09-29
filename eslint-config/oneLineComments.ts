@@ -78,7 +78,7 @@ export const oneLineComments: Rule.RuleModule = {
   create(context) {
     const sourceCode = context.sourceCode
     const comments = sourceCode.getAllComments().filter(isComment)
-    const { enclosingNode, isOwnLine } = createCommentLookup(sourceCode)
+    const { enclosingNode, isOwnLine, isAllowMarker } = createCommentLookup(sourceCode)
     const insideJsx = (comment: Comment) => enclosingNode(comment)?.type.startsWith('JSX') ?? false
     const breaksSemicolonInsertion = (comment: Comment, after: Neighbour) => {
       if (insideJsx(comment)) return false
@@ -109,7 +109,7 @@ export const oneLineComments: Rule.RuleModule = {
       'Program:exit'() {
         const docs = new Set<Comment>()
         for (const comment of comments) {
-          if (comment.type !== 'Block' || isDirective(comment)) continue
+          if (comment.type !== 'Block' || isDirective(comment) || isAllowMarker(comment)) continue
           const after = sourceCode.getTokenAfter(comment, { includeComments: true })
           if (spansLines(comment)) {
             const { messageId, text } = blockVerdict(comment, after)

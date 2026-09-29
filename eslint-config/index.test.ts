@@ -229,6 +229,7 @@ describe('one-line-comments', () => {
         'const a = /* @__NOINLINE__ */ f()',
         '/*# sourceMappingURL=a.js.map */',
         '/*! Preserved banner, which has no line form. */\nconst a = 1',
+        "const key = 'x' /* test key, gitleaks:allow */",
         '#!/usr/bin/env node\n// the interpreter line is not a comment line\nconst a = 1',
         {
           code: 'const a = (\n  <p /* on the tag */ id="x">\n    {/* one */}\n    text\n    {/** two */}\n  </p>\n)',
@@ -272,6 +273,16 @@ describe('one-line-comments', () => {
           code: '// First paragraph.\n//\n// Second paragraph.\nconst a = 1',
           output: null,
           errors: [{ messageId: 'paragraphs' }],
+        },
+        {
+          code: '/*\n * Long rationale here\n * mention gitleaks:allow\n */\nconst a = 1',
+          output: '// Long rationale here mention gitleaks:allow\nconst a = 1',
+          errors: [{ messageId: 'block' }],
+        },
+        {
+          code: '// Long rationale here\n// mention gitleaks:allow\nconst a = 1',
+          output: '// Long rationale here mention gitleaks:allow\nconst a = 1',
+          errors: [{ messageId: 'adjacent' }],
         },
         {
           code: '/**\n * Shared Prettier config.\n */\nconst a = 1',

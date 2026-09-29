@@ -159,7 +159,9 @@ const classify = (
 ): Kind => {
   const node = lookup.enclosingNode(comment)
   const inJsx = isJsxNode(node)
-  if (isToolDirective(comment)) return inJsx ? 'jsxDirective' : 'directive'
+  if (isToolDirective(comment) || lookup.isAllowMarker(comment)) {
+    return inJsx ? 'jsxDirective' : 'directive'
+  }
   if (isBanner(comment)) return 'banner'
   if (inJsx) return node?.type === AST_NODE_TYPES.JSXEmptyExpression ? 'jsx' : 'attribute'
   if (isDocShaped(comment)) {

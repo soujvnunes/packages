@@ -5,7 +5,7 @@ export type Neighbour = ReturnType<SourceCode['getTokenAfter']>
 export type Enclosing = TSESTree.Node | null
 const DIRECTIVE =
   /^\s*(?:eslint-disable\b|eslint-enable\b|\/\s*<|prettier-ignore|biome-ignore|(?:istanbul|c8|v8)\s+ignore\b|(?:webpack|turbopack)[A-Z]|@vitest-environment\b)/u
-const ANYWHERE = /\bgitleaks:allow\b/u
+const ALLOW_MARKER = /\bgitleaks:allow\b/u
 const BLOCK_DIRECTIVE = /^\s*(?:eslint\s|eslint-env\b|global\s|globals\s|exported\s)/u
 const PRAGMA =
   /^\s*(?:@ts-(?:expect-error|ignore|nocheck|check)\b|@jsx(?:Frag|ImportSource|Runtime)?\b|[@#]__[A-Z_]+__|[@#]\s*source(?:Mapping)?URL=|@jest-environment\b|@vite-ignore\b|@refresh\s+reset\b|@license\b|@preserve\b|@format\b|@prettier\b|@internal\b|node:coverage\s)/u
@@ -35,8 +35,7 @@ export const isDocShaped = (comment: Comment) =>
   comment.type === 'Block' && comment.value.startsWith('*')
 export const isBanner = (comment: Comment) => comment.type === 'Block' && comment.value.startsWith('!')
 const pragmaText = (comment: Comment) => comment.value.replace(/^\*+/u, '')
-export const isDirectiveText = (text: string) =>
-  DIRECTIVE.test(text) || ANYWHERE.test(text) || ANNOTATION.test(text)
+export const isDirectiveText = (text: string) => DIRECTIVE.test(text) || ANNOTATION.test(text)
 export const isDirective = (comment: Comment) =>
   isDirectiveText(pragmaText(comment)) ||
   (comment.type === 'Block' &&
@@ -46,7 +45,6 @@ export const isToolDirective = (comment: Comment) => {
   const text = pragmaText(comment)
   return (
     DIRECTIVE.test(text) ||
-    ANYWHERE.test(text) ||
     PRAGMA.test(text) ||
     (comment.type === 'Block' && BLOCK_DIRECTIVE.test(comment.value))
   )
@@ -87,5 +85,10 @@ export const createCommentLookup = (sourceCode: SourceCode) => {
     const side = comment.type === 'Line' ? sidesOf(comment.loc) : sides(comment)
     return !!side && !side.before && !side.after
   }
-  return { nodeAt, enclosingNode, jsxContainer, sides, isOwnLine }
+  const isAllowMarker = (comment: Comment) => {
+    if (spansLines(comment) || !ALLOW_MARKER.test(comment.value)) return false
+    const before = sourceCode.getTokenBefore(comment)
+    return !!before?.loc && before.loc.end.line === comment.loc?.start.line
+  }
+  return { nodeAt, enclosingNode, jsxContainer, sides, isOwnLine, isAllowMarker }
 }

@@ -248,6 +248,13 @@ const FIXES: [string, string, string, string[]][] = [
     ['line'],
   ],
   ['a // opening with #', '// #1 reason we do this\nconst a = 1', 'const a = 1', ['line']],
+  [
+    'a multi-line block that mentions gitleaks:allow, which gitleaks reads only on the line of a finding',
+    '/*\n * Long rationale here\n * mention gitleaks:allow\n */\nconst a = 1',
+    'const a = 1',
+    ['block'],
+  ],
+  ['an own-line gitleaks:allow', '// gitleaks:allow\nconst a = 1', 'const a = 1', ['line']],
   ['a block shaped like word:word', '/* NOTE:keep this */\nconst a = 1', 'const a = 1', ['block']],
   [
     'a multi-line block',
