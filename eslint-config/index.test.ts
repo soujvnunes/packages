@@ -242,6 +242,12 @@ describe('one-line-comments', () => {
           errors: [{ messageId: 'adjacent' }],
         },
         {
+          code: 'const a = (\n  <p>{\n    // a\n    // b\n  }</p>\n)',
+          output: 'const a = (\n  <p>{\n    // a b\n  }</p>\n)',
+          errors: [{ messageId: 'adjacent' }],
+          languageOptions: jsx,
+        },
+        {
           code: '// One.\n// Two.\n// Three.\nconst a = 1',
           output: '// One. Two. Three.\nconst a = 1',
           errors: [{ messageId: 'adjacent' }],

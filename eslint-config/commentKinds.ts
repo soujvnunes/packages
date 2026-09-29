@@ -67,8 +67,7 @@ export const createCommentLookup = (sourceCode: SourceCode) => {
     const node = enclosingNode(comment)
     return node?.type === 'JSXEmptyExpression' ? (node.parent ?? null) : null
   }
-  const sides = (comment: Comment) => {
-    const span = jsxContainer(comment)?.loc ?? comment.loc
+  const sidesOf = (span: AST.SourceLocation | null | undefined) => {
     if (!span) return null
     const { lines } = sourceCode
     return {
@@ -76,8 +75,9 @@ export const createCommentLookup = (sourceCode: SourceCode) => {
       after: (lines[span.end.line - 1] ?? '').slice(span.end.column).trim() !== '',
     }
   }
+  const sides = (comment: Comment) => sidesOf(jsxContainer(comment)?.loc ?? comment.loc)
   const isOwnLine = (comment: Comment) => {
-    const side = sides(comment)
+    const side = comment.type === 'Line' ? sidesOf(comment.loc) : sides(comment)
     return !!side && !side.before && !side.after
   }
   return { nodeAt, enclosingNode, jsxContainer, sides, isOwnLine }
