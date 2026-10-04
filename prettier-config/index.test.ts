@@ -3,7 +3,7 @@ import { format } from 'prettier'
 import { describe, expect, it } from 'vitest'
 import { createConfig } from './index'
 describe('createConfig', () => {
-  it('carries the house style', () => {
+  it('carries the shared style', () => {
     expect(createConfig()).toMatchObject({
       semi: false,
       singleQuote: true,
