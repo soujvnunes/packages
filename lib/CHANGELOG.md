@@ -10,13 +10,13 @@
 
 ### Patch Changes
 
-- 89df975: Swept em dashes out of every source comment and package description, per the house plain-writing voice. No behaviour changes. The `lib` and `react` npm descriptions are the only reader-visible part.
+- 89df975: Swept em dashes out of every source comment and package description, to keep the prose plain. No behaviour changes. The `lib` and `react` npm descriptions are the only reader-visible part.
 
 ## 0.1.2
 
 ### Patch Changes
 
-- 9a76f9c: Docs: rewrite the package READMEs in the house plain voice (no em dashes, no AI tells). No code or API change.
+- 9a76f9c: Docs: rewrite the package READMEs in a plain voice (no em dashes, no AI tells). No code or API change.
 
 ## 0.1.1
 

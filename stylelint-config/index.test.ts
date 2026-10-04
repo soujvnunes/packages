@@ -16,7 +16,7 @@ describe('createConfig', () => {
       expect.arrayContaining(['theme', 'utility', 'variant', 'custom-variant', 'apply', 'source']),
     )
   })
-  it('carries the house deviations from the standard rules', () => {
+  it('carries its deviations from the standard rules', () => {
     expect(createConfig().rules).toMatchObject({
       'import-notation': 'string',
       'color-function-notation': 'modern',
