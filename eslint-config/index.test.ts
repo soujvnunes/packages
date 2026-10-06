@@ -256,8 +256,8 @@ describe('one-line-comments', () => {
       valid: [
         '// One line, however long it runs, which is the whole point and stays legal at any length.',
         'const a = 1\n// A comment separated from another by code.\nconst b = 2\n// Another one.',
-        '/** Single-line JSDoc above the symbol it documents. */\nconst a = 1',
-        '// A module preamble, which is a different comment from the JSDoc under it.\n/** Doc for a. */\nconst a = 1',
+        '/** @deprecated use b, a single-line JSDoc above the symbol a tool reads it on */\nconst a = 1',
+        '// A module preamble, which is a different comment from the JSDoc under it.\n/** @deprecated use b */\nconst a = 1',
         'const f = (/** the id */ id) => id',
         '/** Doc. */\n// eslint-disable-next-line no-console\nconsole.log(1)',
         '/** @jsx h */\n/** @jsxFrag Fragment */\nconst a = 1',
@@ -474,7 +474,7 @@ describe('comment rules', () => {
       expect(block?.files).toEqual(['**/*.{js,jsx,mjs,cjs,ts,tsx,mts,cts}'])
     },
   )
-  it("reports the JSDoc on an export too under jsdoc: 'never'", () => {
+  it('reports the JSDoc on an export by default, and rejects the jsdoc option it no longer takes', () => {
     const lintDoc = (options: LinterTypes.RuleEntry) =>
       new Linter()
         .verify('/** Doc. */\nexport const a = 1', {
@@ -482,8 +482,8 @@ describe('comment rules', () => {
           rules: { 'soujvnunes/no-comments': options },
         })
         .map(({ messageId }) => messageId)
-    expect(lintDoc('error')).toEqual([])
-    expect(lintDoc(['error', { jsdoc: 'never' }])).toEqual(['jsdoc'])
+    expect(lintDoc('error')).toEqual(['jsdoc'])
+    expect(() => lintDoc(['error', { jsdoc: 'never' }])).toThrow(/should NOT have more than 0 items/u)
   })
 })
 const mainRestrictedSyntaxSelectors = (config: LinterTypes.Config[]) => {

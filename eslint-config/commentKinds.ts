@@ -42,6 +42,8 @@ const TYPE_TAGS = new Map<string, (rest: string) => boolean>([
 ])
 const ANNOTATION = /^\s*[@#]/u
 const BLOCK_ANNOTATION = /^\s*[\w-]+:\S/u
+const DEPRECATION = /^@deprecated(?![\w-])/u
+const LATER_TAG = /\s@\w[\w-]*(?![\w/-])/u
 export const isComment = (token: Neighbour): token is Comment =>
   token?.type === AST_TOKEN_TYPES.Line || token?.type === AST_TOKEN_TYPES.Block
 export const isDocShaped = (comment: Comment) =>
@@ -49,6 +51,17 @@ export const isDocShaped = (comment: Comment) =>
 export const isBanner = (comment: Comment) =>
   comment.type === AST_TOKEN_TYPES.Block && comment.value.startsWith('!')
 const pragmaText = (comment: Comment) => comment.value.replace(/^\*+/u, '')
+const docText = (comment: Comment) =>
+  comment.value
+    .split(/\r?\n/u)
+    .map((line) => line.trim().replace(/^\*+/u, '').trim())
+    .filter(Boolean)
+    .join(' ')
+export const isDeprecation = (comment: Comment) => {
+  if (!isDocShaped(comment)) return false
+  const text = docText(comment)
+  return DEPRECATION.test(text) && !LATER_TAG.test(text)
+}
 export const isDirectiveText = (text: string) => DIRECTIVE.test(text) || ANNOTATION.test(text)
 export const isDirective = (comment: Comment) =>
   isDirectiveText(pragmaText(comment)) ||
@@ -60,6 +73,7 @@ export const isToolDirective = (comment: Comment) => {
   return (
     DIRECTIVE.test(text) ||
     PRAGMA.test(text) ||
+    isDeprecation(comment) ||
     (comment.type === AST_TOKEN_TYPES.Block && BLOCK_DIRECTIVE.test(comment.value))
   )
 }

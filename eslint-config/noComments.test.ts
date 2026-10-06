@@ -60,9 +60,30 @@ const KEEPS: [string, string][] = [
   ['webpackChunkName', "const m = import(/* webpackChunkName: 'x' */ './x')"],
   ['a block @internal', '/* @internal */\nexport const a = 1'],
   ['a line @internal', '// @internal\nexport const a = 1'],
-  ['a JSDoc @internal with prose above an export', '/** @internal Doc. */\nexport const a = 1'],
+  ['a JSDoc holding only @deprecated and its sentence', '/** @deprecated use b */\nconst a = 1'],
+  ['a compact @deprecated JSDoc', '/**@deprecated use b*/\nconst a = 1'],
+  ['a bare @deprecated JSDoc', '/** @deprecated */\nconst a = 1'],
+  [
+    'a @deprecated JSDoc naming its scoped replacement package',
+    '/** @deprecated use @scope/pkg instead */\nconst a = 1',
+  ],
+  [
+    'a multi-line @deprecated JSDoc with a {@link} in its sentence',
+    '/**\n * @deprecated use {@link b}\n *   from now on\n */\nconst a = 1',
+  ],
   ['a /*! banner', '/*! banner */\nconst a = 1'],
   ['an interpreter line', '#!/usr/bin/env node\nconst a = 1'],
+  ['// inside a template literal', 'const a = `\n// not a comment\n`'],
+  [
+    'a JSX eslint-disable container',
+    'export const A = () => (\n  <p>\n    {/* eslint-disable-next-line @next/next/no-img-element -- reason */}\n    <img alt="" />\n  </p>\n)',
+  ],
+  [
+    'a JSX @ts-expect-error container',
+    'export const A = () => (\n  <p>\n    {/* @ts-expect-error */}\n    <b x="1" />\n  </p>\n)',
+  ],
+]
+const EXPORTED_DOCS: [string, string][] = [
   ['a JSDoc above export const', '/** Doc. */\nexport const a = 1'],
   ['a JSDoc above export function', '/** Doc. */\nexport function f() {}'],
   ['a JSDoc above export default', '/** Doc. */\nexport default 1'],
@@ -94,17 +115,28 @@ const KEEPS: [string, string][] = [
     'a JSDoc above a directive above an export',
     '/** Doc. */\n// eslint-disable-next-line no-var\nexport var a = 1',
   ],
-  ['// inside a template literal', 'const a = `\n// not a comment\n`'],
   [
-    'a JSX eslint-disable container',
-    'export const A = () => (\n  <p>\n    {/* eslint-disable-next-line @next/next/no-img-element -- reason */}\n    <img alt="" />\n  </p>\n)',
+    'a JSDoc on a key of an object passed to an exported call',
+    'export default defineConfig({\n  /** Doc. */\n  plugins: [],\n})',
   ],
   [
-    'a JSX @ts-expect-error container',
-    'export const A = () => (\n  <p>\n    {/* @ts-expect-error */}\n    <b x="1" />\n  </p>\n)',
+    'a JSDoc on a key of an object Object.freeze exports',
+    'export const A = Object.freeze({\n  /** Doc. */\n  b: 1,\n})',
+  ],
+  [
+    'a JSDoc on a field of a class passed to an exported call',
+    'export const A = mixin(class {\n  /** Doc. */\n  b = 1\n})',
+  ],
+  [
+    'a JSDoc on a key of an object passed to an exported new',
+    'export const a = new Store({\n  /** Doc. */\n  b: 1,\n})',
+  ],
+  [
+    'a JSDoc on an export holding an em dash',
+    `/** Old ${String.fromCodePoint(0x2014)} new. */\nexport const a = 1`,
   ],
 ]
-const TYPESCRIPT_KEEPS: [string, string][] = [
+const TYPESCRIPT_EXPORTED_DOCS: [string, string][] = [
   [
     'a JSDoc on exported interface members',
     '/** Doc. */\nexport interface A {\n  /** Field. */\n  b: string\n  /** Method. */\n  c(): void\n}',
@@ -219,67 +251,67 @@ const TYPESCRIPT_FIXES: [string, string, string, string[]][] = [
     'a JSDoc in a type literal inside an exported function body',
     'export function f() {\n  const a: {\n    /** Doc. */\n    b: number\n  } = { b: 1 }\n  return a\n}',
     'export function f() {\n  const a: {\n    b: number\n  } = { b: 1 }\n  return a\n}',
-    ['orphanDoc'],
+    ['jsdoc'],
   ],
   [
     'a JSDoc in a namespace that is not ambient and a member it does not export',
     'namespace N {\n  /** Doc. */\n  const a = 1\n}',
     'namespace N {\n  const a = 1\n}',
-    ['orphanDoc'],
+    ['jsdoc'],
   ],
   [
     'a JSDoc on an export of a namespace nothing exports',
     'namespace N {\n  /** Doc. */\n  export const a = 1\n}\nexport const b = 1',
     'namespace N {\n  export const a = 1\n}\nexport const b = 1',
-    ['orphanDoc'],
+    ['jsdoc'],
   ],
   [
     'a JSDoc on an export of an exported namespace inside one nothing exports',
     'namespace A {\n  export namespace B {\n    /** Doc. */\n    export const x = 1\n  }\n}\nexport const b = 1',
     'namespace A {\n  export namespace B {\n    export const x = 1\n  }\n}\nexport const b = 1',
-    ['orphanDoc'],
+    ['jsdoc'],
   ],
   [
     'a JSDoc in a declare namespace of a module file that nothing exports',
     "import x from 'y'\ndeclare namespace N {\n  /** Doc. */\n  const a: string\n}\nexport const b = x",
     "import x from 'y'\ndeclare namespace N {\n  const a: string\n}\nexport const b = x",
-    ['orphanDoc'],
+    ['jsdoc'],
   ],
   [
     'a JSDoc in a declare namespace of a file an import require makes a module',
     "import fs = require('fs')\ndeclare namespace N {\n  /** Doc. */\n  const a: string\n}",
     "import fs = require('fs')\ndeclare namespace N {\n  const a: string\n}",
-    ['orphanDoc'],
+    ['jsdoc'],
   ],
   [
     'a JSDoc on a constructor parameter property of a class that is not exported',
     'class A {\n  constructor(\n    /** The URL. */\n    public readonly url: string,\n  ) {}\n}',
     'class A {\n  constructor(\n    public readonly url: string,\n  ) {}\n}',
-    ['orphanDoc'],
+    ['jsdoc'],
   ],
   [
     'a JSDoc between two decorators of an exported class, which TypeScript does not attach',
     '@dec\n/** Doc. */\n@other\nexport class A {}',
     '@dec\n@other\nexport class A {}',
-    ['orphanDoc'],
+    ['jsdoc'],
   ],
   [
     'a JSDoc between two decorators of a member of an exported class',
     'export class A {\n  @dec\n  /** Doc. */\n  @other\n  b = 1\n}',
     'export class A {\n  @dec\n  @other\n  b = 1\n}',
-    ['orphanDoc'],
+    ['jsdoc'],
   ],
   [
     'a JSDoc above a decorated class in a function body that shares a name a top-level export list names',
     'function g() {\n  /** Doc. */\n  @dec\n  class A {}\n  return A\n}\nconst A = 1\nexport { A }',
     'function g() {\n  @dec\n  class A {}\n  return A\n}\nconst A = 1\nexport { A }',
-    ['orphanDoc'],
+    ['jsdoc'],
   ],
   [
     'a JSDoc above a decorated class that is not exported',
     '/** Doc. */\n@dec\nclass A {}',
     '@dec\nclass A {}',
-    ['orphanDoc'],
+    ['jsdoc'],
   ],
 ]
 const FIXES: [string, string, string, string[]][] = [
@@ -313,6 +345,12 @@ const FIXES: [string, string, string, string[]][] = [
   ],
   ['a // opening with #', '// #1 reason we do this\nconst a = 1', 'const a = 1', ['line']],
   [
+    'a // @deprecated, which no tool reads outside a JSDoc',
+    '// @deprecated use b\nconst a = 1',
+    'const a = 1',
+    ['line'],
+  ],
+  [
     'a // @internal with prose after it and no declaration under it',
     'function f() {\n  // @internal we do this because of a long story\n  return 1\n}',
     'function f() {\n  return 1\n}',
@@ -332,56 +370,56 @@ const FIXES: [string, string, string, string[]][] = [
     'const a = 1\nconst b = 2',
     ['block'],
   ],
-  ['a JSDoc above a non-exported const', '/** Doc. */\nconst a = 1', 'const a = 1', ['orphanDoc']],
+  ['a JSDoc above a non-exported const', '/** Doc. */\nconst a = 1', 'const a = 1', ['jsdoc']],
   [
     'a JSDoc on a const whose name only a re-export from another module shares',
     "/** Doc. */\nconst a = 1\nexport { a } from './x'",
     "const a = 1\nexport { a } from './x'",
-    ['orphanDoc'],
+    ['jsdoc'],
   ],
   [
     'a JSDoc above return',
     'function f() {\n  /** Doc. */\n  return 1\n}',
     'function f() {\n  return 1\n}',
-    ['orphanDoc'],
+    ['jsdoc'],
   ],
-  ['a JSDoc above an import', "/** Doc. */\nimport a from 'a'", "import a from 'a'", ['orphanDoc']],
-  ['a JSDoc above an expression statement', '/** Doc. */\nf()', 'f()', ['orphanDoc']],
+  ['a JSDoc above an import', "/** Doc. */\nimport a from 'a'", "import a from 'a'", ['jsdoc']],
+  ['a JSDoc above an expression statement', '/** Doc. */\nf()', 'f()', ['jsdoc']],
   [
     'a JSDoc on an object member inside an exported function body',
     'export function f() {\n  return {\n    /** Doc. */\n    a: 1,\n  }\n}',
     'export function f() {\n  return {\n    a: 1,\n  }\n}',
-    ['orphanDoc'],
+    ['jsdoc'],
   ],
   [
     'a JSDoc on an object member an exported arrow returns',
     'export const f = () => ({\n  /** Doc. */\n  a: 1,\n})',
     'export const f = () => ({\n  a: 1,\n})',
-    ['orphanDoc'],
+    ['jsdoc'],
   ],
   [
     'a JSDoc on a key of an object passed to a call that is not exported',
     'const config = defineConfig({\n  /** Doc. */\n  plugins: [],\n})',
     'const config = defineConfig({\n  plugins: [],\n})',
-    ['orphanDoc'],
+    ['jsdoc'],
   ],
   [
     'a JSDoc on a member of an object that is not exported',
     'const a = {\n  /** Doc. */\n  b: 1,\n}',
     'const a = {\n  b: 1,\n}',
-    ['orphanDoc'],
+    ['jsdoc'],
   ],
   [
     "a JSDoc above 'use client'",
     "/** Doc. */\n'use client'\nexport const a = 1",
     "'use client'\nexport const a = 1",
-    ['orphanDoc'],
+    ['jsdoc'],
   ],
   [
     'a JSDoc trailing code, even with an export under it',
     'const a = 1 /** Doc. */\nexport const b = 2',
     'const a = 1\nexport const b = 2',
-    ['orphanDoc'],
+    ['jsdoc'],
   ],
   [
     'an own-line JSX container',
@@ -389,56 +427,90 @@ const FIXES: [string, string, string, string[]][] = [
     'export const A = () => (\n  <p>\n    text\n  </p>\n)',
     ['jsx'],
   ],
+  [
+    'a // in a catch block that holds code too',
+    'try {\n  f()\n} catch {\n  // ignore\n  g()\n}',
+    'try {\n  f()\n} catch {\n  g()\n}',
+    ['line'],
+  ],
+  [
+    'a // that is all an arrow function body holds, since no-empty never reports a function body',
+    'const f = () => {\n  // noop\n}',
+    'const f = () => {\n}',
+    ['line'],
+  ],
+  [
+    'a // that is all a method body holds',
+    'class A {\n  m() {\n    // noop\n  }\n}',
+    'class A {\n  m() {\n  }\n}',
+    ['line'],
+  ],
 ]
 const UNFIXED: [string, string, string[]][] = [
+  [
+    'a // that is all a catch block holds, since deleting it leaves a block no-empty reports',
+    'try {\n  f()\n} catch {\n  // ignore\n}',
+    ['line'],
+  ],
+  ['two // lines that are all an if block holds', 'if (a) {\n  // x\n  // y\n}', ['line', 'line']],
+  ['a block comment that is all a switch holds', 'switch (a) {\n  /* none */\n}', ['block']],
+  [
+    'a JSDoc that is all a static block holds',
+    'class A {\n  static {\n    /** Doc. */\n  }\n}',
+    ['jsdoc'],
+  ],
   ['an inline JSX container between text', 'export const A = () => <p>a {/* x */} b</p>', ['jsx']],
   ['a block in a JSX tag', 'export const A = () => <p /* x */ id="a" />', ['attribute']],
   ['a multi-line block with code on both of its edges', 'a /* x\n */ (b)', ['block']],
-  ['a misplaced JSDoc holding a tag', '/** Old. @deprecated use b */\nconst a = 1', ['orphanDoc']],
+  ['a JSDoc holding a tag', '/** Old. @deprecated use b */\nconst a = 1', ['jsdoc']],
   [
-    'a misplaced compact JSDoc opening with a tag',
-    '/**@deprecated use b*/\nconst a = 1',
-    ['orphanDoc'],
+    'a JSDoc whose @deprecated has another tag after it',
+    '/** @deprecated use b @see c */\nconst a = 1',
+    ['jsdoc'],
   ],
   [
-    'a misplaced JSDoc that opens with a tag no tool reads',
+    'a JSDoc whose @deprecated tag only starts a longer tag name',
+    '/** @deprecatedSince 2 */\nconst a = 1',
+    ['jsdoc'],
+  ],
+  [
+    'an em dash in a @deprecated JSDoc, the one prose JSDoc the rule keeps',
+    `/** @deprecated use b ${String.fromCodePoint(0x2014)} a is gone */\nconst a = 1`,
+    ['emDash'],
+  ],
+  [
+    'a JSDoc that opens with a tag no tool reads',
     '/** @description any prose here */\nconst a = 1',
-    ['orphanDoc'],
+    ['jsdoc'],
   ],
   [
     'a JSDoc @internal with prose on a local',
     '/** @internal This helper exists because of a long story */\nconst a = 1',
-    ['orphanDoc'],
+    ['jsdoc'],
   ],
   [
-    'a JSDoc on a key of an object passed to an exported call, which only the callee signature publishes or drops',
-    'export default defineConfig({\n  /** Doc. */\n  plugins: [],\n})',
-    ['argumentDoc'],
-  ],
-  [
-    'a JSDoc on a key of an object Object.freeze exports, whose return type keeps it',
-    'export const A = Object.freeze({\n  /** Doc. */\n  b: 1,\n})',
-    ['argumentDoc'],
-  ],
-  [
-    'a JSDoc on a field of a class passed to an exported call',
-    'export const A = mixin(class {\n  /** Doc. */\n  b = 1\n})',
-    ['argumentDoc'],
-  ],
-  [
-    'a JSDoc on a key of an object passed to an exported new',
-    'export const a = new Store({\n  /** Doc. */\n  b: 1,\n})',
-    ['argumentDoc'],
-  ],
-  [
-    'a JSDoc on an export holding an em dash',
-    `/** Old ${String.fromCodePoint(0x2014)} new. */\nexport const a = 1`,
-    ['emDash'],
+    'a JSDoc @internal with prose above an export',
+    '/** @internal Doc. */\nexport const a = 1',
+    ['jsdoc'],
   ],
 ]
+const withoutDocLines = (code: string) =>
+  code
+    .split('\n')
+    .filter((line) => !line.trimStart().startsWith('/**'))
+    .join('\n')
+const docReports = (code: string) =>
+  code
+    .split('/**')
+    .slice(1)
+    .map(() => 'jsdoc')
 describe.each(ruleSetups)('no-comments under %s', (_setup, setup) => {
   it.each(KEEPS)('keeps %s', (_case, code) => {
     expect(lint(setup, code)).toEqual([])
+  })
+  it.each(EXPORTED_DOCS)('reports and removes %s like any other JSDoc', (_case, code) => {
+    expect(lint(setup, code)).toEqual(docReports(code))
+    expect(fixOnce(setup, code)).toBe(withoutDocLines(code))
   })
   it.each(FIXES)('removes %s', (_case, code, output, messageIds) => {
     expect(lint(setup, code)).toEqual(messageIds)
@@ -450,8 +522,9 @@ describe.each(ruleSetups)('no-comments under %s', (_setup, setup) => {
   })
 })
 describe.each(ruleSetups.slice(1))('no-comments on TypeScript syntax under %s', (_setup, setup) => {
-  it.each(TYPESCRIPT_KEEPS)('keeps %s', (_case, code) => {
-    expect(lint(setup, code)).toEqual([])
+  it.each(TYPESCRIPT_EXPORTED_DOCS)('reports and removes %s like any other JSDoc', (_case, code) => {
+    expect(lint(setup, code)).toEqual(docReports(code))
+    expect(fixOnce(setup, code)).toBe(withoutDocLines(code))
   })
   it.each(TYPESCRIPT_FIXES)('removes %s', (_case, code, output, messageIds) => {
     expect(lint(setup, code)).toEqual(messageIds)
@@ -472,21 +545,11 @@ describe.each(ruleSetups.slice(1))(
         .filter(({ fatal, ruleId }) => fatal ?? ruleId === 'soujvnunes/no-comments')
         .map(({ fatal, message, messageId }) => (fatal ? message : messageId))
     it.each(GLOBAL_DECLARATIONS)(
-      'keeps the JSDoc on %s in env.d.ts, which is global',
+      'reports the JSDoc on %s in env.d.ts, in a script file and in a module alike',
       (_case, code) => {
-        expect(lintAs('env.d.ts', code)).toEqual([])
-      },
-    )
-    it.each(GLOBAL_DECLARATIONS)(
-      'keeps the JSDoc on %s in a script file, where it is global too',
-      (_case, code) => {
-        expect(lintAs('component.tsx', code)).toEqual([])
-      },
-    )
-    it.each(GLOBAL_DECLARATIONS)(
-      'reports the JSDoc on %s once an import makes the file a module',
-      (_case, code) => {
-        expect(lintAs('env.d.ts', `import x from 'y'\n${code}\nexport { x }`)).toEqual(['orphanDoc'])
+        expect(lintAs('env.d.ts', code)).toEqual(['jsdoc'])
+        expect(lintAs('component.tsx', code)).toEqual(['jsdoc'])
+        expect(lintAs('env.d.ts', `import x from 'y'\n${code}\nexport { x }`)).toEqual(['jsdoc'])
       },
     )
   },
@@ -533,7 +596,7 @@ describe.each(ruleSetups)('no-comments in a JS file under %s', (_setup, setup) =
     expect(lintAs('next.config.mjs', code)).toEqual([])
   })
   it('still reports a prose JSDoc on a local const', () => {
-    expect(lintAs('next.config.mjs', '/** Doc. */\nconst a = 1')).toEqual(['orphanDoc'])
+    expect(lintAs('next.config.mjs', '/** Doc. */\nconst a = 1')).toEqual(['jsdoc'])
   })
   it.each([
     ['module.exports = f', '/** Doc. */\nfunction f() {}\nmodule.exports = f'],
@@ -541,13 +604,9 @@ describe.each(ruleSetups)('no-comments in a JS file under %s', (_setup, setup) =
     ['module.exports = { g: f }', '/** Doc. */\nconst f = () => 1\nmodule.exports = { g: f }'],
     ['exports.g = f', '/** Doc. */\nfunction f() {}\nexports.g = f'],
     ['module.exports.g = f', '/** Doc. */\nfunction f() {}\nmodule.exports.g = f'],
-  ])('keeps a JSDoc on a declaration a CommonJS %s names', (_case, code) => {
-    expect(lintAs('index.cjs', code)).toEqual([])
-  })
-  it('reports a JSDoc on a CommonJS local that no export assignment names', () => {
-    expect(lintAs('index.cjs', '/** Doc. */\nfunction f() {}\nmodule.exports = g')).toEqual([
-      'orphanDoc',
-    ])
+    ['module.exports = g', '/** Doc. */\nfunction f() {}\nmodule.exports = g'],
+  ])('reports a JSDoc on a declaration whatever a CommonJS %s exports', (_case, code) => {
+    expect(lintAs('index.cjs', code)).toEqual(['jsdoc'])
   })
   it.each([
     [
@@ -567,21 +626,59 @@ describe.each(ruleSetups)('no-comments in a JS file under %s', (_setup, setup) =
       '/** @overload kept for old callers */\nfunction f() {}',
     ],
   ])('reports %s, which gives checkJs no type to read', (_case, code) => {
-    expect(lintAs('next.config.mjs', code)).toEqual(['orphanDoc'])
+    expect(lintAs('next.config.mjs', code)).toEqual(['jsdoc'])
   })
   it('reports the same @type annotation in a TypeScript file, where the type lives in the code', () => {
     expect(lintAs('component.tsx', '/** @typedef {{ a: string }} Shape */\nconst a = 1')).toEqual([
-      'orphanDoc',
+      'jsdoc',
     ])
   })
 })
 describe('no-comments beside one-line-comments', () => {
-  it('converges to code plus the JSDoc on the export, collapsed to one line', () => {
-    const code = '// a\n// b\n/*\n * c\n */\nconst a = 1 // d\n/**\n * Doc.\n */\nexport const b = 2\n'
+  it('converges to the code and the @deprecated JSDoc, collapsed to one line', () => {
+    const code =
+      '// a\n// b\n/*\n * c\n */\nconst a = 1 // d\n/**\n * Doc.\n */\nexport const b = 2\n/**\n * @deprecated use b\n */\nexport const c = 3\n'
     const { output } = new Linter().verifyAndFix(code, {
       plugins: { soujvnunes: soujvnunesPlugin },
       rules: { 'soujvnunes/no-comments': 'error', 'soujvnunes/one-line-comments': 'error' },
     })
-    expect(output).toBe('const a = 1\n/** Doc. */\nexport const b = 2\n')
+    expect(output).toBe(
+      'const a = 1\nexport const b = 2\n/** @deprecated use b */\nexport const c = 3\n',
+    )
+  })
+})
+describe('no-comments beside the empty-block rules the presets turn on', () => {
+  it('leaves the comment of an empty block in place, so the fix never trades it for a no-empty error', () => {
+    const code =
+      'try {\n  f()\n} catch {\n  // ignore\n}\nswitch (a) {\n  // none\n}\nclass A {\n  static {\n    // later\n  }\n}\n'
+    const { output, messages } = new Linter().verifyAndFix(code, {
+      plugins: { soujvnunes: soujvnunesPlugin },
+      rules: {
+        'soujvnunes/no-comments': 'error',
+        'no-empty': 'error',
+        'no-empty-static-block': 'error',
+      },
+    })
+    expect(output).toBe(code)
+    expect(messages.map(({ ruleId }) => ruleId)).toEqual([
+      'soujvnunes/no-comments',
+      'soujvnunes/no-comments',
+      'soujvnunes/no-comments',
+    ])
+  })
+  it('still deletes the comment that is all a function body holds, which no-empty never reports', () => {
+    const { output, messages } = new Linter().verifyAndFix(
+      'function f() {\n  // noop\n}\nconst g = () => {\n  // noop\n}\n',
+      {
+        plugins: { soujvnunes: soujvnunesPlugin },
+        rules: {
+          'soujvnunes/no-comments': 'error',
+          'no-empty': 'error',
+          'no-empty-static-block': 'error',
+        },
+      },
+    )
+    expect(output).toBe('function f() {\n}\nconst g = () => {\n}\n')
+    expect(messages).toEqual([])
   })
 })

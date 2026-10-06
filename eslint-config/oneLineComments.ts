@@ -68,11 +68,11 @@ export const oneLineComments = ESLintUtils.RuleCreator.withoutDocs({
       paragraphs:
         'A paragraph break inside a comment, a bare `//` between comment lines or an empty line inside a block, makes it a set of comments rather than one wrapped line, and joining it would bury every fact but the first. Write one line per fact beside the code it describes, or move the rationale to the README or the project MANIFEST.',
       block:
-        'This block comment spans lines. A comment is one line, however long it runs: collapse it to one `//` line, or to one `/** … */` line when it is JSDoc, or move the rationale to the README or the project MANIFEST.',
+        'This block comment spans lines. A comment is one line, however long it runs: collapse it to one `//` line, or to one `/** … */` line when a tool reads it as JSDoc, or move the rationale to the README or the project MANIFEST.',
       notDoc:
         'A block comment is for JSDoc and JSX only. Write this one as `//`, on its own line or at the end of one, or delete it if it is empty.',
       orphanDoc:
-        '`/**` is JSDoc, and JSDoc sits directly above the code it documents. Move it there, join it with the doc under it, or write it as `//`.',
+        '`/**` opens a JSDoc, which a tool reads only directly above the code it applies to. Move it there when a tool reads it, and delete it otherwise.',
     },
   },
   defaultOptions: [],
