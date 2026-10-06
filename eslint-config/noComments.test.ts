@@ -423,8 +423,26 @@ const FIXES: [string, string, string, string[]][] = [
     'export const A = () => (\n  <p>\n    text\n  </p>\n)',
     ['jsx'],
   ],
+  [
+    'a // in a catch block that holds code too',
+    'try {\n  f()\n} catch {\n  // ignore\n  g()\n}',
+    'try {\n  f()\n} catch {\n  g()\n}',
+    ['line'],
+  ],
 ]
 const UNFIXED: [string, string, string[]][] = [
+  [
+    'a // that is all a catch block holds, since deleting it leaves a block no-empty reports',
+    'try {\n  f()\n} catch {\n  // ignore\n}',
+    ['line'],
+  ],
+  ['two // lines that are all an if block holds', 'if (a) {\n  // x\n  // y\n}', ['line', 'line']],
+  ['a block comment that is all a switch holds', 'switch (a) {\n  /* none */\n}', ['block']],
+  [
+    'a JSDoc that is all a static block holds',
+    'class A {\n  static {\n    /** Doc. */\n  }\n}',
+    ['jsdoc'],
+  ],
   ['an inline JSX container between text', 'export const A = () => <p>a {/* x */} b</p>', ['jsx']],
   ['a block in a JSX tag', 'export const A = () => <p /* x */ id="a" />', ['attribute']],
   ['a multi-line block with code on both of its edges', 'a /* x\n */ (b)', ['block']],
@@ -606,5 +624,25 @@ describe('no-comments beside one-line-comments', () => {
     expect(output).toBe(
       'const a = 1\nexport const b = 2\n/** @deprecated use b */\nexport const c = 3\n',
     )
+  })
+})
+describe('no-comments beside the empty-block rules the presets turn on', () => {
+  it('leaves the comment of an empty block in place, so the fix never trades it for a no-empty error', () => {
+    const code =
+      'try {\n  f()\n} catch {\n  // ignore\n}\nswitch (a) {\n  // none\n}\nclass A {\n  static {\n    // later\n  }\n}\n'
+    const { output, messages } = new Linter().verifyAndFix(code, {
+      plugins: { soujvnunes: soujvnunesPlugin },
+      rules: {
+        'soujvnunes/no-comments': 'error',
+        'no-empty': 'error',
+        'no-empty-static-block': 'error',
+      },
+    })
+    expect(output).toBe(code)
+    expect(messages.map(({ ruleId }) => ruleId)).toEqual([
+      'soujvnunes/no-comments',
+      'soujvnunes/no-comments',
+      'soujvnunes/no-comments',
+    ])
   })
 })

@@ -16,6 +16,13 @@ type Removal = { range: [number, number]; text: string; lines: [number, number] 
 const JS_FILE = /\.[cm]?jsx?$/u
 const isJsxNode = (node: Enclosing) =>
   !!node && node.type.startsWith('JSX') && node.type !== AST_NODE_TYPES.JSXExpressionContainer
+const isEmptyBlock = (node: Enclosing) => {
+  if (node?.type === AST_NODE_TYPES.SwitchStatement) return node.cases.length === 0
+  return (
+    (node?.type === AST_NODE_TYPES.BlockStatement || node?.type === AST_NODE_TYPES.StaticBlock) &&
+    node.body.length === 0
+  )
+}
 const classify = (comment: Comment, lookup: Lookup): Kind => {
   const node = lookup.enclosingNode(comment)
   const inJsx = isJsxNode(node)
@@ -72,7 +79,13 @@ export const noComments = ESLintUtils.RuleCreator.withoutDocs<[], MessageId>({
       return [0, text.length]
     }
     const removal = (comment: Comment, kind: Kind): Removal | null => {
-      if (kind === 'attribute' || (kind === 'jsdoc' && holdsTag(comment))) return null
+      if (
+        kind === 'attribute' ||
+        (kind === 'jsdoc' && holdsTag(comment)) ||
+        isEmptyBlock(lookup.enclosingNode(comment))
+      ) {
+        return null
+      }
       const span = lookup.jsxContainer(comment) ?? comment
       const side = lookup.sides(comment)
       const { range, loc } = span
