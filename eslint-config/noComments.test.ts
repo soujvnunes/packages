@@ -429,6 +429,18 @@ const FIXES: [string, string, string, string[]][] = [
     'try {\n  f()\n} catch {\n  g()\n}',
     ['line'],
   ],
+  [
+    'a // that is all an arrow function body holds, since no-empty never reports a function body',
+    'const f = () => {\n  // noop\n}',
+    'const f = () => {\n}',
+    ['line'],
+  ],
+  [
+    'a // that is all a method body holds',
+    'class A {\n  m() {\n    // noop\n  }\n}',
+    'class A {\n  m() {\n  }\n}',
+    ['line'],
+  ],
 ]
 const UNFIXED: [string, string, string[]][] = [
   [
@@ -644,5 +656,20 @@ describe('no-comments beside the empty-block rules the presets turn on', () => {
       'soujvnunes/no-comments',
       'soujvnunes/no-comments',
     ])
+  })
+  it('still deletes the comment that is all a function body holds, which no-empty never reports', () => {
+    const { output, messages } = new Linter().verifyAndFix(
+      'function f() {\n  // noop\n}\nconst g = () => {\n  // noop\n}\n',
+      {
+        plugins: { soujvnunes: soujvnunesPlugin },
+        rules: {
+          'soujvnunes/no-comments': 'error',
+          'no-empty': 'error',
+          'no-empty-static-block': 'error',
+        },
+      },
+    )
+    expect(output).toBe('function f() {\n}\nconst g = () => {\n}\n')
+    expect(messages).toEqual([])
   })
 })

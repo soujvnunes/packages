@@ -16,11 +16,18 @@ type Removal = { range: [number, number]; text: string; lines: [number, number] 
 const JS_FILE = /\.[cm]?jsx?$/u
 const isJsxNode = (node: Enclosing) =>
   !!node && node.type.startsWith('JSX') && node.type !== AST_NODE_TYPES.JSXExpressionContainer
+const FUNCTION_NODES = new Set<AST_NODE_TYPES>([
+  AST_NODE_TYPES.FunctionDeclaration,
+  AST_NODE_TYPES.FunctionExpression,
+  AST_NODE_TYPES.ArrowFunctionExpression,
+])
 const isEmptyBlock = (node: Enclosing) => {
   if (node?.type === AST_NODE_TYPES.SwitchStatement) return node.cases.length === 0
+  if (node?.type === AST_NODE_TYPES.StaticBlock) return node.body.length === 0
   return (
-    (node?.type === AST_NODE_TYPES.BlockStatement || node?.type === AST_NODE_TYPES.StaticBlock) &&
-    node.body.length === 0
+    node?.type === AST_NODE_TYPES.BlockStatement &&
+    node.body.length === 0 &&
+    !FUNCTION_NODES.has(node.parent.type)
   )
 }
 const classify = (comment: Comment, lookup: Lookup): Kind => {
