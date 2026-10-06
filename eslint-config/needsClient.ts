@@ -227,7 +227,6 @@ const analyze = (sourceCode: Readonly<TSESLint.SourceCode>) => {
     )
   )
 }
-/** Whether a `'use client'` module needs the client, judged once per file by allow-list: it does unless every module-level statement, tag and value handed to a component is one a server module could hold. */
 export const needsClient = (sourceCode: Readonly<TSESLint.SourceCode>) => {
   const cached = verdicts.get(sourceCode.ast)
   if (cached !== undefined) return cached

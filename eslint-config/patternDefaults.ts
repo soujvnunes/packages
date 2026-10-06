@@ -1,5 +1,4 @@
 import { AST_NODE_TYPES, type TSESTree } from '@typescript-eslint/utils'
-/** Every default a destructuring or parameter pattern can give a binding, its own and each enclosing pattern's (`{ options: { format } = fallback }`). */
 export const patternDefaults = (name: TSESTree.Node) => {
   const defaults: TSESTree.Node[] = []
   let current = name

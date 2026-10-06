@@ -224,23 +224,14 @@ const arbitraryTailwindValuePattern = (allow: string[]): string => {
   return `(?:^|:)!?-?${exempt}[a-zA-Z][a-zA-Z0-9-]*-\\[[^\\]]+\\](?:/[a-zA-Z0-9.]+)?!?$`
 }
 export interface ConfigOptions {
-  /** Extra ignore globs, merged after the defaults. */
   ignores?: string[]
-  /** Full import-order groups (replaces the default skeleton). */
   importGroups?: (string | string[])[]
-  /** Root for typescript-eslint's project service. Defaults to cwd. */
   tsconfigRootDir?: string
-  /** Path to the Tailwind v4 CSS entry (the file with `@import "tailwindcss"` + `@theme`, e.g. `./app/tailwind.config.css`). When set on the Next preset, it wires the bundled `eslint-plugin-better-tailwindcss` correctness rules, chiefly `no-unknown-classes`, which flags a class not registered in the theme (a dead token `tsc`/build cannot see; see DESIGN-TOKENS). Leave it unset and the plugin stays off, since without the entry the rule cannot resolve the theme and would flag every class. */
   tailwindEntryPoint?: string
-  /** Utility prefixes exempt from the arbitrary-Tailwind-value ban, for a shape with no theme token (e.g. `['grid-cols', 'grid-rows']` for `grid-cols-[200px_1fr]`). Only read when `tailwindEntryPoint` is set. */
   allowArbitraryClasses?: string[]
-  /** The `cn()`-like helper name a ternary passed straight to it is banned inside of. */
   classMergeName?: string
-  /** Modules next.config.* loads, beside a next.config.ts, .mts or .cts itself (the .js and .mjs forms sit in the default ignores), restricted with the same repo's `no-restricted-imports` patterns (`['@/*']`) as the config file: relative imports only. */
   nextConfigModules?: string[]
-  /** Globs wired to `soujvnunes/one-export-per-file`, the probe-only one-value-export-per-module rule. Unwired (no globs) leaves the rule exported but off. */
   strictExportGlobs?: string[]
-  /** Extra flat-config objects appended at the end. */
   extend?: Linter.Config[]
 }
 const buildConfig = ({
@@ -414,7 +405,5 @@ const buildConfig = ({
     ...extend,
   ]
 }
-/** Base config for TypeScript libraries (no React/Next layers). */
 export const createBaseConfig = (options?: ConfigOptions) => buildConfig({ ...options, next: false })
-/** Full config for Next.js apps: base plus React, React Hooks, jsx-a11y and Next plugins. */
 export const createNextConfig = (options?: ConfigOptions) => buildConfig({ ...options, next: true })

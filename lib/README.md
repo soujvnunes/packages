@@ -4,7 +4,10 @@ Framework-agnostic **stateful** modules (the `shared/lib` counterpart to the pur
 
 ## `./mongoose`: serverless Mongoose client factory
 
-`createMongooseConnection({ mongoDbURI, ...connectOptions })` returns the access boundaries bound to that URI, cached on `globalThis` (survives lambda reuse and dev hot-reload) and attached to Vercel Fluid Compute. Any Mongoose `ConnectOptions` may be overridden.
+`createMongooseConnection({ mongoDbURI, ...connectOptions })` returns the access boundaries bound to that URI, cached on `globalThis` (survives lambda reuse and dev hot-reload) and attached to Vercel Fluid Compute. Any Mongoose `ConnectOptions` may be overridden; four are defaulted: `bufferCommands: false`, `maxPoolSize: 10`, `serverSelectionTimeoutMS: 5000` and `serverApi: { version: '1', strict: true, deprecationErrors: true }`.
+
+- `withDb(operation)` connects, then runs the operation: the shape for a Server Component or any one-off async function.
+- `withDbCallback(action)` returns a function that connects on each call before running the action: the shape for a Server Action or a reusable async function.
 
 ```bash
 pnpm add @soujvnunes/lib mongoose @vercel/functions
@@ -25,7 +28,9 @@ export const getEntry = (key: string) => withDb(() => EntryModel.findOne({ key }
 
 ## `./typegoose`: base model classes
 
-`BaseModel` (subdocuments) and `BaseTimestampedModel` (main docs) both wire the `mongoose-lean-virtuals` plugin and `virtuals: true`, so `.lean({ virtuals: true })` attaches the `id` string.
+`BaseModel` (subdocuments) and `BaseTimestampedModel` (main docs) both wire the `mongoose-lean-virtuals` plugin and `virtuals: true`, so `.lean({ virtuals: true })` attaches the `id` string. Both type `_id` as a Mongoose `ObjectId` and `id` as a string. `BaseTimestampedModel` also extends Typegoose's `TimeStamps` and turns on `timestamps`, so `createdAt` and `updatedAt` are set and typed.
+
+They stand in for Typegoose's `Base` interface, whose documented use merges an interface into the model class of the same name, a merge ESLint reports.
 
 ```bash
 pnpm add @soujvnunes/lib @typegoose/typegoose mongoose mongoose-lean-virtuals reflect-metadata

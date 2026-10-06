@@ -7,9 +7,7 @@ export interface MongooseConnection {
   connectDb: () => Promise<Connection>
   getDbClient: () => Promise<mongo.MongoClient>
   getDB: () => Promise<mongo.Db>
-  /** Connects, then runs the callback (for Server Components & standard async functions). */
   withDb: <T>(operation: () => Promise<T> | PromiseLike<T>) => Promise<T>
-  /** Wraps a callback so it connects on call (for Server Actions / reusable async functions). */
   withDbCallback: <Args extends unknown[], Return>(
     action: (...args: Args) => Promise<Return>,
   ) => (...args: Args) => Promise<Return>
@@ -22,7 +20,6 @@ const cache = {
 declare global {
   var mongoose: typeof cache | undefined
 }
-/** Builds a serverless-safe Mongoose connection bound to `mongoDbURI` and returns the access boundaries. The connection is cached on `globalThis` so it survives lambda reuse and dev hot-reload. Any Mongoose `ConnectOptions` may be passed; the four below are defaulted. Call once per app (e.g. `shared/lib/mongodb.ts`) and destructure the helpers. */
 export const createMongooseConnection = ({
   mongoDbURI,
   bufferCommands = false,
