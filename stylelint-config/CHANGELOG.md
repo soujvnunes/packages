@@ -1,5 +1,11 @@
 # @soujvnunes/stylelint-config
 
+## 0.1.4
+
+### Patch Changes
+
+- 7b4543b: The published type file no longer carries a doc comment, so `createConfig` shows no doc text on hover. Nothing else changed: the compiled output with the comment removed is the same as before. The README already says what the comment did: `rules` passed to `createConfig` merge onto the base rules, any other Stylelint option replaces, and `ignoreFiles` is the common override.
+
 ## 0.1.3
 
 ### Patch Changes
