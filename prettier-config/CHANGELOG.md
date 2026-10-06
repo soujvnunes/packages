@@ -1,5 +1,11 @@
 # @soujvnunes/prettier-config
 
+## 0.4.1
+
+### Patch Changes
+
+- 7b4543b: The published type file no longer carries a doc comment, so `createConfig` shows no doc text on hover. Nothing else changed: the compiled output with the comment removed is the same as before. The README already says what the comment did: any Prettier option passed to `createConfig` overrides the base, and `tailwindStylesheet` is the common override.
+
 ## 0.4.0
 
 ### Minor Changes
