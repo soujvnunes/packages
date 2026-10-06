@@ -64,6 +64,10 @@ const KEEPS: [string, string][] = [
   ['a compact @deprecated JSDoc', '/**@deprecated use b*/\nconst a = 1'],
   ['a bare @deprecated JSDoc', '/** @deprecated */\nconst a = 1'],
   [
+    'a @deprecated JSDoc naming its scoped replacement package',
+    '/** @deprecated use @scope/pkg instead */\nconst a = 1',
+  ],
+  [
     'a multi-line @deprecated JSDoc with a {@link} in its sentence',
     '/**\n * @deprecated use {@link b}\n *   from now on\n */\nconst a = 1',
   ],

@@ -43,7 +43,7 @@ const TYPE_TAGS = new Map<string, (rest: string) => boolean>([
 const ANNOTATION = /^\s*[@#]/u
 const BLOCK_ANNOTATION = /^\s*[\w-]+:\S/u
 const DEPRECATION = /^@deprecated(?![\w-])/u
-const LATER_TAG = /\s@\w/u
+const LATER_TAG = /\s@\w[\w-]*(?![\w/-])/u
 export const isComment = (token: Neighbour): token is Comment =>
   token?.type === AST_TOKEN_TYPES.Line || token?.type === AST_TOKEN_TYPES.Block
 export const isDocShaped = (comment: Comment) =>
