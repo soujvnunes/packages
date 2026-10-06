@@ -6,7 +6,6 @@ const MODULE_LEVEL = new Set<string>([
   AST_NODE_TYPES.ExportNamedDeclaration,
   AST_NODE_TYPES.ExportDefaultDeclaration,
 ])
-/** Whether a function is a component React renders: declared at module level under a PascalCase name or as the default export, through any `memo`, `forwardRef`, `as` or `satisfies` around it. */
 export const isComponentFunction = (node: TSESTree.Node) => {
   if (node.type === AST_NODE_TYPES.FunctionDeclaration)
     return (

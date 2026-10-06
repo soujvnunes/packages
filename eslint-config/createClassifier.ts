@@ -77,7 +77,6 @@ const isMutated = (variable: Variable) =>
         MUTATING_METHODS.has(method ?? ''))
     )
   })
-/** Classifies JSX values and tags for both client-boundary rules: `data` when a server parent could supply it, `stable` when the server would hold the same one. */
 export const createClassifier = (
   sourceCode: Readonly<TSESLint.SourceCode>,
   importMembersAreData: boolean,

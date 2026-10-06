@@ -18,5 +18,4 @@ const tailwind = {
   tailwindFunctions: ['cva', 'twMerge', 'cn'],
   plugins: [require.resolve('prettier-plugin-tailwindcss')],
 }
-/** Shared Prettier config. Pass any Prettier option to override the base; the common one is `tailwindStylesheet` (its path differs between `app/` and `src/app/` layouts). */
 export const createConfig = (overrides: Config = {}): Config => ({ ...base, ...tailwind, ...overrides })
