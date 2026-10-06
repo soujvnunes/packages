@@ -470,6 +470,11 @@ const UNFIXED: [string, string, string[]][] = [
     ['jsdoc'],
   ],
   [
+    'an em dash in a @deprecated JSDoc, the one prose JSDoc the rule keeps',
+    '/** @deprecated use b — a is gone */\nconst a = 1',
+    ['emDash'],
+  ],
+  [
     'a JSDoc that opens with a tag no tool reads',
     '/** @description any prose here */\nconst a = 1',
     ['jsdoc'],

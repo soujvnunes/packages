@@ -4,6 +4,7 @@ import {
   holdsTag,
   isBanner,
   isComment,
+  isDeprecation,
   isDocShaped,
   isToolDirective,
   isTypeAnnotation,
@@ -14,6 +15,7 @@ type Lookup = ReturnType<typeof createCommentLookup>
 type Kind = 'directive' | 'banner' | 'jsdoc' | 'jsx' | 'jsxDirective' | 'attribute' | 'line' | 'block'
 type Removal = { range: [number, number]; text: string; lines: [number, number] | null }
 const JS_FILE = /\.[cm]?jsx?$/u
+const EM_DASH = String.fromCodePoint(0x2014)
 const isJsxNode = (node: Enclosing) =>
   !!node && node.type.startsWith('JSX') && node.type !== AST_NODE_TYPES.JSXExpressionContainer
 const FUNCTION_NODES = new Set<AST_NODE_TYPES>([
@@ -49,6 +51,8 @@ const MESSAGES = {
   jsdoc: `Comments are not allowed in code, JSDoc included. Delete this JSDoc: a reason the code cannot carry belongs in the README. ${KEPT}`,
   jsx: 'Comments are not allowed in JSX. Delete this `{/* */}` container; only a tool directive stays.',
   attribute: 'Comments are not allowed inside a JSX tag. Delete this one.',
+  emDash:
+    'This `@deprecated` JSDoc holds an em dash. Write a comma, a colon, parentheses or two sentences instead.',
 }
 type MessageId = keyof typeof MESSAGES
 const MESSAGE_IDS: Record<Kind, MessageId | null> = {
@@ -121,6 +125,10 @@ export const noComments = ESLintUtils.RuleCreator.withoutDocs<[], MessageId>({
         for (const comment of sourceCode.getAllComments().filter(isComment)) {
           const kind: Kind =
             typedJs && isTypeAnnotation(comment) ? 'directive' : classify(comment, lookup)
+          if (isDeprecation(comment) && comment.value.includes(EM_DASH)) {
+            reports.push({ comment, messageId: 'emDash', fix: null })
+            continue
+          }
           const messageId = MESSAGE_IDS[kind]
           if (messageId) reports.push({ comment, messageId, fix: removal(comment, kind) })
         }

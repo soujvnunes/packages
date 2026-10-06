@@ -57,7 +57,7 @@ const docText = (comment: Comment) =>
     .map((line) => line.trim().replace(/^\*+/u, '').trim())
     .filter(Boolean)
     .join(' ')
-const isDeprecation = (comment: Comment) => {
+export const isDeprecation = (comment: Comment) => {
   if (!isDocShaped(comment)) return false
   const text = docText(comment)
   return DEPRECATION.test(text) && !LATER_TAG.test(text)
