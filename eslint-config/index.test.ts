@@ -474,7 +474,7 @@ describe('comment rules', () => {
       expect(block?.files).toEqual(['**/*.{js,jsx,mjs,cjs,ts,tsx,mts,cts}'])
     },
   )
-  it("reports the JSDoc on an export too under jsdoc: 'never'", () => {
+  it('reports the JSDoc on an export by default, and rejects the jsdoc option it no longer takes', () => {
     const lintDoc = (options: LinterTypes.RuleEntry) =>
       new Linter()
         .verify('/** Doc. */\nexport const a = 1', {
@@ -482,8 +482,8 @@ describe('comment rules', () => {
           rules: { 'soujvnunes/no-comments': options },
         })
         .map(({ messageId }) => messageId)
-    expect(lintDoc('error')).toEqual([])
-    expect(lintDoc(['error', { jsdoc: 'never' }])).toEqual(['jsdoc'])
+    expect(lintDoc('error')).toEqual(['jsdoc'])
+    expect(() => lintDoc(['error', { jsdoc: 'never' }])).toThrow(/should NOT have more than 0 items/u)
   })
 })
 const mainRestrictedSyntaxSelectors = (config: LinterTypes.Config[]) => {
