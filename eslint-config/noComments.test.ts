@@ -475,7 +475,7 @@ const UNFIXED: [string, string, string[]][] = [
   ],
   [
     'an em dash in a @deprecated JSDoc, the one prose JSDoc the rule keeps',
-    '/** @deprecated use b — a is gone */\nconst a = 1',
+    `/** @deprecated use b ${String.fromCodePoint(0x2014)} a is gone */\nconst a = 1`,
     ['emDash'],
   ],
   [
