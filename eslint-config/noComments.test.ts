@@ -428,19 +428,19 @@ const UNFIXED: [string, string, string[]][] = [
   ['an inline JSX container between text', 'export const A = () => <p>a {/* x */} b</p>', ['jsx']],
   ['a block in a JSX tag', 'export const A = () => <p /* x */ id="a" />', ['attribute']],
   ['a multi-line block with code on both of its edges', 'a /* x\n */ (b)', ['block']],
-  ['a JSDocholding a tag', '/** Old. @deprecated use b */\nconst a = 1', ['jsdoc']],
+  ['a JSDoc holding a tag', '/** Old. @deprecated use b */\nconst a = 1', ['jsdoc']],
   [
-    'a JSDocwhose @deprecated has another tag after it',
+    'a JSDoc whose @deprecated has another tag after it',
     '/** @deprecated use b @see c */\nconst a = 1',
     ['jsdoc'],
   ],
   [
-    'a JSDocwhose @deprecated tag only starts a longer tag name',
+    'a JSDoc whose @deprecated tag only starts a longer tag name',
     '/** @deprecatedSince 2 */\nconst a = 1',
     ['jsdoc'],
   ],
   [
-    'a JSDocthat opens with a tag no tool reads',
+    'a JSDoc that opens with a tag no tool reads',
     '/** @description any prose here */\nconst a = 1',
     ['jsdoc'],
   ],
