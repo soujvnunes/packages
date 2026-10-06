@@ -18,7 +18,7 @@ Monorepo for the shared `@soujvnunes/*` packages.
 
 Separate packages when deps are bundled (the configs); subpaths in one package when deps are peer or zero (`util`, `lib`, `react`, `nextjs`).
 
-Source in this repo follows `@soujvnunes/eslint-config`, which is stricter than most shared configs on a few points: no blank lines between statements, no warning severity (a rule either fails or is absent), and type-aware rules enabled. See [its README](./eslint-config#style-rules-worth-knowing-before-you-adopt) before adopting it elsewhere.
+This repo lints itself with the base preset of `@soujvnunes/eslint-config` and formats itself with `@soujvnunes/prettier-config`, minus the Tailwind plugin and its options, since no package here holds Tailwind classes. The ESLint config is stricter than most shared configs on a few points: no blank lines between statements, no warning severity (a rule either fails or is absent), and type-aware rules enabled. See [its README](./eslint-config#style-rules-worth-knowing-before-you-adopt) before adopting it elsewhere.
 
 ## Convention: every package is a customizable factory
 
