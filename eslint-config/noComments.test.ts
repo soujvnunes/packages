@@ -61,6 +61,13 @@ const KEEPS: [string, string][] = [
   ['a block @internal', '/* @internal */\nexport const a = 1'],
   ['a line @internal', '// @internal\nexport const a = 1'],
   ['a JSDoc @internal with prose above an export', '/** @internal Doc. */\nexport const a = 1'],
+  ['a JSDoc holding only @deprecated and its sentence', '/** @deprecated use b */\nconst a = 1'],
+  ['a compact @deprecated JSDoc', '/**@deprecated use b*/\nconst a = 1'],
+  ['a bare @deprecated JSDoc', '/** @deprecated */\nconst a = 1'],
+  [
+    'a multi-line @deprecated JSDoc with a {@link} in its sentence',
+    '/**\n * @deprecated use {@link b}\n *   from now on\n */\nconst a = 1',
+  ],
   ['a /*! banner', '/*! banner */\nconst a = 1'],
   ['an interpreter line', '#!/usr/bin/env node\nconst a = 1'],
   ['a JSDoc above export const', '/** Doc. */\nexport const a = 1'],
@@ -313,6 +320,12 @@ const FIXES: [string, string, string, string[]][] = [
   ],
   ['a // opening with #', '// #1 reason we do this\nconst a = 1', 'const a = 1', ['line']],
   [
+    'a // @deprecated, which no tool reads outside a JSDoc',
+    '// @deprecated use b\nconst a = 1',
+    'const a = 1',
+    ['line'],
+  ],
+  [
     'a // @internal with prose after it and no declaration under it',
     'function f() {\n  // @internal we do this because of a long story\n  return 1\n}',
     'function f() {\n  return 1\n}',
@@ -396,8 +409,13 @@ const UNFIXED: [string, string, string[]][] = [
   ['a multi-line block with code on both of its edges', 'a /* x\n */ (b)', ['block']],
   ['a misplaced JSDoc holding a tag', '/** Old. @deprecated use b */\nconst a = 1', ['orphanDoc']],
   [
-    'a misplaced compact JSDoc opening with a tag',
-    '/**@deprecated use b*/\nconst a = 1',
+    'a misplaced JSDoc whose @deprecated has another tag after it',
+    '/** @deprecated use b @see c */\nconst a = 1',
+    ['orphanDoc'],
+  ],
+  [
+    'a misplaced JSDoc whose @deprecated tag only starts a longer tag name',
+    '/** @deprecatedSince 2 */\nconst a = 1',
     ['orphanDoc'],
   ],
   [
