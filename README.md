@@ -44,7 +44,7 @@ pnpm format
 pnpm changeset   # record a change for release
 ```
 
-Tests run on Vitest, one project per package, and sit next to the module they cover (`util/ellipses.ts` and `util/ellipses.test.ts`). The `react` project runs in jsdom against React Testing Library; every other project runs in node. Nothing reaches a real database or network: `lib/mongoose` runs against a mocked driver, and `createApi` against a stubbed `fetch`. CI runs `build`, `typecheck`, `test`, `lint`, and `format` on every pull request.
+Tests run on Vitest, one project per package, and sit next to the module they cover (`util/ellipses.ts` and `util/ellipses.test.ts`). The `react` project runs in jsdom against React Testing Library; every other project runs in node. Nothing reaches a real database or network: `lib/mongoose` runs against a mocked driver, and `createApi` against a stubbed `fetch`. CI runs `format` on every pull request and on every push to `main`. It runs `build`, `typecheck`, `test` and `lint` on every push to `main`, and on a pull request that changes any file beyond Markdown, `.changeset/`, `.gitignore`, `.prettierignore` and the release workflow; a pull request that changes only those skips them.
 
 ## Release
 
