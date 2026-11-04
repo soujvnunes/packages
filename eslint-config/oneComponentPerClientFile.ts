@@ -88,7 +88,7 @@ export const oneComponentPerClientFile = ESLintUtils.RuleCreator.withoutDocs<[],
           (candidate) => candidate.isExported && isComponentFunction(candidate.fn),
         )
         if (!component) return
-        const walk = createClientWalk(sourceCode, createClassifier(sourceCode, false))
+        const walk = createClientWalk(sourceCode, createClassifier(sourceCode, false), true)
         const readsBrowserGlobal = (fn: FunctionNode) =>
           sourceCode
             .getScope(fn)

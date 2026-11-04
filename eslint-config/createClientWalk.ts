@@ -12,8 +12,14 @@ const CLASS_BASES = new Set(['Component', 'PureComponent'])
 export const createClientWalk = (
   sourceCode: Readonly<TSESLint.SourceCode>,
   { classify, classifyTag, positionOf, variableOf }: ReturnType<typeof createClassifier>,
+  countsOnlyInlineFunctions = false,
 ) => {
   const isData = (node: TSESTree.Node) => classify(node, 'prop').data
+  const isClientValue = (node: TSESTree.Node) =>
+    countsOnlyInlineFunctions
+      ? node.type === AST_NODE_TYPES.ArrowFunctionExpression ||
+        node.type === AST_NODE_TYPES.FunctionExpression
+      : !isData(node)
   const callNames = (callee: TSESTree.Node) => {
     if (callee.type !== AST_NODE_TYPES.Identifier) return [calleeName(callee)]
     return [callee.name, importedName(variableOf(callee, callee.name))]
@@ -43,14 +49,15 @@ export const createClientWalk = (
           if (isEventHandler(key)) return true
           const { value } = attribute
           if (value?.type !== AST_NODE_TYPES.JSXExpressionContainer) return false
-          return (isTag ? isFunctionAttribute(key) : key !== 'className') && !isData(value.expression)
+          if (isTag) return isFunctionAttribute(key) && !isData(value.expression)
+          return key !== 'className' && isClientValue(value.expression)
         })
       }
       case AST_NODE_TYPES.JSXExpressionContainer:
         return (
           node.parent.type === AST_NODE_TYPES.JSXElement &&
           positionOf(node.parent.openingElement) === 'prop' &&
-          !isData(node.expression)
+          isClientValue(node.expression)
         )
       default:
         return false

@@ -38,6 +38,14 @@ const KEEPS: [string, string][] = [
     `${STATE}const Counter = () => { const [n] = useState(0); return <span>{n}</span> }\nexport const Panel = () => <section><Counter /></section>`,
   ],
   [
+    'a private sub-component that hands an inline function to another component',
+    `${STATE}import { Table } from 'ui'\nconst Rows = () => <Table renderRow={(row) => <tr>{row}</tr>} />\nexport const Panel = () => { const [n] = useState(0); return <section>{n}<Rows /></section> }`,
+  ],
+  [
+    'a private sub-component that hands an inline render function to another component as its child',
+    `${STATE}import { Query } from 'ui'\nconst Result = () => <Query>{(data) => <p>{data}</p>}</Query>\nexport const Panel = () => { const [n] = useState(0); return <section>{n}<Result /></section> }`,
+  ],
+  [
     'a closure inside the component, which is not module level',
     `${STATE}export const Form = () => { const [v, setV] = useState(''); const onChange = (event) => setV(event.target.value); function reset() { setV('') } return <input value={v} onChange={onChange} onBlur={reset} /> }`,
   ],
@@ -66,6 +74,16 @@ const REPORTS: [string, string, string[]][] = [
     'a private PascalCase component that calls no hook',
     `${STATE}const Row = () => <li>Row</li>\nexport const List = () => { const [rows] = useState([1]); return <ul>{rows.map((row) => <Row key={row} />)}</ul> }`,
     ['List:Row'],
+  ],
+  [
+    'a static sub-component that maps its props into another component',
+    `${STATE}import { Item } from 'ui'\nconst Rows = ({ items }) => <ul>{items.map((i) => <Item key={i} label={i} />)}</ul>\nexport const L = () => { const [r] = useState([1]); return <Rows items={r} /> }`,
+    ['L:Rows'],
+  ],
+  [
+    'a render helper handed to map, whose argument reaches another component',
+    `${STATE}import { Item } from 'ui'\nconst renderRow = (row) => <Item key={row.id} label={row.label} />\nexport const L = () => { const [r] = useState([]); return <ul>{r.map(renderRow)}</ul> }`,
+    ['L:renderRow'],
   ],
   [
     'a second exported component',
