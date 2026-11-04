@@ -1,4 +1,4 @@
-import { AST_NODE_TYPES, type TSESLint, type TSESTree } from '@typescript-eslint/utils'
+import { AST_NODE_TYPES, TSESLint, type TSESTree } from '@typescript-eslint/utils'
 import { BROWSER_GLOBALS } from './browserGlobals'
 import { calleeName } from './calleeName'
 import { childNodes } from './childNodes'
@@ -7,6 +7,7 @@ import { importedName } from './importedName'
 import { isEventHandler } from './isEventHandler'
 import { isFunctionAttribute } from './isFunctionAttribute'
 import { isHookName } from './isHookName'
+const { DefinitionType } = TSESLint.Scope
 const CLIENT_CALLS = new Set(['use', 'createContext', 'createPortal', 'flushSync'])
 const CLASS_BASES = new Set(['Component', 'PureComponent'])
 export const createClientWalk = (
@@ -20,10 +21,11 @@ export const createClientWalk = (
     node?.type === AST_NODE_TYPES.FunctionExpression
   const isBoundToFunction = (node: TSESTree.Identifier) =>
     !!variableOf(node, node.name)?.defs.some(
-      ({ node: definition }) =>
-        definition.type === AST_NODE_TYPES.FunctionDeclaration ||
-        (definition.type === AST_NODE_TYPES.VariableDeclarator &&
-          isFunctionExpression(definition.init)),
+      (def) =>
+        def.type === DefinitionType.FunctionName ||
+        (def.type === DefinitionType.Variable &&
+          def.node.type === AST_NODE_TYPES.VariableDeclarator &&
+          isFunctionExpression(def.node.init)),
     )
   const isFunctionValue = (node: TSESTree.Node) =>
     isFunctionExpression(node) || (node.type === AST_NODE_TYPES.Identifier && isBoundToFunction(node))

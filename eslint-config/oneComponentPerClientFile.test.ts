@@ -110,6 +110,11 @@ const REPORTS: [string, string, string[]][] = [
     ['L:Rows'],
   ],
   [
+    'a static sub-component written as a function declaration that passes its parameter on to another component',
+    `${STATE}import { List } from 'ui'\nfunction Rows({ items }) { return <List items={items} /> }\nexport const Panel = () => { const [n] = useState([0]); return <section><Rows items={n} /></section> }`,
+    ['Panel:Rows'],
+  ],
+  [
     'a render helper handed to map, whose argument reaches another component',
     `${STATE}import { Item } from 'ui'\nconst renderRow = (row) => <Item key={row.id} label={row.label} />\nexport const L = () => { const [r] = useState([]); return <ul>{r.map(renderRow)}</ul> }`,
     ['L:renderRow'],
