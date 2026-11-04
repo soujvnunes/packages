@@ -326,6 +326,7 @@ const buildConfig = ({
     rules: {
       'soujvnunes/no-needless-use-client': 'error',
       'soujvnunes/no-static-jsx-in-client': 'error',
+      'soujvnunes/one-component-per-client-file': 'error',
     },
   }
   const programBanRule = (message: string): Linter.RulesRecord =>
