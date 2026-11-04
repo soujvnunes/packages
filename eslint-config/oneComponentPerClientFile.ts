@@ -68,7 +68,7 @@ export const oneComponentPerClientFile = ESLintUtils.RuleCreator.withoutDocs<[],
     schema: [],
     messages: {
       extra:
-        'This client file exports `{{component}}`; `{{name}}` is not it and needs no browser, so it belongs to the server parent or to its own module (a pure function under utils/, a hook under lib/, a static sub-component passed in as children).',
+        'This client file exports `{{component}}`; `{{name}}` is a second function that needs no browser of its own. Move it to its own module (a pure function under utils/, a hook under lib/), or render static markup in the server parent and pass it in as children.',
     },
   },
   defaultOptions: [],
