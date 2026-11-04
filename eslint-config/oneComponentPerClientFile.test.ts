@@ -70,6 +70,10 @@ const KEEPS: [string, string][] = [
     `${STATE}import { Query } from 'ui'\nconst Result = () => <Query>{(data) => <p>{data}</p>}</Query>\nexport const Panel = () => { const [n] = useState(0); return <section>{n}<Result /></section> }`,
   ],
   [
+    'a private sub-component that spreads an object holding an on* handler onto a tag',
+    `${STATE}const Btn = () => { const handlers = { onClick: (event) => event.preventDefault() }; return <button {...handlers} /> }\nexport const Panel = () => { const [n] = useState(0); return <section>{n}<Btn /></section> }`,
+  ],
+  [
     'a closure inside the component, which is not module level',
     `${STATE}export const Form = () => { const [v, setV] = useState(''); const onChange = (event) => setV(event.target.value); function reset() { setV('') } return <input value={v} onChange={onChange} onBlur={reset} /> }`,
   ],
