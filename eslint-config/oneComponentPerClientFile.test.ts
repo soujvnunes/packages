@@ -38,6 +38,22 @@ const KEEPS: [string, string][] = [
     `${STATE}const Counter = () => { const [n] = useState(0); return <span>{n}</span> }\nexport const Panel = () => <section><Counter /></section>`,
   ],
   [
+    'a module-level function the component hands to a tag as its onClick handler',
+    `${STATE}const onClick = () => console.log('x')\nexport const B = () => { const [n] = useState(0); return <button onClick={onClick}>{n}</button> }`,
+  ],
+  [
+    'a module-level function the component hands to another component as an on* prop',
+    `${STATE}import { Select } from 'ui'\nconst onValueChange = (value) => console.log(value)\nexport const S = () => { const [n] = useState(0); return <Select value={n} onValueChange={onValueChange} /> }`,
+  ],
+  [
+    'a module-level function the component hands to a tag as its ref',
+    `${STATE}const focus = (node) => node?.focus()\nexport const F = () => { const [v] = useState(''); return <input ref={focus} defaultValue={v} /> }`,
+  ],
+  [
+    'a module-level function the component passes to a hook such as useEffect',
+    "'use client'\nimport { useEffect, useState } from 'react'\nconst effect = () => console.log('mounted')\nexport const E = () => { const [n] = useState(0); useEffect(effect, []); return <p>{n}</p> }",
+  ],
+  [
     'a private sub-component that hands an inline function to another component',
     `${STATE}import { Table } from 'ui'\nconst Rows = () => <Table renderRow={(row) => <tr>{row}</tr>} />\nexport const Panel = () => { const [n] = useState(0); return <section>{n}<Rows /></section> }`,
   ],
@@ -92,7 +108,7 @@ const REPORTS: [string, string, string[]][] = [
   ],
   [
     'an async helper',
-    `${STATE}const load = async () => { const response = await fetch('/api'); return response.json() }\nexport const Feed = () => { const [items] = useState(load); return <p>{String(items)}</p> }`,
+    `${STATE}const load = async () => { const response = await fetch('/api'); return response.json() }\nexport const Feed = () => { const [items, setItems] = useState([]); return <button onClick={() => load().then(setItems)}>{items.length}</button> }`,
     ['Feed:load'],
   ],
   [

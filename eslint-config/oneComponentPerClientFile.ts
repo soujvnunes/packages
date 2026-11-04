@@ -1,10 +1,15 @@
-import { AST_NODE_TYPES, ESLintUtils, type TSESTree } from '@typescript-eslint/utils'
+import { AST_NODE_TYPES, ESLintUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils'
 import { BROWSER_GLOBALS } from './browserGlobals'
+import { calleeName } from './calleeName'
 import { createClassifier } from './createClassifier'
 import { createClientWalk } from './createClientWalk'
 import { findUseClientDirective } from './findUseClientDirective'
+import { importedName } from './importedName'
 import { isComponentFunction } from './isComponentFunction'
 import { isComponentWrapper } from './isComponentWrapper'
+import { isEventHandler } from './isEventHandler'
+import { isFunctionAttribute } from './isFunctionAttribute'
+import { isHookName } from './isHookName'
 type MessageId = 'extra'
 type FunctionNode =
   TSESTree.ArrowFunctionExpression | TSESTree.FunctionExpression | TSESTree.FunctionDeclaration
@@ -88,7 +93,38 @@ export const oneComponentPerClientFile = ESLintUtils.RuleCreator.withoutDocs<[],
           (candidate) => candidate.isExported && isComponentFunction(candidate.fn),
         )
         if (!component) return
-        const walk = createClientWalk(sourceCode, createClassifier(sourceCode, false), true)
+        const classifier = createClassifier(sourceCode, false)
+        const { positionOf, variableOf } = classifier
+        const walk = createClientWalk(sourceCode, classifier, true)
+        const isHookCallee = (callee: TSESTree.Node) =>
+          isHookName(calleeName(callee)) ||
+          (callee.type === AST_NODE_TYPES.Identifier &&
+            isHookName(importedName(variableOf(callee, callee.name))))
+        const isHandedToClient = ({ identifier }: TSESLint.Scope.Reference) => {
+          const { parent } = identifier
+          if (parent.type === AST_NODE_TYPES.CallExpression)
+            return (
+              parent.arguments.some((argument) => argument === identifier) &&
+              isHookCallee(parent.callee)
+            )
+          if (
+            parent.type !== AST_NODE_TYPES.JSXExpressionContainer ||
+            parent.parent.type !== AST_NODE_TYPES.JSXAttribute
+          )
+            return false
+          const attribute = parent.parent
+          const key = attribute.name.type === AST_NODE_TYPES.JSXIdentifier ? attribute.name.name : ''
+          return (
+            isEventHandler(key) || (positionOf(attribute.parent) === 'text' && isFunctionAttribute(key))
+          )
+        }
+        const isUsedByClient = (candidate: Candidate) =>
+          sourceCode
+            .getDeclaredVariables(candidate.node)
+            .some(
+              (variable) =>
+                variable.name === candidate.name && variable.references.some(isHandedToClient),
+            )
         const readsBrowserGlobal = (fn: FunctionNode) =>
           sourceCode
             .getScope(fn)
@@ -99,7 +135,12 @@ export const oneComponentPerClientFile = ESLintUtils.RuleCreator.withoutDocs<[],
                 !reference.resolved?.defs.length,
             )
         for (const candidate of candidates) {
-          if (candidate === component || walk(candidate.fn) || readsBrowserGlobal(candidate.fn))
+          if (
+            candidate === component ||
+            walk(candidate.fn) ||
+            readsBrowserGlobal(candidate.fn) ||
+            isUsedByClient(candidate)
+          )
             continue
           context.report({
             node: candidate.node,

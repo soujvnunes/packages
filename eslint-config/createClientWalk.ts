@@ -6,7 +6,7 @@ import type { createClassifier } from './createClassifier'
 import { importedName } from './importedName'
 import { isEventHandler } from './isEventHandler'
 import { isFunctionAttribute } from './isFunctionAttribute'
-const HOOK = /^use[A-Z]/u
+import { isHookName } from './isHookName'
 const CLIENT_CALLS = new Set(['use', 'createContext', 'createPortal', 'flushSync'])
 const CLASS_BASES = new Set(['Component', 'PureComponent'])
 export const createClientWalk = (
@@ -27,7 +27,7 @@ export const createClientWalk = (
   const needsNode = (node: TSESTree.Node) => {
     switch (node.type) {
       case AST_NODE_TYPES.CallExpression:
-        return callNames(node.callee).some((name) => HOOK.test(name) || CLIENT_CALLS.has(name))
+        return callNames(node.callee).some((name) => isHookName(name) || CLIENT_CALLS.has(name))
       case AST_NODE_TYPES.ClassDeclaration:
       case AST_NODE_TYPES.ClassExpression:
         return !!node.superClass && CLASS_BASES.has(calleeName(node.superClass))
