@@ -58,6 +58,14 @@ const KEEPS: [string, string][] = [
     `${STATE}import { Table } from 'ui'\nconst Rows = () => <Table renderRow={(row) => <tr>{row}</tr>} />\nexport const Panel = () => { const [n] = useState(0); return <section>{n}<Rows /></section> }`,
   ],
   [
+    'a private sub-component that hands a function it names to another component',
+    `${STATE}import { Table } from 'ui'\nconst Rows = () => { const renderRow = (row) => <tr>{row}</tr>; return <Table renderRow={renderRow} /> }\nexport const Panel = () => { const [n] = useState(0); return <section>{n}<Rows /></section> }`,
+  ],
+  [
+    'a private sub-component that hands a function declaration it holds to another component',
+    `${STATE}import { Table } from 'ui'\nconst Rows = () => { function renderRow(row) { return <tr>{row}</tr> } return <Table renderRow={renderRow} /> }\nexport const Panel = () => { const [n] = useState(0); return <section>{n}<Rows /></section> }`,
+  ],
+  [
     'a private sub-component that hands an inline render function to another component as its child',
     `${STATE}import { Query } from 'ui'\nconst Result = () => <Query>{(data) => <p>{data}</p>}</Query>\nexport const Panel = () => { const [n] = useState(0); return <section>{n}<Result /></section> }`,
   ],
@@ -100,6 +108,11 @@ const REPORTS: [string, string, string[]][] = [
     'a render helper handed to map, whose argument reaches another component',
     `${STATE}import { Item } from 'ui'\nconst renderRow = (row) => <Item key={row.id} label={row.label} />\nexport const L = () => { const [r] = useState([]); return <ul>{r.map(renderRow)}</ul> }`,
     ['L:renderRow'],
+  ],
+  [
+    'a module-level render function, though not the sub-component that hands it to another component',
+    `${STATE}import { Table } from 'ui'\nconst renderRow = (row) => <tr>{row}</tr>\nconst Rows = () => <Table renderRow={renderRow} />\nexport const Panel = () => { const [n] = useState(0); return <section>{n}<Rows /></section> }`,
+    ['Panel:renderRow'],
   ],
   [
     'a second exported component',

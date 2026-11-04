@@ -12,14 +12,23 @@ const CLASS_BASES = new Set(['Component', 'PureComponent'])
 export const createClientWalk = (
   sourceCode: Readonly<TSESLint.SourceCode>,
   { classify, classifyTag, positionOf, variableOf }: ReturnType<typeof createClassifier>,
-  countsOnlyInlineFunctions = false,
+  countsOnlyFunctions = false,
 ) => {
   const isData = (node: TSESTree.Node) => classify(node, 'prop').data
+  const isFunctionExpression = (node: TSESTree.Node | null) =>
+    node?.type === AST_NODE_TYPES.ArrowFunctionExpression ||
+    node?.type === AST_NODE_TYPES.FunctionExpression
+  const isBoundToFunction = (node: TSESTree.Identifier) =>
+    !!variableOf(node, node.name)?.defs.some(
+      ({ node: definition }) =>
+        definition.type === AST_NODE_TYPES.FunctionDeclaration ||
+        (definition.type === AST_NODE_TYPES.VariableDeclarator &&
+          isFunctionExpression(definition.init)),
+    )
+  const isFunctionValue = (node: TSESTree.Node) =>
+    isFunctionExpression(node) || (node.type === AST_NODE_TYPES.Identifier && isBoundToFunction(node))
   const isClientValue = (node: TSESTree.Node) =>
-    countsOnlyInlineFunctions
-      ? node.type === AST_NODE_TYPES.ArrowFunctionExpression ||
-        node.type === AST_NODE_TYPES.FunctionExpression
-      : !isData(node)
+    countsOnlyFunctions ? isFunctionValue(node) : !isData(node)
   const callNames = (callee: TSESTree.Node) => {
     if (callee.type !== AST_NODE_TYPES.Identifier) return [calleeName(callee)]
     return [callee.name, importedName(variableOf(callee, callee.name))]
