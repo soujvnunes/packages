@@ -53,7 +53,8 @@ export const createClientWalk = (
         if (!classifyTag(node).data) return true
         const isTag = positionOf(node) === 'text'
         return node.attributes.some((attribute) => {
-          if (attribute.type === AST_NODE_TYPES.JSXSpreadAttribute) return !isData(attribute.argument)
+          if (attribute.type === AST_NODE_TYPES.JSXSpreadAttribute)
+            return isClientValue(attribute.argument)
           const key = attribute.name.type === AST_NODE_TYPES.JSXIdentifier ? attribute.name.name : ''
           if (isEventHandler(key)) return true
           const { value } = attribute
