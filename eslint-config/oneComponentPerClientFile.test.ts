@@ -101,6 +101,10 @@ const TYPESCRIPT_KEEPS: [string, string][] = [
     'a type alias beside the component',
     `${STATE}type Props = { label: string }\nexport const Field = ({ label }: Props) => { const [v] = useState(label); return <p>{v}</p> }`,
   ],
+  [
+    'a client file whose only export is type-only, so it exports no component',
+    "'use client'\nconst helper = () => 1\nconst Inner = () => <p>{helper()}</p>\nexport type { Inner }",
+  ],
 ]
 const TYPESCRIPT_REPORTS: [string, string, string[]][] = [
   [

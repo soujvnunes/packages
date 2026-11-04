@@ -46,6 +46,8 @@ const statementCandidates = (statement: TSESTree.ProgramStatement): Candidate[] 
   return fn ? [{ node: statement, fn, name: 'default', isExported: true }] : []
 }
 const exportedLocalNames = (statement: TSESTree.ProgramStatement): string[] => {
+  if (statement.type === AST_NODE_TYPES.ExportNamedDeclaration && statement.exportKind === 'type')
+    return []
   if (statement.type === AST_NODE_TYPES.ExportNamedDeclaration && !statement.source)
     return statement.specifiers.flatMap((specifier) =>
       specifier.exportKind !== 'type' && specifier.local.type === AST_NODE_TYPES.Identifier
