@@ -1,5 +1,6 @@
 import { needlessUseClient } from './needlessUseClient'
 import { noComments } from './noComments'
+import { oneComponentPerClientFile } from './oneComponentPerClientFile'
 import { oneExportPerFile } from './oneExportPerFile'
 import { oneLineComments } from './oneLineComments'
 import { staticJsxInClient } from './staticJsxInClient'
@@ -12,6 +13,7 @@ const plugin = {
     'no-needless-use-client': needlessUseClient,
     'no-static-jsx-in-client': staticJsxInClient,
     'one-export-per-file': oneExportPerFile,
+    'one-component-per-client-file': oneComponentPerClientFile,
   },
 }
 export const soujvnunesPlugin: CompatiblePlugin = plugin
