@@ -108,6 +108,7 @@ describe('createBaseConfig', () => {
     const rules = createBaseConfig().flatMap((entry) => Object.keys(entry.rules ?? {}))
     expect(rules).not.toContain('soujvnunes/no-needless-use-client')
     expect(rules).not.toContain('soujvnunes/no-static-jsx-in-client')
+    expect(rules).not.toContain('soujvnunes/one-component-per-client-file')
   })
 })
 describe('createNextConfig', () => {
@@ -156,11 +157,12 @@ describe('createNextConfig', () => {
     )
     expect(override?.files?.[0]).toContain(`,${name},`)
   })
-  it('turns on both client-boundary rules at error, on JSX files only', () => {
+  it('turns on the three client-boundary rules at error, on JSX files only', () => {
     const block = createNextConfig().find((entry) => entry.rules?.['soujvnunes/no-needless-use-client'])
     expect(block?.rules).toEqual({
       'soujvnunes/no-needless-use-client': 'error',
       'soujvnunes/no-static-jsx-in-client': 'error',
+      'soujvnunes/one-component-per-client-file': 'error',
     })
     expect(block?.files).toEqual(['**/*.{jsx,tsx}'])
     expect(block?.ignores).toEqual(['**/{error,global-error}.{jsx,tsx}'])

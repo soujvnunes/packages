@@ -1,22 +1,17 @@
 import { AST_NODE_TYPES, TSESLint, type TSESTree } from '@typescript-eslint/utils'
-import globals from 'globals'
+import { BROWSER_GLOBALS } from './browserGlobals'
 import { calleeName } from './calleeName'
 import { childNodes } from './childNodes'
 import { createClassifier } from './createClassifier'
+import { createClientWalk } from './createClientWalk'
 import { everyDef } from './everyDef'
-import { importedName } from './importedName'
 import { isComponentInit } from './isComponentInit'
 import { isComponentName } from './isComponentName'
 import { isComponentWrapperCall } from './isComponentWrapperCall'
-import { isEventHandler } from './isEventHandler'
-import { isFunctionAttribute } from './isFunctionAttribute'
 import { isFunctionNode } from './isFunctionNode'
 const { DefinitionType } = TSESLint.Scope
-const HOOK = /^use[A-Z]/u
 const STYLESHEET = /\.(?:css|scss|sass|less)$/u
-const CLIENT_CALLS = new Set(['use', 'createContext', 'createPortal', 'flushSync'])
 const CLIENT_MODULES = new Set(['next/dynamic', 'client-only'])
-const CLASS_BASES = new Set(['Component', 'PureComponent'])
 const PURE_CALLS = new Set(['cva', 'tv'])
 const INERT_TYPES = new Set<string>([
   AST_NODE_TYPES.Literal,
@@ -57,19 +52,12 @@ const TYPE_DECLARATIONS = new Set<string>([
   AST_NODE_TYPES.TSTypeAliasDeclaration,
   AST_NODE_TYPES.TSDeclareFunction,
 ])
-const BROWSER_GLOBALS = new Set([
-  ...Object.keys(globals.browser).filter(
-    (name) => !Object.hasOwn(globals.node, name) && !Object.hasOwn(globals.builtin, name),
-  ),
-  'navigator',
-  'localStorage',
-  'sessionStorage',
-])
 const isValueReference = (reference: TSESLint.Scope.Reference) => reference.isValueReference !== false
 const verdicts = new WeakMap<TSESTree.Program, boolean>()
 const analyze = (sourceCode: Readonly<TSESLint.SourceCode>) => {
-  const { classify, classifyTag, positionOf, variableOf } = createClassifier(sourceCode, false)
-  const isData = (node: TSESTree.Node) => classify(node, 'prop').data
+  const classifier = createClassifier(sourceCode, false)
+  const { variableOf } = classifier
+  const walk = createClientWalk(sourceCode, classifier)
   const isComponentBinding = (identifier: TSESTree.Identifier) => {
     const variable = variableOf(identifier, identifier.name)
     const isNamedLikeComponent = isComponentName(variable?.name)
@@ -169,50 +157,6 @@ const analyze = (sourceCode: Readonly<TSESLint.SourceCode>) => {
         return TYPE_DECLARATIONS.has(statement.type)
     }
   }
-  const callNames = (callee: TSESTree.Node) => {
-    if (callee.type !== AST_NODE_TYPES.Identifier) return [calleeName(callee)]
-    return [callee.name, importedName(variableOf(callee, callee.name))]
-  }
-  const needsNode = (node: TSESTree.Node) => {
-    switch (node.type) {
-      case AST_NODE_TYPES.CallExpression:
-        return callNames(node.callee).some((name) => HOOK.test(name) || CLIENT_CALLS.has(name))
-      case AST_NODE_TYPES.ClassDeclaration:
-      case AST_NODE_TYPES.ClassExpression:
-        return !!node.superClass && CLASS_BASES.has(calleeName(node.superClass))
-      case AST_NODE_TYPES.MemberExpression:
-        return (
-          node.object.type === AST_NODE_TYPES.Identifier &&
-          node.object.name === 'globalThis' &&
-          !node.computed &&
-          node.property.type === AST_NODE_TYPES.Identifier &&
-          BROWSER_GLOBALS.has(node.property.name) &&
-          !variableOf(node.object, 'globalThis')?.defs.length
-        )
-      case AST_NODE_TYPES.JSXOpeningElement: {
-        if (!classifyTag(node).data) return true
-        const isTag = positionOf(node) === 'text'
-        return node.attributes.some((attribute) => {
-          if (attribute.type === AST_NODE_TYPES.JSXSpreadAttribute) return !isData(attribute.argument)
-          const key = attribute.name.type === AST_NODE_TYPES.JSXIdentifier ? attribute.name.name : ''
-          if (isEventHandler(key)) return true
-          const { value } = attribute
-          if (value?.type !== AST_NODE_TYPES.JSXExpressionContainer) return false
-          return (isTag ? isFunctionAttribute(key) : key !== 'className') && !isData(value.expression)
-        })
-      }
-      case AST_NODE_TYPES.JSXExpressionContainer:
-        return (
-          node.parent.type === AST_NODE_TYPES.JSXElement &&
-          positionOf(node.parent.openingElement) === 'prop' &&
-          !isData(node.expression)
-        )
-      default:
-        return false
-    }
-  }
-  const walk = (node: TSESTree.Node): boolean =>
-    needsNode(node) || childNodes(node, sourceCode.visitorKeys).some(walk)
   if (!sourceCode.ast.body.every(isServerSafeStatement) || walk(sourceCode.ast)) return true
   const scope = sourceCode.getScope(sourceCode.ast)
   return (
