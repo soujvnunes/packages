@@ -46,6 +46,7 @@ export default createBaseConfig()
 | `tsconfigRootDir` | `process.cwd()` | Root for typescript-eslint's project service |
 | `tailwindEntryPoint` | (none) | Tailwind v4 CSS entry path: the file holding `@import "tailwindcss"` and `@theme`, such as `./app/tailwind.config.css`. When set on the Next preset, wires `eslint-plugin-better-tailwindcss` correctness rules such as `no-unknown-classes`, which flags a class not registered in the theme (a dead token neither `tsc` nor the build sees), and `no-restricted-classes`, which flags an arbitrary-value class such as `text-[11px]`. Left unset, the plugin stays off, since without the entry `no-unknown-classes` cannot resolve the theme and would flag every class. The stylistic rules stay off, since `prettier-plugin-tailwindcss` already owns class order |
 | `allowArbitraryClasses` | `[]` | Utility prefixes exempt from the arbitrary-Tailwind-value ban, for a shape with no theme token (`['grid-cols']` for `grid-cols-[200px_1fr]`). Read only when `tailwindEntryPoint` is set |
+| `design` | `false` | `true` or `{ dark?: boolean }` adds the design class rules to `no-restricted-classes`, for a theme that follows the design scales. Read only when `tailwindEntryPoint` is set. `{ dark: true }` allows the `dark:` variant. See "Design class rules" below |
 | `classMergeName` | `'cn'` | The class-merge helper name a ternary passed straight to it is banned inside of |
 | `nextConfigModules` | `[]` | Modules `next.config.*` loads, restricted to relative imports (`no-restricted-imports` on `['@/*']`) the same as a `next.config.ts`, `.mts` or `.cts` itself, on the Next preset |
 | `strictExportGlobs` | `[]` | Globs wired to `soujvnunes/one-export-per-file`. With no globs the rule stays exported but off |
@@ -117,6 +118,26 @@ Both are Next-preset only, since a plain TypeScript library's `index.ts` is its 
 ## Arbitrary Tailwind values, when `tailwindEntryPoint` is set
 
 `better-tailwindcss/no-restricted-classes` bans a bracketed value on a utility (`text-[11px]`, `tracking-[0.08em]`, `bg-[#000]/50`) while leaving a bracketed **variant** alone (`data-[state=open]:`, `group-data-[state=open]:`, `peer-data-[checked]:`, `supports-[display:grid]:`, `[&_>_svg]:`), since those precede a colon and the ban only matches the class's own trailing bracket. `allowArbitraryClasses` exempts a utility prefix that has no theme-token shape at all, such as `grid-cols` for `grid-cols-[200px_1fr]`. Measured on a Next app: 28 distinct values at 52 sites, mostly `text-[Npx]` and `tracking-[Nem]`, none of which has a matching theme token today.
+
+## Design class rules, when `design` is set
+
+`design: true` (or `design: { dark: true }`) adds seven entries to `better-tailwindcss/no-restricted-classes`, beside the arbitrary-value entry and only where `tailwindEntryPoint` is set. Without the option nothing changes. Each pattern is matched against the whole class with its variants, so `hover:lg:p-2` is read the same as `p-2`, and the first entry that matches reports.
+
+```js
+export default createNextConfig({ tailwindEntryPoint: './app/tailwind.config.css', design: true })
+```
+
+| Entry | Reports | Passes |
+| --- | --- | --- |
+| Responsive switch | `sm:flex`, `md:flex`, `max-sm:hidden`, `max-md:hidden` | `lg:flex`, `max-lg:flex` |
+| Dark variant | `dark:bg-surface`, unless `design: { dark: true }` | `bg-surface` |
+| Motion | `transition`, `transition-colors`, `animate-spin`, `duration-300`, `ease-in`, `delay-150` with no `motion-safe:` variant | `motion-safe:transition`, `motion-safe:lg:duration-300`, `transition-none`, `animate-none` |
+| Stock font size | `text-xs`, `text-sm`, `text-base`, `text-lg`, `text-xl`, `text-2xl` to `text-9xl`, `text-sm/6` | `text-body` (a theme alias) |
+| Spacing and size scale | a number outside 0, 4, 8, 12, 16, 24, 40, 64, 104, 168 on a padding, margin, gap, space, inset, top, right, bottom, left, start, end, `w`, `h`, `size`, `min-w`, `min-h`, `max-h` or `basis` utility: `p-2`, `mt-0.5`, `w-px`, `h-48`, `-mt-10` | `p-4`, `-mt-8`, `w-1/2`, `w-full`, `h-auto`, `size-fit`, `mx-auto` |
+| Opacity modifier | `bg-surface/50`, `text-foreground/70`, `border-line/20`, `ring-focus/40`, `outline-line/10`, `fill-icon/60`, `stroke-icon/60`, `divide-line/20`, `shadow-shade/30`, `from-surface/50`, `via-surface/50`, `to-surface/50` | `bg-surface`, `w-1/2` |
+| Max width | `max-w-xl`, `max-w-full`, `lg:max-w-prose` | `w-full`, `min-w-0` |
+
+A decimal and `px` are outside the scale, a fraction and a keyword are not. Each report states its rule in plain words.
 
 ## Module boundaries
 
