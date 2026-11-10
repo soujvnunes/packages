@@ -153,6 +153,7 @@ describe('designClassRestrictions', () => {
       'to-surface/50',
       'hover:bg-surface/50',
       'lg:hover:text-foreground/70',
+      'bg-(--brand)/50',
     ])('flags %s', (className) => expect(flags(5, className)).toBe(true))
     it.each([
       'bg-surface',

@@ -51,7 +51,7 @@ const MOTION_SAFE_VARIANT = '(?:.*:)?motion-safe:'
 const MOTION_PATTERN = `^(?!${MOTION_SAFE_VARIANT})(?:.*:)?!?${anyOf(MOTION_UTILITIES)}${CLASS_END}`
 const FONT_SIZE_PATTERN = `${CLASS_START}text-${anyOf(STOCK_FONT_SIZES)}(?:/${CLASS_VALUE})?${CLASS_END}`
 const OFF_SCALE_PATTERN = `${CLASS_START}-?${anyOf(SCALED_UTILITIES)}-(?!${anyOf(SPACING_STEPS)}${CLASS_END})(?:\\d+(?:\\.\\d+)?|px)${CLASS_END}`
-const OPACITY_PATTERN = `${CLASS_START}${anyOf(COLOUR_UTILITIES)}-[a-zA-Z0-9-]+/(?:\\d+(?:\\.\\d+)?|\\[[^\\]\\s]+\\]|\\([^)\\s]+\\))${CLASS_END}`
+const OPACITY_PATTERN = `${CLASS_START}${anyOf(COLOUR_UTILITIES)}-(?:[a-zA-Z0-9-]+|\\([^)\\s]+\\))/(?:\\d+(?:\\.\\d+)?|\\[[^\\]\\s]+\\]|\\([^)\\s]+\\))${CLASS_END}`
 const MAX_WIDTH_PATTERN = `${CLASS_START}max-w-`
 export const designClassRestrictions = ({ dark }: { dark: boolean }) => [
   {
