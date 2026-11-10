@@ -134,7 +134,7 @@ export default createNextConfig({ tailwindEntryPoint: './app/tailwind.config.css
 | Motion | `transition`, `transition-colors`, `animate-spin`, `duration-300`, `ease-in`, `delay-150` with no `motion-safe:` variant | `motion-safe:transition`, `motion-safe:lg:duration-300`, `transition-none`, `animate-none` |
 | Stock font size | `text-xs`, `text-sm`, `text-base`, `text-lg`, `text-xl`, `text-2xl` to `text-9xl`, `text-sm/6` | `text-body` (a theme alias) |
 | Spacing and size scale | a number outside 0, 4, 8, 12, 16, 24, 40, 64, 104, 168 on a padding, margin, gap, space, inset, top, right, bottom, left, start, end, `w`, `h`, `size`, `min-w`, `min-h`, `max-h` or `basis` utility: `p-2`, `mt-0.5`, `w-px`, `h-48`, `-mt-10` | `p-4`, `-mt-8`, `w-1/2`, `w-full`, `h-auto`, `size-fit`, `mx-auto` |
-| Opacity modifier | `bg-surface/50`, `text-foreground/70`, `border-line/20`, `ring-focus/40`, `outline-line/10`, `fill-icon/60`, `stroke-icon/60`, `divide-line/20`, `shadow-shade/30`, `from-surface/50`, `via-surface/50`, `to-surface/50` | `bg-surface`, `w-1/2` |
+| Opacity modifier | `bg-surface/50`, `text-foreground/70`, `border-line/20`, `ring-focus/40`, `outline-line/10`, `fill-icon/60`, `stroke-icon/60`, `divide-line/20`, `shadow-shade/30`, `from-surface/50`, `via-surface/50`, `to-surface/50` | `bg-surface`, `w-1/2`, `bg-linear-to-r/oklch` |
 | Max width | `max-w-xl`, `max-w-full`, `lg:max-w-prose` | `w-full`, `min-w-0` |
 
 A decimal and `px` are outside the scale, a fraction and a keyword are not. Each report states its rule in plain words.

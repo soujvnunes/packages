@@ -162,6 +162,9 @@ describe('designClassRestrictions', () => {
       'w-1/2',
       'translate-x-1/2',
       'aspect-16/9',
+      'bg-linear-to-r/oklch',
+      'bg-radial/srgb',
+      'text-heading/tight',
     ])('passes %s', (className) => expect(flags(5, className)).toBe(false))
   })
   describe('max-w classes', () => {
