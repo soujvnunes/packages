@@ -1,6 +1,7 @@
 import { ESLint, Linter } from 'eslint'
 import type { Linter as LinterTypes } from 'eslint'
 import { describe, expect, it } from 'vitest'
+import { designClassRestrictions } from './designClassRestrictions'
 import { lintWithRule } from './lintWithRule'
 import { soujvnunesPlugin } from './plugin'
 import { createBaseConfig, createNextConfig, type ConfigOptions } from './index'
@@ -652,6 +653,80 @@ describe('arbitrary Tailwind values', () => {
   })
   it('does nothing when tailwindEntryPoint is unset', () => {
     expect(mainBlock(createNextConfig()).rules).not.toHaveProperty(
+      'better-tailwindcss/no-restricted-classes',
+    )
+  })
+})
+describe('design class rules', () => {
+  const restrictions = (options?: ConfigOptions) => {
+    const config = createNextConfig({ tailwindEntryPoint: TAILWIND_ENTRY, ...options })
+    const rule = mainBlock(config).rules?.['better-tailwindcss/no-restricted-classes'] as [
+      string,
+      { restrict: { pattern: string; message: string }[] },
+    ]
+    return rule[1].restrict
+  }
+  const flagged = (className: string, options?: ConfigOptions) =>
+    restrictions(options).some((entry) => className.match(entry.pattern) !== null)
+  it('adds nothing beside the arbitrary-value entry without the option', () => {
+    expect(restrictions()).toHaveLength(1)
+    expect(restrictions({ design: false })).toHaveLength(1)
+    expect(flagged('md:flex')).toBe(false)
+    expect(flagged('text-sm')).toBe(false)
+    expect(flagged('dark:bg-surface')).toBe(false)
+  })
+  it('appends the seven design entries after the arbitrary-value entry with design: true', () => {
+    const [arbitrary, ...design] = restrictions({ design: true })
+    expect(arbitrary?.pattern).toBe(restrictions()[0]?.pattern)
+    expect(design).toEqual(designClassRestrictions({ dark: false }))
+    expect(design).toHaveLength(7)
+  })
+  it('flags a class of each entry once the option is set', () => {
+    for (const className of [
+      'md:flex',
+      'dark:bg-surface',
+      'transition',
+      'text-sm',
+      'p-2',
+      'bg-surface/50',
+      'max-w-xl',
+    ]) {
+      expect(flagged(className, { design: true })).toBe(true)
+    }
+  })
+  it('keeps the arbitrary-value ban beside the design entries', () => {
+    expect(flagged('text-[11px]', { design: true })).toBe(true)
+  })
+  it('passes a class that follows the scales', () => {
+    for (const className of [
+      'lg:flex',
+      'motion-safe:transition',
+      'p-4',
+      'w-1/2',
+      'w-full',
+      'bg-surface',
+    ]) {
+      expect(flagged(className, { design: true })).toBe(false)
+    }
+  })
+  it('drops the dark entry and only it with design: { dark: true }', () => {
+    expect(flagged('dark:bg-surface', { design: true })).toBe(true)
+    expect(flagged('dark:bg-surface', { design: { dark: true } })).toBe(false)
+    expect(restrictions({ design: { dark: true } })).toHaveLength(7)
+    expect(flagged('md:flex', { design: { dark: true } })).toBe(true)
+  })
+  it('keeps the dark entry for design: {} and design: { dark: false }', () => {
+    expect(flagged('dark:bg-surface', { design: {} })).toBe(true)
+    expect(flagged('dark:bg-surface', { design: { dark: false } })).toBe(true)
+  })
+  it('does nothing when tailwindEntryPoint is unset', () => {
+    expect(mainBlock(createNextConfig({ design: true })).rules).not.toHaveProperty(
+      'better-tailwindcss/no-restricted-classes',
+    )
+  })
+  it('does nothing on the base preset, which has no Tailwind layer', () => {
+    const options: ConfigOptions = { tailwindEntryPoint: TAILWIND_ENTRY, design: true }
+    expect(mainBlock(createBaseConfig(options)).rules).not.toHaveProperty(
       'better-tailwindcss/no-restricted-classes',
     )
   })

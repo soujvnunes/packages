@@ -13,6 +13,7 @@ import security from 'eslint-plugin-security'
 import unusedImports from 'eslint-plugin-unused-imports'
 import globals from 'globals'
 import tseslint from 'typescript-eslint'
+import { designClassRestrictions } from './designClassRestrictions'
 import { soujvnunesPlugin } from './plugin'
 export { oneLineComments } from './oneLineComments'
 export { soujvnunesPlugin } from './plugin'
@@ -229,6 +230,7 @@ export interface ConfigOptions {
   tsconfigRootDir?: string
   tailwindEntryPoint?: string
   allowArbitraryClasses?: string[]
+  design?: boolean | { dark?: boolean }
   classMergeName?: string
   nextConfigModules?: string[]
   strictExportGlobs?: string[]
@@ -241,6 +243,7 @@ const buildConfig = ({
   tsconfigRootDir = process.cwd(),
   tailwindEntryPoint,
   allowArbitraryClasses = [],
+  design = false,
   classMergeName = 'cn',
   nextConfigModules = [],
   strictExportGlobs = [],
@@ -279,6 +282,8 @@ const buildConfig = ({
     settings['import-x/resolver-next'] = [createTypeScriptImportResolver({ alwaysTryTypes: true })]
     settings['jsx-a11y'] = { components: JSX_A11Y_COMPONENTS }
     if (tailwindEntryPoint) {
+      const allowDark = typeof design === 'object' && design.dark === true
+      const designRestrictions = design ? designClassRestrictions({ dark: allowDark }) : []
       plugins['better-tailwindcss'] = betterTailwind
       Object.assign(rules, {
         'better-tailwindcss/no-unknown-classes': 'error',
@@ -293,6 +298,7 @@ const buildConfig = ({
                 message:
                   'Avoid an arbitrary Tailwind value ($0); use a theme token, or list its prefix in allowArbitraryClasses when it has none (e.g. grid-cols-[...]).',
               },
+              ...designRestrictions,
             ],
           },
         ],
