@@ -29,7 +29,7 @@ const meta = {
   args: { 'aria-label': 'Plate', placeholder: 'ABC1D23' },
   decorators: [
     (Story) => (
-      <div style={INPUT_THEME}>
+      <div style={INPUT_THEME} className="grid grid-cols-1 gap-16 lg:grid-cols-2">
         <Story />
       </div>
     ),
@@ -40,7 +40,7 @@ type Story = StoryObj<typeof meta>
 export const Default: Story = {}
 export const KindsBySize: Story = {
   render: (args) => (
-    <div className="grid justify-items-start gap-16">
+    <>
       {INPUT_KINDS.flatMap((kind) =>
         INPUT_SIZES.map((size) => (
           <Input
@@ -55,15 +55,15 @@ export const KindsBySize: Story = {
           />
         )),
       )}
-    </div>
+    </>
   ),
 }
 export const States: Story = {
   render: (args) => (
-    <div className="flex flex-wrap gap-16">
+    <>
       <Input {...args} aria-label="Enabled" placeholder="Enabled" />
       <Input {...args} aria-label="Invalid" placeholder="Invalid" aria-invalid />
       <Input {...args} aria-label="Disabled" placeholder="Disabled" disabled />
-    </div>
+    </>
   ),
 }

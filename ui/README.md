@@ -156,6 +156,8 @@ export const PlateField = () => (
 
 A `label` root with the button's `text` or `fullWidth` proportions, wrapping one `input`. `kind` (`text` or `fullWidth`), `size` (`md` or `lg`, `md` by default), `startItem`, `endItem` and `asChild` go to the root, `className` takes `{ root, input }`, and every other prop, the ref included, goes to the `input`. The root carries `data-slot="input"`, `data-kind` and `data-size`, `data-invalid` when `aria-invalid` is set and `data-disabled` when the input is disabled; the input carries `data-slot="input-control"`. The items render in `aria-hidden` `input-start-item` and `input-end-item` slots inside the label, so they are decoration: a control that acts on the field, such as a clear or a show-password button, goes beside the `Input`, never in `startItem` or `endItem`, where it would be a tab stop with no name.
 
+The `Input` takes its width from what holds it, never from its content: the `input` has a zero width and grows into the root, and the root has a zero minimum width, so the browser's default `size` of 20 characters never sets it. In a grid column it fills the column, and in a flex row it needs a basis or a grow factor, such as `className={{ root: 'col-span-6' }}` or `flex-1`.
+
 The `Input` starts at `md`: a field 24 high with 12 text cannot be typed in or touched in real use, so it has no `sm` size, and passing one is a type error.
 
 | Variable | Default |

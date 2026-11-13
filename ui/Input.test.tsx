@@ -155,6 +155,14 @@ describe('Input', () => {
       expect(INPUT_RADIUS[size] - INPUT_PADDING[size]).toBe(INPUT_INNER_RADIUS[size])
     },
   )
+  it('takes its width from the column it sits in, never from the size attribute of the input', () => {
+    render(<Input aria-label="Plate" />)
+    const input = screen.getByRole('textbox')
+    expect(input.matches(selectorWith('{flex:1;width:0;min-width:0;'))).toBe(true)
+    expect(
+      rootOf(input).matches(selectorWith('{box-sizing:border-box;display:inline-flex;min-width:0;')),
+    ).toBe(true)
+  })
   it('marks the root invalid when the input is, and only then', () => {
     render(
       <>
