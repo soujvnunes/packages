@@ -10,10 +10,13 @@ pnpm add @soujvnunes/ui react
 
 ```tsx
 import { Icon } from '@soujvnunes/ui'
-import { Icon } from '@soujvnunes/ui/Icon'
 ```
 
-Both paths resolve to the same module, so pick one per codebase.
+Each component is also its own subpath, which resolves to the same module, so pick one style per codebase:
+
+```tsx
+import { Icon } from '@soujvnunes/ui/Icon'
+```
 
 ## Stylesheet
 
