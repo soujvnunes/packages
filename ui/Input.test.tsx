@@ -23,7 +23,6 @@ const DECLARATIONS = readFileSync(`${import.meta.dirname}/styles/input.css`, 'ut
   .replace(/\s*([(,:;{}])\s*/g, '$1')
   .replace(/\s*\)/g, ')')
 const STATE_STEPS = { hover: 80, disabled: 40 } as const
-const STATES = Object.keys(STATE_STEPS) as readonly (keyof typeof STATE_STEPS)[]
 const PAINT_PROPERTIES = {
   'background-color': 'background-color',
   'text-color': 'color',
@@ -37,6 +36,14 @@ const REST_VALUES = {
     'var(--input-border-color,color-mix(in oklab,var(--input-color,transparent) 60%,transparent))',
 } as const
 const PAINTS = Object.keys(PAINT_PROPERTIES) as readonly (keyof typeof PAINT_PROPERTIES)[]
+const STATE_PAINTS = { hover: ['border-color'], disabled: PAINTS } as const
+const STATES = Object.keys(STATE_PAINTS) as readonly (keyof typeof STATE_PAINTS)[]
+const hoverDeclarations = () => {
+  const start = DECLARATIONS.indexOf(':not([data-disabled]):hover){')
+  if (start === -1) throw new Error('No hover rule of the stylesheet.')
+  const body = DECLARATIONS.slice(DECLARATIONS.indexOf('{', start) + 1)
+  return body.slice(0, body.indexOf('}'))
+}
 const THEME: React.CSSProperties & Record<`--${string}`, string> = {
   '--input-border-color--invalid': 'rgb(1, 2, 3)',
 }
@@ -164,7 +171,14 @@ describe('Input', () => {
       'outline-color:var(--input-outline-color--disabled,var(--input-outline-color--focus,',
     )
   })
-  it.each(STATES.flatMap((state) => PAINTS.map((paint) => [state, paint] as const)))(
+  it('moves only the border on hover, so the typed text, the fill and the focus ring keep their value', () => {
+    const hover = hoverDeclarations()
+    expect(hover.startsWith('border-color:var(--input-border-color--hover,')).toBe(true)
+    expect(hover).not.toContain(';color:')
+    expect(hover).not.toContain('background-color:')
+    expect(hover).not.toContain('outline-color:')
+  })
+  it.each(STATES.flatMap((state) => STATE_PAINTS[state].map((paint) => [state, paint] as const)))(
     'reads the %s %s the theme maps first, and otherwise its rest value at the step of that state',
     (state, paint) => {
       expect(DECLARATIONS).toContain(

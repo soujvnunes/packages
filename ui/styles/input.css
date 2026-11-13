@@ -101,22 +101,6 @@
   }
   @media (hover: hover) {
     [data-slot='input']:where(:not([data-disabled]):hover) {
-      background-color: var(
-        --input-background-color--hover,
-        color-mix(
-          in oklab,
-          var(
-              --input-background-color,
-              color-mix(in oklab, var(--input-color, transparent) 20%, transparent)
-            )
-            80%,
-          transparent
-        )
-      );
-      color: var(
-        --input-text-color--hover,
-        color-mix(in oklab, var(--input-text-color, var(--input-color)) 80%, transparent)
-      );
       border-color: var(
         --input-border-color--hover,
         color-mix(
@@ -129,7 +113,6 @@
           transparent
         )
       );
-      outline-color: var(--input-outline-color--hover, var(--input-outline-color, currentColor));
     }
   }
   [data-slot='input']:where(:has([data-slot='input-control']:focus-visible)) {
