@@ -183,7 +183,7 @@ describe('Field', () => {
     expect(item.contains(control)).toBe(true)
     expect(control.getAttribute('aria-invalid')).toBe('true')
   })
-  it('publishes its inner radius, its radius less its block padding, to the input within it', () => {
+  it('publishes its inner radius, its radius less its block padding, which the pill input within it never reads', () => {
     const { container } = render(
       <Field label="Max bid">
         <Input />
@@ -199,7 +199,8 @@ describe('Field', () => {
     ).toBe(true)
     expect(root.matches(selectorWith('--ui-inner-radius-64:max('))).toBe(true)
     expect(input?.parentElement).toBe(root)
-    expect(input?.matches(selectorWith('border-radius:var(--ui-inner-radius-64,'))).toBe(true)
+    expect(input?.matches(selectorWith('border-radius:var(--input-md-radius,9999px);'))).toBe(true)
+    expect(STYLESHEET.replace(/\s/g, '')).not.toContain('border-radius:var(--ui-inner-radius-64,')
   })
   it('lets the control take the room the items and the padding leave', () => {
     const { container } = render(

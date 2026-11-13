@@ -149,12 +149,12 @@ describe('Card', () => {
     )
     expect(ref.current).toBe(screen.getByRole('article'))
   })
-  it('publishes its inner radius, its radius less its block padding, to a button within it', () => {
+  it('publishes its inner radius, its radius less its block padding, to a card button within it', () => {
     render(
       <Card>
         <CardTitle>Lot 12</CardTitle>
         <CardDescription>Open until 20h</CardDescription>
-        <Button>Place a bid</Button>
+        <Button kind="card">Place a bid</Button>
       </Card>,
     )
     const card = screen.getByRole('article')

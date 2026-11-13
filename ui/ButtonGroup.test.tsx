@@ -126,9 +126,9 @@ describe('ButtonGroup', () => {
   })
   it('publishes its own radius as its inner radius, since it has no padding around the controls it joins', () => {
     render(
-      <ButtonGroup aria-label="Period">
-        <Button>Day</Button>
-        <Button>Week</Button>
+      <ButtonGroup aria-label="Lots">
+        <Button kind="card">Lot 12</Button>
+        <Button kind="card">Lot 13</Button>
       </ButtonGroup>,
     )
     const group = screen.getByRole('group')
@@ -250,7 +250,7 @@ describe('ButtonGroup', () => {
     )
     const input = container.querySelector('[data-slot="input"]')
     if (!input) throw new Error('The input root is missing.')
-    expect(input.matches(selectorWith('border-radius:var(--ui-inner-radius-64,'))).toBe(true)
+    expect(input.matches(selectorWith('border-radius:var(--input-md-radius,9999px);'))).toBe(true)
     expect(squaredCornersOf(input)).toEqual(['border-start-end-radius', 'border-end-end-radius'])
     expect(squaredCornersOf(screen.getByRole('button'))).toEqual([
       'border-start-start-radius',

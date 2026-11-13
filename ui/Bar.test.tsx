@@ -119,20 +119,22 @@ describe('Bar radius', () => {
       ),
     ).toBe(true)
   })
-  it('gives a button and an input within it its inner radius before their own', () => {
+  it('gives a card button within it its inner radius before its own, and keeps a text button and an input pills', () => {
     const { container } = render(
       <Bar>
+        <Button kind="card">Lot 12</Button>
         <Button>Watch</Button>
         <Input aria-label="Max bid" />
       </Bar>,
     )
     const root = rootOf(container)
+    const card = screen.getByRole('button', { name: 'Lot 12' })
+    expect(card.matches(READS_64_FIRST)).toBe(true)
+    expect(ancestorsOf(card).filter((ancestor) => ancestor.matches(PUBLISHES_64))).toEqual([root])
     const input = container.querySelector('[data-slot="input"]')
     if (!input) throw new Error('The input root is missing.')
-    for (const control of [screen.getByRole('button', { name: 'Watch' }), input]) {
-      expect(control.matches(READS_64_FIRST)).toBe(true)
-      expect(ancestorsOf(control).filter((ancestor) => ancestor.matches(PUBLISHES_64))).toEqual([root])
-    }
+    expect(screen.getByRole('button', { name: 'Watch' }).matches(READS_64_FIRST)).toBe(false)
+    expect(input.matches(READS_64_FIRST)).toBe(false)
   })
   it('publishes nothing to a sibling, which keeps the default radius of its own height', () => {
     render(
@@ -145,7 +147,7 @@ describe('Bar radius', () => {
     )
     const beside = screen.getByRole('button', { name: 'Beside' })
     expect(ancestorsOf(beside).some((ancestor) => ancestor.matches(PUBLISHES_64))).toBe(false)
-    expect(beside.matches(selectorWith('var(--button-md-radius,var(--radius-12))'))).toBe(true)
+    expect(beside.matches(selectorWith('border-radius:var(--button-md-radius,9999px);'))).toBe(true)
   })
   it('keeps a full radius full, since the inner radius has a floor at zero and no ceiling', () => {
     const published = STYLESHEET.replace(/\s/g, '').match(/--ui-inner-radius-64:([^;]+);/)?.[1]
@@ -205,6 +207,10 @@ describe('A badge on the corner of a bar or a button', () => {
     const badge = screen.getByText('New')
     expect(badge.matches(selectorWith('position:absolute;'))).toBe(false)
     expect(screen.getByRole('button').matches(selectorWith('position:relative;'))).toBe(false)
-    expect(badge.matches(selectorWith('border-radius:var(--ui-inner-radius-40,'))).toBe(true)
+    expect(
+      badge.matches(
+        selectorWith('--ui-badge-radius:calc(0*var(--badge-radius)+var(--ui-inner-radius-40,'),
+      ),
+    ).toBe(true)
   })
 })
