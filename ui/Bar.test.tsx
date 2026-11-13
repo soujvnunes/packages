@@ -5,6 +5,9 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { BADGE_CORNERS, Badge } from './Badge'
 import { Bar } from './Bar'
 import { Button } from './Button'
+import { Card } from './Card'
+import { CardDescription } from './CardDescription'
+import { CardTitle } from './CardTitle'
 const STYLESHEET = ['badge', 'bar', 'button', 'input', 'radius']
   .map((name) => readFileSync(`${import.meta.dirname}/styles/${name}.css`, 'utf8'))
   .join('\n')
@@ -272,6 +275,25 @@ describe('A badge on the corner of a bar or a button', () => {
     expect(button.matches(selectorWith(',var(--button-md-height,calc(var(--spacing)*40))/2);'))).toBe(
       true,
     )
+  })
+  it('shares no corner of a card with a badge on a plain element within it, which draws no radius of its own', () => {
+    render(
+      <Card>
+        <CardTitle>Lot 12</CardTitle>
+        <CardDescription>Open until 20h</CardDescription>
+        <div>
+          <Badge data-corner="top-end">New</Badge>
+        </div>
+      </Card>,
+    )
+    const badge = screen.getByText('New')
+    const wrapper = badge.parentElement
+    const reset = selectorWith('--ui-corner-radius:initial;')
+    expect(wrapper?.tagName).toBe('DIV')
+    expect(wrapper?.parentElement).toBe(screen.getByRole('article'))
+    expect(wrapper?.matches(reset)).toBe(true)
+    expect(screen.getByRole('article').matches(reset)).toBe(false)
+    expect(badge.matches(reset)).toBe(false)
   })
   it('lifts the badge onto the corner and positions what holds it, so the corner is its own', () => {
     render(

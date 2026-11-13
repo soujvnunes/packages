@@ -13,6 +13,16 @@
   [data-slot='card'] {
     --ui-corner-radius: var(--ui-container-radius, 0px);
   }
+  :where(
+      [data-slot='bar'],
+      [data-slot='field'],
+      [data-slot='button-group'],
+      [data-slot='card'],
+      [data-slot='button']
+    )
+    > :where(:not([data-slot='badge'][data-corner])) {
+    --ui-corner-radius: initial;
+  }
   [data-slot='card'] {
     --ui-inner-radius-card: max(0px, var(--ui-container-radius) - var(--ui-container-padding));
     --ui-inner-radius-64: initial;
