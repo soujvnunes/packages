@@ -169,7 +169,7 @@ The `Input` starts at `md`: a field 24 high with 12 text cannot be typed in or t
 | `--input-background-color[--<state>]` | `--input-color` at the 20 step |
 | `--input-border-color[--<state>]` | `--input-color` at the 60 step |
 | `--input-outline-color[--<state>]` | none |
-| `--input-placeholder-color` | the text colour |
+| `--input-placeholder-color` | the text colour at the 60 step |
 
 The states are `hover`, `focus` (while the input has visible focus), `invalid` and `disabled`. `hover` moves the border alone, so `--input-border-color--hover` is its one variable, and the typed text, the fill and the focus ring keep their value under the pointer. The `hover` border and the `disabled` colours derive from the rest colour at the steps of the variable grammar unless the product maps them, and `focus` keeps the rest colour. `invalid` takes no step: each property reads its rest value until the product maps that state, so the invalid border reads the rest border until a product maps `--input-border-color--invalid` to its error colour. An outline colour left unmapped for `invalid` or `disabled` falls back to the `focus` one, so a focused invalid field draws its ring in the focus colour. The state rules share one specificity and run `focus`, `hover`, `invalid`, `disabled`, so a focused field still answers hover, and a hovered invalid field takes its invalid border at the hover step, so the error colour stays while it answers.
 

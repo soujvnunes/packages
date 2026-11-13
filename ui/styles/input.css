@@ -72,7 +72,7 @@
     appearance: none;
   }
   [data-slot='input-control']::placeholder {
-    color: var(--input-placeholder-color, currentColor);
+    color: var(--input-placeholder-color, color-mix(in oklab, currentColor 60%, transparent));
     opacity: 1;
   }
   [data-slot='input-start-item'],

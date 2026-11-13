@@ -163,6 +163,11 @@ describe('Input', () => {
       rootOf(input).matches(selectorWith('{box-sizing:border-box;display:inline-flex;min-width:0;')),
     ).toBe(true)
   })
+  it('defaults the placeholder to the text colour at the 60 step, so it reads apart from a typed value, and lets the theme map it', () => {
+    expect(DECLARATIONS).toContain(
+      "[data-slot='input-control']::placeholder{color:var(--input-placeholder-color,color-mix(in oklab,currentColor 60%,transparent));",
+    )
+  })
   it('marks the root invalid when the input is, and only then', () => {
     render(
       <>
