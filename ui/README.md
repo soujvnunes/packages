@@ -145,7 +145,7 @@ A `label` root with the button's `text` or `fullWidth` proportions, wrapping one
 | `--input-outline-color[--<state>]`                                        | none                  |
 | `--input-placeholder-color`                                               | the text colour       |
 
-The states are `hover`, `focus` (while the input has visible focus), `invalid` and `disabled`.
+The states are `hover`, `focus` (while the input has visible focus), `invalid` and `disabled`. An outline colour left unmapped for `invalid` or `disabled` falls back to the `focus` one, so a focused invalid field draws its ring in the focus colour.
 
 ## Badge
 

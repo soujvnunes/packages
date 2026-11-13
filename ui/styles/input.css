@@ -136,7 +136,10 @@
     );
     color: var(--input-color--invalid, var(--input-color));
     border-color: var(--input-border-color--invalid, var(--input-border-color, transparent));
-    outline-color: var(--input-outline-color--invalid, var(--input-outline-color, currentColor));
+    outline-color: var(
+      --input-outline-color--invalid,
+      var(--input-outline-color--focus, var(--input-outline-color, currentColor))
+    );
   }
   [data-slot='input']:where([data-disabled]) {
     cursor: default;
@@ -146,6 +149,9 @@
     );
     color: var(--input-color--disabled, var(--input-color));
     border-color: var(--input-border-color--disabled, var(--input-border-color, transparent));
-    outline-color: var(--input-outline-color--disabled, var(--input-outline-color, currentColor));
+    outline-color: var(
+      --input-outline-color--disabled,
+      var(--input-outline-color--focus, var(--input-outline-color, currentColor))
+    );
   }
 }
