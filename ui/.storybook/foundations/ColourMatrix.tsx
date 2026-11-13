@@ -9,11 +9,7 @@ export const ColourMatrix = () => (
     className="foundations-panel foundations-scroll sb-unstyled"
     role="region"
     tabIndex={0}>
-    <table className="foundations-matrix">
-      <caption>
-        Each chip is a role on a surface. The three dots are text in the disabled, default and focused
-        state.
-      </caption>
+    <table aria-describedby="colour-matrix-note" className="foundations-matrix">
       <thead>
         <tr>
           <th scope="col">Surface</th>
@@ -47,5 +43,9 @@ export const ColourMatrix = () => (
         ))}
       </tbody>
     </table>
+    <p className="foundations-note" id="colour-matrix-note">
+      Each chip is a role on a surface. The three dots are text in the disabled, default and focused
+      state.
+    </p>
   </div>
 )

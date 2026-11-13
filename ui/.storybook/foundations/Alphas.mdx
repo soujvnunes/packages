@@ -28,8 +28,7 @@ In code a step is a token, never an opacity modifier: the primary step is the ba
   className="foundations-panel foundations-scroll sb-unstyled"
   role="region"
   tabIndex={0}>
-  <table className="foundations-alphas">
-    <caption>Each swatch is a role at one alpha step, drawn over the ground.</caption>
+  <table aria-describedby="alpha-steps-note" className="foundations-alphas">
     <thead>
       <tr>
         <th scope="col">Role</th>
@@ -59,6 +58,9 @@ In code a step is a token, never an opacity modifier: the primary step is the ba
       ))}
     </tbody>
   </table>
+  <p className="foundations-note" id="alpha-steps-note">
+    Each swatch is a role at one alpha step, drawn over the ground.
+  </p>
 </div>
 
 ## What each step is for

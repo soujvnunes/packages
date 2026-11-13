@@ -26,8 +26,8 @@
   text-align: start;
 }
 
-.foundations-matrix caption {
-  caption-side: bottom;
+.foundations-note {
+  margin: 0;
   padding-block-start: calc(var(--spacing) * 12);
   text-align: start;
 }
@@ -305,12 +305,6 @@
 
 .foundations-chart-fill[data-screen='1024'] {
   background: var(--color-main);
-}
-
-.foundations-alphas caption {
-  caption-side: bottom;
-  padding-block-start: calc(var(--spacing) * 12);
-  text-align: start;
 }
 
 .foundations-alphas th,
