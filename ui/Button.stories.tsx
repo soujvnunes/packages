@@ -55,7 +55,7 @@ type Story = StoryObj<typeof meta>
 export const Default: Story = {}
 export const KindsBySize: Story = {
   render: (args) => (
-    <div className="grid grid-cols-3 items-start justify-items-start gap-16">
+    <div className="grid grid-cols-1 items-start justify-items-start gap-16 lg:grid-cols-3">
       {BUTTON_KINDS.flatMap((kind) =>
         BUTTON_SIZES.map((size) => (
           <Button
