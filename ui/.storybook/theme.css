@@ -4,6 +4,8 @@
 @theme {
   --breakpoint-*: initial;
   --breakpoint-lg: 64rem;
+  --breakpoint-xl: 80rem;
+  --breakpoint-2xl: 96rem;
 
   --spacing: 0.0625rem;
 
