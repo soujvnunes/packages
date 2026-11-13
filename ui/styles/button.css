@@ -147,6 +147,16 @@
   [data-slot='button'][data-size='md'][data-element-edge~='end'] > [data-slot='badge']:last-child {
     margin-inline-end: calc(var(--button-md-px, calc(var(--spacing) * 16)) / -2);
   }
+  [data-slot='button'][data-size='md']:not([data-kind='card']) [data-slot='badge'] {
+    margin-block: min(
+      0px,
+      (
+          var(--button-md-content-size, calc(var(--spacing) * 16)) * var(--button-line-height, 1.25) -
+            var(--badge-height, calc(var(--spacing) * 24))
+        ) /
+        2
+    );
+  }
   [data-slot='button'][data-size='lg']:not([data-kind='icon']) > [data-slot='button-start-item'] {
     margin-inline-start: calc(var(--button-lg-px, calc(var(--spacing) * 24)) / -2);
   }

@@ -120,7 +120,7 @@ export const PlaceBid = () => (
 | --- | --- |
 | `--button-<size>-height` | 24, 40, 64, a minimum that a wrapped label grows past, and the fixed height of the icon kind; the card kind reads none and takes its height from its padding and content |
 | `--button-<size>-px` | 12, 16, 24, two steps below the height and equal to the content size; the items, and on the `md` size a `Badge` at either end of the label, pull toward the edge by half of it; the icon kind has no inline padding, so its items take no pull and the end item is not pushed to the far edge, and the row stays centred in the square |
-| `--button-<size>-py` | half of the height less one line and the border width, so one line keeps the height and the text sits 6, 12 or 20 from the outer edge whether the label takes one line or wraps; the icon kind has no padding |
+| `--button-<size>-py` | half of the height less one line and the border width, so one line keeps the height and the text sits 6, 12 or 20 from the outer edge whether the label takes one line or wraps; the icon kind has no padding; a `Badge` in a `md` `Button` takes a negative block margin of half the amount it stands above the line, so the button keeps its height |
 | `--button-line-height` | 1.25, so the lines of a wrapped label keep apart |
 | `--button-<size>-content-size` | 12, 16, 24, the font size and the `svg` size |
 | `--button-<size>-gap` | 4, 8, 12 |

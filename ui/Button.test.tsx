@@ -538,6 +538,16 @@ describe('Button', () => {
       screen.getByText('New').matches(selectorWith('margin-inline-start:calc(var(--button-md-px,')),
     ).toBe(true)
   })
+  it('takes back the height a Badge stands above the line in a md Button, in the label and in an item, so the button stays 40 high', () => {
+    render(
+      <Button startItem={<Badge>New</Badge>}>
+        Lot 12 <Badge>Sold</Badge>
+      </Button>,
+    )
+    const takeBack = selectorWith('margin-block:min(0px,')
+    expect(screen.getByText('Sold').matches(takeBack)).toBe(true)
+    expect(screen.getByText('New').matches(takeBack)).toBe(true)
+  })
   it('passes className and the remaining button props through to the root', () => {
     render(
       <Button className="col-span-4" name="intent" value="bid" aria-describedby="hint">
