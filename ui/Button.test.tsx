@@ -125,6 +125,25 @@ describe('Button', () => {
     },
   )
   it.each(BUTTON_SIZES)(
+    'publishes the whole radius from the %s icon kind, which has no inline padding to subtract',
+    (size) => {
+      render(
+        <Button kind="icon" size={size} aria-label="Alerts">
+          {PLUS}
+        </Button>,
+      )
+      expect(
+        screen
+          .getByRole('button', { name: 'Alerts' })
+          .matches(
+            selectorWith(
+              `--ui-inner-radius-40:var(--ui-inner-radius-64,var(--ui-inner-radius-card,var(--button-${size}-radius,var(--radius-${TEXT_RADIUS[size]}))));`,
+            ),
+          ),
+      ).toBe(true)
+    },
+  )
+  it.each(BUTTON_SIZES)(
     'sizes the %s card kind box from the ladder, and reads the container inner radius before its own',
     (size) => {
       render(

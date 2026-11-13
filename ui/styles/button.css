@@ -130,12 +130,24 @@
   }
   [data-slot='button'][data-kind='icon'][data-size='sm'] {
     height: var(--button-sm-height, calc(var(--spacing) * 24));
+    --ui-inner-radius-40: var(
+      --ui-inner-radius-64,
+      var(--ui-inner-radius-card, var(--button-sm-radius, var(--radius-12)))
+    );
   }
   [data-slot='button'][data-kind='icon'][data-size='md'] {
     height: var(--button-md-height, calc(var(--spacing) * 40));
+    --ui-inner-radius-40: var(
+      --ui-inner-radius-64,
+      var(--ui-inner-radius-card, var(--button-md-radius, var(--radius-24)))
+    );
   }
   [data-slot='button'][data-kind='icon'][data-size='lg'] {
     height: var(--button-lg-height, calc(var(--spacing) * 64));
+    --ui-inner-radius-40: var(
+      --ui-inner-radius-64,
+      var(--ui-inner-radius-card, var(--button-lg-radius, var(--radius-40)))
+    );
   }
   [data-slot='button'][data-kind='fullWidth'] {
     display: flex;

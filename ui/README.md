@@ -70,7 +70,8 @@ Every radius is a step of the ladder: 12, 24 and 40 for a `sm`, `md` and `lg` `B
 
 | Component | Reads, in order | Publishes |
 | --- | --- | --- |
-| `Button` (`text`, `icon`, `fullWidth`), `Input` | `--ui-inner-radius-64`, `--ui-inner-radius-card`, its own radius | `--ui-inner-radius-40`: 0, 8, 16 by default |
+| `Button` (`text`, `fullWidth`), `Input` | `--ui-inner-radius-64`, `--ui-inner-radius-card`, its own radius | `--ui-inner-radius-40`: 0, 8, 16 by default |
+| `Button` (`icon`) | `--ui-inner-radius-64`, `--ui-inner-radius-card`, its own radius | `--ui-inner-radius-40`: 12, 24, 40 by default |
 | `Button` (`card`) | `--ui-inner-radius-64`, `--ui-inner-radius-card`, its own radius | `--ui-inner-radius-40`: 4, 4, 8 by default |
 | `Badge` | `--ui-inner-radius-40`, `--ui-inner-radius-64`, `--ui-inner-radius-card`, its own radius | nothing |
 
