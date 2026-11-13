@@ -5,17 +5,20 @@ export type IconNode = [elementName: IconElementName, attrs: Record<string, stri
 export const ICON_SIZES = ['xs', 'sm', 'md', 'lg', 'xl'] as const
 type IconSize = (typeof ICON_SIZES)[number]
 type SvgProps = Omit<React.ComponentProps<'svg'>, 'children'>
+type AccessibleName = Pick<React.AriaAttributes, 'aria-label' | 'aria-labelledby'>
 type IconProps = SvgProps & { size?: IconSize } & (
     | { asChild?: false; iconNode: IconNode; children?: never }
-    | { asChild: true; iconNode?: never; children: React.ReactElement }
+    | { asChild: true; iconNode?: never; children: React.ReactElement<AccessibleName> }
   )
 const IconSlot = createSlot<SVGSVGElement, React.SVGProps<SVGSVGElement>>('Icon')
-const accessibilityOf = (label: string | undefined) =>
-  label ? { role: 'img' } : { 'aria-hidden': true }
+const nameOf = ({ 'aria-label': label, 'aria-labelledby': labelledBy }: AccessibleName) =>
+  label ?? labelledBy
+const accessibilityOf = (name: string | undefined) => (name ? { role: 'img' } : { 'aria-hidden': true })
 const renderNode = ([elementName, { key, ...attrs }]: IconNode[number]) =>
   createElement(elementName, { key: key ?? JSON.stringify(attrs), ...attrs })
 export const Icon = ({ size = 'md', asChild, iconNode, children, ...rest }: IconProps) => {
-  const rootProps = { ...accessibilityOf(rest['aria-label']), 'data-slot': 'icon', 'data-size': size }
+  const name = nameOf(rest) ?? (asChild ? nameOf(children.props) : undefined)
+  const rootProps = { ...accessibilityOf(name), 'data-slot': 'icon', 'data-size': size }
   if (asChild) {
     return (
       <IconSlot {...rest} {...rootProps}>

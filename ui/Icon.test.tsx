@@ -50,6 +50,27 @@ describe('Icon', () => {
     const image = screen.getByRole('img', { name: 'Accepted' })
     expect(image.getAttribute('aria-hidden')).toBeNull()
   })
+  it('is an image named by aria-labelledby, so a visible caption beside it can name it', () => {
+    render(
+      <>
+        <span id="caption">Accepted</span>
+        <ProductIcon name="check" aria-labelledby="caption" />
+      </>,
+    )
+    const image = screen.getByRole('img', { name: 'Accepted' })
+    expect(image.getAttribute('aria-hidden')).toBeNull()
+  })
+  it('is an image named by the aria-label a product svg passed with asChild carries itself', () => {
+    render(
+      <Icon asChild>
+        <svg viewBox="0 0 10 10" aria-label="Logo">
+          <circle cx="5" cy="5" r="4" />
+        </svg>
+      </Icon>,
+    )
+    const image = screen.getByRole('img', { name: 'Logo' })
+    expect(image.getAttribute('aria-hidden')).toBeNull()
+  })
   it('passes className and the remaining svg props through to the root', () => {
     const { container } = render(<ProductIcon name="check" className="text-main" strokeWidth={1.5} />)
     const root = rootOf(container)
