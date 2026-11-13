@@ -18,6 +18,18 @@ const selectorWith = (declaration: string) => {
 const INPUT_PADDING = { sm: 12, md: 16, lg: 24 } as const
 const INPUT_RADIUS = { sm: 12, md: 24, lg: 40 } as const
 const INPUT_INNER_RADIUS = { sm: 0, md: 8, lg: 16 } as const
+const DECLARATIONS = readFileSync(`${import.meta.dirname}/styles/input.css`, 'utf8')
+  .replace(/\s+/g, ' ')
+  .replace(/\s*([(,:;{}])\s*/g, '$1')
+  .replace(/\s*\)/g, ')')
+const STATE_STEPS = { hover: 80, disabled: 40 } as const
+const STATES = Object.keys(STATE_STEPS) as readonly (keyof typeof STATE_STEPS)[]
+const REST_FALLBACKS = {
+  'background-color': ',transparent',
+  color: '',
+  'border-color': ',transparent',
+} as const
+const PAINTS = Object.keys(REST_FALLBACKS) as readonly (keyof typeof REST_FALLBACKS)[]
 const THEME: React.CSSProperties & Record<`--${string}`, string> = {
   '--input-border-color--invalid': 'rgb(1, 2, 3)',
 }
@@ -140,6 +152,14 @@ describe('Input', () => {
       'outline-color:var(--input-outline-color--disabled,var(--input-outline-color--focus,',
     )
   })
+  it.each(STATES.flatMap((state) => PAINTS.map((paint) => [state, paint] as const)))(
+    'reads the %s %s the theme maps first, and otherwise its rest value at the step of that state',
+    (state, paint) => {
+      expect(DECLARATIONS).toContain(
+        `${paint}:var(--input-${paint}--${state},color-mix(in oklab,var(--input-${paint}${REST_FALLBACKS[paint]}) ${STATE_STEPS[state]}%,transparent));`,
+      )
+    },
+  )
   it('applies the hover colours only where the pointer can hover, so a tap leaves no stuck hover', () => {
     expect(STYLESHEET).toContain(
       "@media(hover:hover){[data-slot='input']:where(:not([data-disabled]):hover)",

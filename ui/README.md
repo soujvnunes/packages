@@ -45,7 +45,18 @@ A component's root carries `data-slot="<name>"` and one `data-<axis>` attribute 
 
 - **Structural values default to the ladder.** Size, padding, gap and radius read `calc(var(--spacing) * <number>)` and `var(--radius-<number>)`, so a theme that declares a one-pixel `--spacing` and the radius steps maps nothing to get them.
 - **Paint values have no default.** A background or border colour no theme maps is transparent, and an unmapped text colour inherits. An unmapped outline colour follows the text colour, so a focus ring never disappears.
-- **A state falls back to the plain value.** `--button-background-color--hover` unmapped reads `--button-background-color`.
+- **A state colour derives from the rest colour.** A product maps the rest paint, and the background, text and border colour of each state default to that rest value at an alpha step, `color-mix(in oklab, <rest> <step>%, transparent)`, so every state responds whatever colour the rest takes. The outline colour is not scaled.
+
+| State      | Step                                     |
+| ---------- | ---------------------------------------- |
+| `hover`    | 80                                       |
+| `active`   | 60                                       |
+| `pressed`  | 60                                       |
+| `disabled` | 40                                       |
+| `focus`    | the rest value, and the outline is drawn |
+
+A state variable the product maps wins over the derived value, so a product maps a state only where its palette steps differently on purpose, such as an input border that goes from the 60 step to the 80 step on hover. An unmapped rest background or border is transparent in every state, and an unmapped rest text colour inherits in every state.
+
 - **The mapping goes in a plain `:root` block, never in `@theme`:**
 
 ```css
@@ -117,7 +128,7 @@ export const PlaceBid = () => (
 | `--button-[<tone>-]border-color[--<state>]` | none |
 | `--button-[<tone>-]outline-color[--<state>]` | none |
 
-The states are `hover`, `focus` (drawn on `:focus-visible` as an outline), `active`, `pressed` and `disabled`. `pressed` applies on `aria-pressed="true"`, `aria-selected="true"` or `data-state="active"`, and `disabled` on `disabled` or `aria-disabled="true"`. An outline colour left unmapped for `active`, `pressed` or `disabled` falls back to the `focus` one, so a focused selected tab draws its ring in the focus colour. On a root with `data-tone`, the tone's variables stand in for the plain ones, so an unmapped tone is transparent.
+The states are `hover`, `focus` (drawn on `:focus-visible` as an outline), `active`, `pressed` and `disabled`. `pressed` applies on `aria-pressed="true"`, `aria-selected="true"` or `data-state="active"`, and `disabled` on `disabled` or `aria-disabled="true"`. An outline colour left unmapped for `active`, `pressed` or `disabled` falls back to the `focus` one, so a focused selected tab draws its ring in the focus colour. On a root with `data-tone`, the tone's variables stand in for the plain ones: a state reads `--button-<tone>-<property>--<state>` when the product maps it and otherwise derives from the tone's rest value, `--button-<tone>-<property>`, so one mapped colour per property makes every state of the tone respond, and an unmapped tone is transparent.
 
 A product builds a tab from the button with its own tabs primitive, and the selected tab shows as pressed:
 
@@ -149,7 +160,7 @@ A `label` root with the button's `text` or `fullWidth` proportions, wrapping one
 | `--input-outline-color[--<state>]`                                        | none                  |
 | `--input-placeholder-color`                                               | the text colour       |
 
-The states are `hover`, `focus` (while the input has visible focus), `invalid` and `disabled`. An outline colour left unmapped for `invalid` or `disabled` falls back to the `focus` one, so a focused invalid field draws its ring in the focus colour.
+The states are `hover`, `focus` (while the input has visible focus), `invalid` and `disabled`. The `hover` and `disabled` colours derive from the rest colour at the steps of the variable grammar unless the product maps them, `focus` keeps the rest colour, and an unmapped `invalid` colour reads the rest colour. An outline colour left unmapped for `invalid` or `disabled` falls back to the `focus` one, so a focused invalid field draws its ring in the focus colour.
 
 ## Badge
 

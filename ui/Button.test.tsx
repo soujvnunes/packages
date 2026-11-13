@@ -20,6 +20,76 @@ const selectorWith = (declaration: string) => {
   return selectors.join(', ')
 }
 const selectorReading = (variable: string) => selectorWith(`var(${variable},`)
+const RULES = STYLESHEET.replace(/\s+/g, ' ')
+  .replace(/\s*([(,:;{}])\s*/g, '$1')
+  .replace(/\s*\)/g, ')')
+  .split('}')
+  .flatMap((chunk) => {
+    const parts = chunk.split('{')
+    const selector = parts.at(-2)
+    const body = parts.at(-1)
+    if (selector === undefined || body === undefined) return []
+    const declarations = body
+      .split(';')
+      .filter(Boolean)
+      .map((declaration) => {
+        const colon = declaration.indexOf(':')
+        return [declaration.slice(0, colon), declaration.slice(colon + 1)] as const
+      })
+    return [{ selector, declarations: Object.fromEntries(declarations) }]
+  })
+const STATE_STEPS = { hover: 80, active: 60, pressed: 60, disabled: 40 } as const
+const STATES = Object.keys(STATE_STEPS) as readonly (keyof typeof STATE_STEPS)[]
+const PAINTS = ['background-color', 'color', 'border-color'] as const
+const REST = 'rgb(1,2,3)'
+const MAPPED = 'rgb(4,5,6)'
+type Paint = (typeof PAINTS)[number]
+type Variables = Readonly<Record<string, string>>
+const closingParenthesis = (value: string, from: number) => {
+  let depth = 0
+  for (let index = from; index < value.length; index += 1) {
+    if (value[index] === '(') depth += 1
+    if (value[index] === ')') {
+      if (depth === 0) return index
+      depth -= 1
+    }
+  }
+  throw new Error(`No closing parenthesis after ${value.slice(from)}.`)
+}
+const substitute = (value: string, variables: Variables): string | null => {
+  const start = value.indexOf('var(')
+  if (start === -1) return value
+  const end = closingParenthesis(value, start + 'var('.length)
+  const inner = value.slice(start + 'var('.length, end)
+  const comma = inner.indexOf(',')
+  const name = comma === -1 ? inner : inner.slice(0, comma)
+  const fallback = comma === -1 ? null : inner.slice(comma + 1)
+  const replacement = variables[name] ?? (fallback === null ? null : substitute(fallback, variables))
+  if (replacement === null) return null
+  return substitute(`${value.slice(0, start)}${replacement}${value.slice(end + 1)}`, variables)
+}
+const paintDeclaration = (property: Paint, state: keyof typeof STATE_STEPS | 'focus') => {
+  const head = `var(--button-${property}--${state},`
+  const declared = RULES.map((rule) => rule.declarations[property]).find((value) =>
+    value?.startsWith(head),
+  )
+  if (declared === undefined)
+    throw new Error(`No rule of the stylesheet sets ${property} from ${head}.`)
+  return declared
+}
+const tonedVariables = (tone: (typeof BUTTON_TONES)[number], product: Variables) => {
+  const rule = RULES.find(({ selector }) => selector === `[data-slot='button'][data-tone='${tone}']`)
+  if (!rule) throw new Error(`No rule of the stylesheet maps the ${tone} tone.`)
+  const own = Object.entries(rule.declarations).map(
+    ([name, value]) => [name, substitute(value, product)] as const,
+  )
+  return Object.fromEntries([
+    ...Object.entries(product).filter(([name]) => !Object.hasOwn(rule.declarations, name)),
+    ...own.filter((entry): entry is readonly [string, string] => entry[1] !== null),
+  ])
+}
+const scaled = (state: keyof typeof STATE_STEPS) =>
+  `color-mix(in oklab,${REST} ${STATE_STEPS[state]}%,transparent)`
 const TEXT_PADDING = { sm: 12, md: 16, lg: 24 } as const
 const TEXT_RADIUS = { sm: 12, md: 24, lg: 40 } as const
 const TEXT_INNER_RADIUS = { sm: 0, md: 8, lg: 16 } as const
@@ -472,6 +542,59 @@ describe('Button', () => {
         ),
       ),
     ).toBe(true)
+  })
+  it.each(STATES.flatMap((state) => PAINTS.map((paint) => [state, paint] as const)))(
+    'derives the %s %s of a button with no tone from its rest value at the step of that state',
+    (state, paint) => {
+      expect(substitute(paintDeclaration(paint, state), { [`--button-${paint}`]: REST })).toBe(
+        scaled(state),
+      )
+    },
+  )
+  it.each(
+    BUTTON_TONES.flatMap((tone) =>
+      STATES.flatMap((state) => PAINTS.map((paint) => [tone, state, paint] as const)),
+    ),
+  )(
+    'derives the %s tone %s %s from that tone rest value, over a state the theme maps for no tone',
+    (tone, state, paint) => {
+      const variables = tonedVariables(tone, {
+        [`--button-${tone}-${paint}`]: REST,
+        [`--button-${paint}`]: MAPPED,
+        [`--button-${paint}--${state}`]: MAPPED,
+      })
+      expect(substitute(paintDeclaration(paint, state), variables)).toBe(scaled(state))
+    },
+  )
+  it.each(STATES)(
+    'lets a %s colour the theme maps win over the derived one, with a tone and without',
+    (state) => {
+      for (const paint of PAINTS) {
+        const declaration = paintDeclaration(paint, state)
+        const plain = { [`--button-${paint}`]: REST, [`--button-${paint}--${state}`]: MAPPED }
+        const toned = tonedVariables('main', {
+          [`--button-main-${paint}`]: REST,
+          [`--button-main-${paint}--${state}`]: MAPPED,
+        })
+        expect(substitute(declaration, plain)).toBe(MAPPED)
+        expect(substitute(declaration, toned)).toBe(MAPPED)
+      }
+    },
+  )
+  it('keeps the rest colours on focus, which draws the outline instead', () => {
+    for (const paint of PAINTS) {
+      expect(substitute(paintDeclaration(paint, 'focus'), { [`--button-${paint}`]: REST })).toBe(REST)
+    }
+  })
+  it('leaves every state of an unmapped background and border transparent, and of an unmapped text colour inherited', () => {
+    for (const state of STATES) {
+      for (const paint of ['background-color', 'border-color'] as const) {
+        expect(substitute(paintDeclaration(paint, state), {})).toBe(
+          `color-mix(in oklab,transparent ${STATE_STEPS[state]}%,transparent)`,
+        )
+      }
+      expect(substitute(paintDeclaration('color', state), {})).toBeNull()
+    }
   })
   it('applies the hover colours only where the pointer can hover, so a tap leaves no stuck hover', () => {
     expect(STYLESHEET.replace(/\s/g, '')).toContain(

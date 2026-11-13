@@ -123,10 +123,13 @@
     [data-slot='input']:where(:not([data-disabled]):hover) {
       background-color: var(
         --input-background-color--hover,
-        var(--input-background-color, transparent)
+        color-mix(in oklab, var(--input-background-color, transparent) 80%, transparent)
       );
-      color: var(--input-color--hover, var(--input-color));
-      border-color: var(--input-border-color--hover, var(--input-border-color, transparent));
+      color: var(--input-color--hover, color-mix(in oklab, var(--input-color) 80%, transparent));
+      border-color: var(
+        --input-border-color--hover,
+        color-mix(in oklab, var(--input-border-color, transparent) 80%, transparent)
+      );
       outline-color: var(--input-outline-color--hover, var(--input-outline-color, currentColor));
     }
   }
@@ -153,10 +156,13 @@
     cursor: default;
     background-color: var(
       --input-background-color--disabled,
-      var(--input-background-color, transparent)
+      color-mix(in oklab, var(--input-background-color, transparent) 40%, transparent)
     );
-    color: var(--input-color--disabled, var(--input-color));
-    border-color: var(--input-border-color--disabled, var(--input-border-color, transparent));
+    color: var(--input-color--disabled, color-mix(in oklab, var(--input-color) 40%, transparent));
+    border-color: var(
+      --input-border-color--disabled,
+      color-mix(in oklab, var(--input-border-color, transparent) 40%, transparent)
+    );
     outline-color: var(
       --input-outline-color--disabled,
       var(--input-outline-color--focus, var(--input-outline-color, currentColor))

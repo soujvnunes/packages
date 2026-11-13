@@ -227,10 +227,13 @@
     ) {
       background-color: var(
         --button-background-color--hover,
-        var(--button-background-color, transparent)
+        color-mix(in oklab, var(--button-background-color, transparent) 80%, transparent)
       );
-      color: var(--button-color--hover, var(--button-color));
-      border-color: var(--button-border-color--hover, var(--button-border-color, transparent));
+      color: var(--button-color--hover, color-mix(in oklab, var(--button-color) 80%, transparent));
+      border-color: var(
+        --button-border-color--hover,
+        color-mix(in oklab, var(--button-border-color, transparent) 80%, transparent)
+      );
       outline-color: var(--button-outline-color--hover, var(--button-outline-color, currentColor));
     }
   }
@@ -249,10 +252,13 @@
   ) {
     background-color: var(
       --button-background-color--active,
-      var(--button-background-color, transparent)
+      color-mix(in oklab, var(--button-background-color, transparent) 60%, transparent)
     );
-    color: var(--button-color--active, var(--button-color));
-    border-color: var(--button-border-color--active, var(--button-border-color, transparent));
+    color: var(--button-color--active, color-mix(in oklab, var(--button-color) 60%, transparent));
+    border-color: var(
+      --button-border-color--active,
+      color-mix(in oklab, var(--button-border-color, transparent) 60%, transparent)
+    );
     outline-color: var(
       --button-outline-color--active,
       var(--button-outline-color--focus, var(--button-outline-color, currentColor))
@@ -265,10 +271,13 @@
     ) {
     background-color: var(
       --button-background-color--pressed,
-      var(--button-background-color, transparent)
+      color-mix(in oklab, var(--button-background-color, transparent) 60%, transparent)
     );
-    color: var(--button-color--pressed, var(--button-color));
-    border-color: var(--button-border-color--pressed, var(--button-border-color, transparent));
+    color: var(--button-color--pressed, color-mix(in oklab, var(--button-color) 60%, transparent));
+    border-color: var(
+      --button-border-color--pressed,
+      color-mix(in oklab, var(--button-border-color, transparent) 60%, transparent)
+    );
     outline-color: var(
       --button-outline-color--pressed,
       var(--button-outline-color--focus, var(--button-outline-color, currentColor))
@@ -278,10 +287,13 @@
     cursor: default;
     background-color: var(
       --button-background-color--disabled,
-      var(--button-background-color, transparent)
+      color-mix(in oklab, var(--button-background-color, transparent) 40%, transparent)
     );
-    color: var(--button-color--disabled, var(--button-color));
-    border-color: var(--button-border-color--disabled, var(--button-border-color, transparent));
+    color: var(--button-color--disabled, color-mix(in oklab, var(--button-color) 40%, transparent));
+    border-color: var(
+      --button-border-color--disabled,
+      color-mix(in oklab, var(--button-border-color, transparent) 40%, transparent)
+    );
     outline-color: var(
       --button-outline-color--disabled,
       var(--button-outline-color--focus, var(--button-outline-color, currentColor))
