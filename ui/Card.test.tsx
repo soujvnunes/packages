@@ -184,6 +184,20 @@ describe('Card', () => {
     )
     expect(ref.current).toBe(screen.getByRole('region', { name: 'Lot 12' }))
   })
+  it('keeps the ref a function child sets before the spread when the component is given none', () => {
+    const sectionRef = createRef<HTMLElement>()
+    render(
+      <Card>
+        {(props) => (
+          <section ref={sectionRef} {...props}>
+            <CardTitle>Lot 12</CardTitle>
+            <CardDescription>Open until 20h</CardDescription>
+          </section>
+        )}
+      </Card>,
+    )
+    expect(sectionRef.current).toBe(screen.getByRole('region', { name: 'Lot 12' }))
+  })
   it('pads 12 on every side inside a radius of 24 by default, so a control at its corner sits as far from the side as from the top', () => {
     render(
       <Card>

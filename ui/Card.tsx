@@ -3,7 +3,7 @@ import { forwardRef, useEffect, useId, useMemo } from 'react'
 import { CardContext } from './CardContext.js'
 type CardOwnProps = Omit<React.ComponentPropsWithoutRef<'article'>, 'children'>
 type CardRenderProps = CardOwnProps & {
-  ref: React.ForwardedRef<HTMLElement>
+  ref?: React.ForwardedRef<HTMLElement>
   'aria-labelledby': string
   'aria-describedby': string
   'data-slot': 'card'
@@ -32,7 +32,7 @@ export const Card = forwardRef<HTMLElement, CardProps>(({ children, ...rest }, r
   }, [ids])
   const props: CardRenderProps = {
     ...rest,
-    ref,
+    ...(ref !== null && { ref }),
     'aria-labelledby': ids.titleId,
     'aria-describedby': ids.descriptionId,
     'data-slot': 'card',

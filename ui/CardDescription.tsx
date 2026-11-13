@@ -3,7 +3,7 @@ import { forwardRef, useContext } from 'react'
 import { CardContext } from './CardContext.js'
 type CardDescriptionOwnProps = Omit<React.ComponentPropsWithoutRef<'p'>, 'children'>
 type CardDescriptionRenderProps = CardDescriptionOwnProps & {
-  ref: React.ForwardedRef<HTMLParagraphElement>
+  ref?: React.ForwardedRef<HTMLParagraphElement>
   'data-slot': 'card-description'
 }
 type CardDescriptionProps = CardDescriptionOwnProps & {
@@ -14,7 +14,7 @@ export const CardDescription = forwardRef<HTMLParagraphElement, CardDescriptionP
     const { descriptionId } = useContext(CardContext)
     const props: CardDescriptionRenderProps = {
       ...rest,
-      ref,
+      ...(ref !== null && { ref }),
       ...(descriptionId !== '' && { id: descriptionId }),
       'data-slot': 'card-description',
     }

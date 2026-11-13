@@ -68,4 +68,17 @@ describe('CardDescription', () => {
     )
     expect(ref.current).toBe(screen.getByText('Open until 20h'))
   })
+  it('keeps the ref a function child sets before the spread when the component is given none', () => {
+    const paragraphRef = createRef<HTMLParagraphElement>()
+    render(
+      <CardDescription>
+        {(props) => (
+          <p ref={paragraphRef} {...props}>
+            Open until 20h
+          </p>
+        )}
+      </CardDescription>,
+    )
+    expect(paragraphRef.current).toBe(screen.getByText('Open until 20h'))
+  })
 })

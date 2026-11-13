@@ -64,4 +64,17 @@ describe('CardTitle', () => {
     render(<CardTitle ref={ref}>{(props) => <h3 {...props}>Lot 12</h3>}</CardTitle>)
     expect(ref.current).toBe(screen.getByRole('heading', { level: 3, name: 'Lot 12' }))
   })
+  it('keeps the ref a function child sets before the spread when the component is given none', () => {
+    const headingRef = createRef<HTMLHeadingElement>()
+    render(
+      <CardTitle>
+        {(props) => (
+          <h2 ref={headingRef} {...props}>
+            Lot 12
+          </h2>
+        )}
+      </CardTitle>,
+    )
+    expect(headingRef.current).toBe(screen.getByRole('heading', { name: 'Lot 12' }))
+  })
 })

@@ -3,7 +3,7 @@ import { forwardRef, useContext } from 'react'
 import { CardContext } from './CardContext.js'
 type CardTitleOwnProps = Omit<React.ComponentPropsWithoutRef<'h2'>, 'children'>
 type CardTitleRenderProps = CardTitleOwnProps & {
-  ref: React.ForwardedRef<HTMLHeadingElement>
+  ref?: React.ForwardedRef<HTMLHeadingElement>
   'data-slot': 'card-title'
 }
 type CardTitleProps = CardTitleOwnProps & {
@@ -14,7 +14,7 @@ export const CardTitle = forwardRef<HTMLHeadingElement, CardTitleProps>(
     const { titleId } = useContext(CardContext)
     const props: CardTitleRenderProps = {
       ...rest,
-      ref,
+      ...(ref !== null && { ref }),
       ...(titleId !== '' && { id: titleId }),
       'data-slot': 'card-title',
     }
