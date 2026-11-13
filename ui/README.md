@@ -113,7 +113,7 @@ export const PlaceBid = () => (
 | `--button-[<tone>-]border-color[--<state>]` | none |
 | `--button-[<tone>-]outline-color[--<state>]` | none |
 
-The states are `hover`, `focus` (drawn on `:focus-visible` as an outline), `active`, `pressed` and `disabled`. `pressed` applies on `aria-pressed="true"`, `aria-selected="true"` or `data-state="active"`, and `disabled` on `disabled` or `aria-disabled="true"`. On a root with `data-tone`, the tone's variables stand in for the plain ones, so an unmapped tone is transparent.
+The states are `hover`, `focus` (drawn on `:focus-visible` as an outline), `active`, `pressed` and `disabled`. `pressed` applies on `aria-pressed="true"`, `aria-selected="true"` or `data-state="active"`, and `disabled` on `disabled` or `aria-disabled="true"`. An outline colour left unmapped for `active`, `pressed` or `disabled` falls back to the `focus` one, so a focused selected tab draws its ring in the focus colour. On a root with `data-tone`, the tone's variables stand in for the plain ones, so an unmapped tone is transparent.
 
 A product builds a tab from the button with its own tabs primitive, and the selected tab shows as pressed:
 

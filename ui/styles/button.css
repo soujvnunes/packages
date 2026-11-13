@@ -224,7 +224,10 @@
     );
     color: var(--button-color--active, var(--button-color));
     border-color: var(--button-border-color--active, var(--button-border-color, transparent));
-    outline-color: var(--button-outline-color--active, var(--button-outline-color, currentColor));
+    outline-color: var(
+      --button-outline-color--active,
+      var(--button-outline-color--focus, var(--button-outline-color, currentColor))
+    );
   }
   [data-slot='button']:where(:not([data-responsive='false'])):where(
       [aria-pressed='true'],
@@ -237,7 +240,10 @@
     );
     color: var(--button-color--pressed, var(--button-color));
     border-color: var(--button-border-color--pressed, var(--button-border-color, transparent));
-    outline-color: var(--button-outline-color--pressed, var(--button-outline-color, currentColor));
+    outline-color: var(
+      --button-outline-color--pressed,
+      var(--button-outline-color--focus, var(--button-outline-color, currentColor))
+    );
   }
   [data-slot='button']:where(:disabled, [aria-disabled='true']) {
     cursor: default;
@@ -247,7 +253,10 @@
     );
     color: var(--button-color--disabled, var(--button-color));
     border-color: var(--button-border-color--disabled, var(--button-border-color, transparent));
-    outline-color: var(--button-outline-color--disabled, var(--button-outline-color, currentColor));
+    outline-color: var(
+      --button-outline-color--disabled,
+      var(--button-outline-color--focus, var(--button-outline-color, currentColor))
+    );
   }
   [data-slot='button'][data-tone='main'] {
     --button-background-color: var(--button-main-background-color);
