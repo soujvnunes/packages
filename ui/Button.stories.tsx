@@ -6,6 +6,7 @@ import './styles/badge.css'
 import './styles/button.css'
 const BUTTON_THEME: React.CSSProperties & Record<`--${string}`, string> = {
   '--button-color': 'var(--color-neutral)',
+  '--button-border-color': 'var(--color-neutral-60)',
   '--button-background-color': 'var(--color-neutral-10)',
   '--button-background-color--hover': 'var(--color-neutral-20)',
   '--button-background-color--active': 'var(--color-neutral-40)',
