@@ -369,13 +369,14 @@
   display: grid;
   grid-template-columns: repeat(12, 1fr);
   column-gap: calc(var(--spacing) * 16);
-  row-gap: calc(var(--spacing) * 16);
+  row-gap: calc(var(--spacing) * 64);
   padding-inline: calc(var(--spacing) * 16);
   padding-block: calc(var(--spacing) * 16);
   border-radius: var(--radius-8);
   background: var(--color-background);
   @variant lg {
     column-gap: calc(var(--spacing) * 24);
+    row-gap: calc(var(--spacing) * 104);
     padding-inline: calc(var(--spacing) * 40);
   }
 }
