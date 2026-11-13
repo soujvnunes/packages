@@ -366,7 +366,7 @@
   padding: calc(var(--spacing) * 24);
   border-radius: var(--radius-8);
   background: var(--color-main);
-  color: var(--color-neutral);
+  color: color-mix(in oklab, var(--palette-black) 80%, transparent);
 }
 
 .foundations-grid {
