@@ -95,6 +95,20 @@ const tonedVariables = (tone: (typeof BUTTON_TONES)[number], product: Variables)
     ...own.filter((entry): entry is readonly [string, string] => entry[1] !== null),
   ])
 }
+const withoutWhere = (selector: string): string => {
+  const start = selector.indexOf(':where(')
+  if (start === -1) return selector
+  const end = closingParenthesis(selector, start + ':where('.length)
+  return withoutWhere(`${selector.slice(0, start)}${selector.slice(end + 1)}`)
+}
+const stateRule = (state: keyof typeof STATE_STEPS | 'focus') => {
+  const index = RULES.findIndex(({ declarations }) =>
+    declarations['background-color']?.startsWith(`var(--button-background-color--${state},`),
+  )
+  const rule = RULES[index]
+  if (!rule) throw new Error(`No rule of the stylesheet paints the ${state} state.`)
+  return { index, selector: rule.selector }
+}
 const scaled = (state: keyof typeof STATE_STEPS, rest = REST) =>
   `color-mix(in oklab,${rest} ${STATE_STEPS[state]}%,transparent)`
 const restFrom = (paint: Paint, color: string) =>
@@ -590,6 +604,25 @@ describe('Button', () => {
       }
     },
   )
+  it('orders the state rules focus, pressed, hover, active, disabled at one specificity, so hover and a press still answer on a focused or a pressed button', () => {
+    const order = (['focus', 'pressed', 'hover', 'active', 'disabled'] as const).map(stateRule)
+    expect(order.map(({ index }) => index)).toEqual(
+      order.map(({ index }) => index).sort((first, second) => first - second),
+    )
+    for (const { selector } of order) {
+      expect(withoutWhere(selector)).toBe("[data-slot='button']")
+    }
+  })
+  it('matches the hover and active rules on a pressed button, and keeps the focus ring colour while hovered', () => {
+    render(<Button aria-pressed>Bold</Button>)
+    const pressed = screen.getByRole('button', { name: 'Bold', pressed: true })
+    expect(pressed.matches(stateRule('pressed').selector)).toBe(true)
+    expect(pressed.matches(stateRule('hover').selector.replace(':hover', ''))).toBe(true)
+    expect(pressed.matches(stateRule('active').selector.replace(':active', ''))).toBe(true)
+    expect(STYLESHEET.replace(/\s/g, '')).toContain(
+      'outline-color:var(--button-outline-color--hover,var(--button-outline-color--focus,',
+    )
+  })
   it('keeps the rest colours on focus, which draws the outline instead', () => {
     for (const paint of PAINTS) {
       expect(substitute(paintDeclaration(paint, 'focus'), { [`--button-${paint}`]: REST })).toBe(REST)

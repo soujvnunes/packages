@@ -227,41 +227,6 @@
     cursor: default;
     user-select: none;
   }
-  @media (hover: hover) {
-    [data-slot='button']:where(
-      :not([data-responsive='false'], :disabled, [aria-disabled='true']):hover
-    ) {
-      background-color: var(
-        --button-background-color--hover,
-        color-mix(
-          in oklab,
-          var(
-              --button-background-color,
-              color-mix(in oklab, var(--button-color, transparent) 20%, transparent)
-            )
-            80%,
-          transparent
-        )
-      );
-      color: var(
-        --button-text-color--hover,
-        color-mix(in oklab, var(--button-text-color, var(--button-color)) 80%, transparent)
-      );
-      border-color: var(
-        --button-border-color--hover,
-        color-mix(
-          in oklab,
-          var(
-              --button-border-color,
-              color-mix(in oklab, var(--button-color, transparent) 60%, transparent)
-            )
-            80%,
-          transparent
-        )
-      );
-      outline-color: var(--button-outline-color--hover, var(--button-outline-color, currentColor));
-    }
-  }
   [data-slot='button']:where(:not([data-responsive='false']):focus-visible) {
     outline-style: solid;
     background-color: var(
@@ -277,42 +242,6 @@
       var(--button-border-color, color-mix(in oklab, var(--button-color, transparent) 60%, transparent))
     );
     outline-color: var(--button-outline-color--focus, var(--button-outline-color, currentColor));
-  }
-  [data-slot='button']:where(
-    :not([data-responsive='false'], :disabled, [aria-disabled='true']):active
-  ) {
-    background-color: var(
-      --button-background-color--active,
-      color-mix(
-        in oklab,
-        var(
-            --button-background-color,
-            color-mix(in oklab, var(--button-color, transparent) 20%, transparent)
-          )
-          60%,
-        transparent
-      )
-    );
-    color: var(
-      --button-text-color--active,
-      color-mix(in oklab, var(--button-text-color, var(--button-color)) 60%, transparent)
-    );
-    border-color: var(
-      --button-border-color--active,
-      color-mix(
-        in oklab,
-        var(
-            --button-border-color,
-            color-mix(in oklab, var(--button-color, transparent) 60%, transparent)
-          )
-          60%,
-        transparent
-      )
-    );
-    outline-color: var(
-      --button-outline-color--active,
-      var(--button-outline-color--focus, var(--button-outline-color, currentColor))
-    );
   }
   [data-slot='button']:where(:not([data-responsive='false'])):where(
       [aria-pressed='true'],
@@ -349,6 +278,80 @@
     );
     outline-color: var(
       --button-outline-color--pressed,
+      var(--button-outline-color--focus, var(--button-outline-color, currentColor))
+    );
+  }
+  @media (hover: hover) {
+    [data-slot='button']:where(
+      :not([data-responsive='false'], :disabled, [aria-disabled='true']):hover
+    ) {
+      background-color: var(
+        --button-background-color--hover,
+        color-mix(
+          in oklab,
+          var(
+              --button-background-color,
+              color-mix(in oklab, var(--button-color, transparent) 20%, transparent)
+            )
+            80%,
+          transparent
+        )
+      );
+      color: var(
+        --button-text-color--hover,
+        color-mix(in oklab, var(--button-text-color, var(--button-color)) 80%, transparent)
+      );
+      border-color: var(
+        --button-border-color--hover,
+        color-mix(
+          in oklab,
+          var(
+              --button-border-color,
+              color-mix(in oklab, var(--button-color, transparent) 60%, transparent)
+            )
+            80%,
+          transparent
+        )
+      );
+      outline-color: var(
+        --button-outline-color--hover,
+        var(--button-outline-color--focus, var(--button-outline-color, currentColor))
+      );
+    }
+  }
+  [data-slot='button']:where(
+    :not([data-responsive='false'], :disabled, [aria-disabled='true']):active
+  ) {
+    background-color: var(
+      --button-background-color--active,
+      color-mix(
+        in oklab,
+        var(
+            --button-background-color,
+            color-mix(in oklab, var(--button-color, transparent) 20%, transparent)
+          )
+          60%,
+        transparent
+      )
+    );
+    color: var(
+      --button-text-color--active,
+      color-mix(in oklab, var(--button-text-color, var(--button-color)) 60%, transparent)
+    );
+    border-color: var(
+      --button-border-color--active,
+      color-mix(
+        in oklab,
+        var(
+            --button-border-color,
+            color-mix(in oklab, var(--button-color, transparent) 60%, transparent)
+          )
+          60%,
+        transparent
+      )
+    );
+    outline-color: var(
+      --button-outline-color--active,
       var(--button-outline-color--focus, var(--button-outline-color, currentColor))
     );
   }
