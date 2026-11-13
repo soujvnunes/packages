@@ -145,6 +145,14 @@
     --color-neutral-10: color-mix(in oklab, var(--palette-black) 10%, transparent);
   }
 
+  [data-slot='button'][data-tone] {
+    --button-main-color: var(--color-neutral);
+    --button-accent-color: var(--color-neutral);
+    --button-success-color: var(--color-neutral);
+    --button-warning-color: var(--color-neutral);
+    --button-error-color: var(--color-neutral);
+  }
+
   body {
     background-color: var(--color-background);
     color: var(--color-neutral);

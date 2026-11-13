@@ -54,6 +54,14 @@ A component's root carries `data-slot="<name>"` and one `data-<axis>` attribute 
 }
 ```
 
+A custom property resolves its `var()` on the element that declares it, and children inherit the result. So a tone's text colour mapped to `--color-neutral` goes on the toned root, where the theme declares the neutral of that ground, and never on `:root`, which would hand every tone the neutral of the page:
+
+```css
+[data-slot='button'][data-tone] {
+  --button-main-color: var(--color-neutral);
+}
+```
+
 Every component takes `asChild` and then renders its child with the same attributes, so a product extends one by wrapping its own element, such as its own `svg` inside an `Icon`.
 
 ## Nested radius

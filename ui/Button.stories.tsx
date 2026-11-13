@@ -3,7 +3,6 @@ import { Badge } from './Badge'
 import { BUTTON_KINDS, BUTTON_SIZES, BUTTON_TONES, Button } from './Button'
 import './styles/badge.css'
 import './styles/button.css'
-const ON_TONE = 'color-mix(in oklab, var(--palette-black) 80%, transparent)'
 const BUTTON_THEME: React.CSSProperties & Record<`--${string}`, string> = {
   '--button-background-color': 'var(--color-neutral-10)',
   '--button-background-color--hover': 'var(--color-neutral-20)',
@@ -19,20 +18,15 @@ const BUTTON_THEME: React.CSSProperties & Record<`--${string}`, string> = {
   '--button-main-background-color--hover': 'var(--color-main-80)',
   '--button-main-background-color--active': 'var(--color-main-60)',
   '--button-main-background-color--disabled': 'var(--color-main-20)',
-  '--button-main-color': ON_TONE,
   '--button-main-outline-color--focus': 'var(--color-main)',
   '--button-accent-background-color': 'var(--color-accent)',
   '--button-accent-background-color--hover': 'var(--color-accent-80)',
-  '--button-accent-color': ON_TONE,
   '--button-success-background-color': 'var(--color-success)',
   '--button-success-background-color--hover': 'var(--color-success-80)',
-  '--button-success-color': ON_TONE,
   '--button-warning-background-color': 'var(--color-warning)',
   '--button-warning-background-color--hover': 'var(--color-warning-80)',
-  '--button-warning-color': ON_TONE,
   '--button-error-background-color': 'var(--color-error)',
   '--button-error-background-color--hover': 'var(--color-error-80)',
-  '--button-error-color': ON_TONE,
   '--badge-background-color': 'var(--color-surface)',
   '--badge-color': 'var(--color-neutral)',
 }
