@@ -309,6 +309,34 @@ describe('Button', () => {
     expect(screen.getByText('Wrapped').matches(startPull)).toBe(true)
     expect(screen.getByText('Lot').matches(startPull)).toBe(false)
   })
+  it('pulls a Badge after a component that renders text toward the end only, since a selector skips the text it renders', () => {
+    const Label = () => <>Lot 12</>
+    render(
+      <Button>
+        <Label />
+        <Badge>New</Badge>
+      </Button>,
+    )
+    const pull = 'calc(var(--button-md-px,calc(var(--spacing)*16))/-2);'
+    const badge = screen.getByText('New')
+    expect(badge.matches(selectorWith(`margin-inline-end:${pull}`))).toBe(true)
+    expect(badge.matches(selectorWith(`margin-inline-start:${pull}`))).toBe(false)
+  })
+  it('pulls no Badge from a lone component that renders text before it, since a selector skips that text', () => {
+    const LotTitle = () => (
+      <>
+        Lot 12 <Badge>New</Badge>
+      </>
+    )
+    render(
+      <Button>
+        <LotTitle />
+      </Button>,
+    )
+    expect(
+      screen.getByText('New').matches(selectorWith('margin-inline-start:calc(var(--button-md-px,')),
+    ).toBe(false)
+  })
   it('pulls no Badge that a start item precedes, nor one inside the card or icon kind', () => {
     render(
       <>
