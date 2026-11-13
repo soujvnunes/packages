@@ -19,7 +19,7 @@ Every role colour comes in six alpha steps, and each step has one job. The steps
 - **Quinary, 20:** faint fills and shadows.
 - **Senary, 10:** faint fills and shadows.
 
-In code a step is a token, never an opacity modifier: the primary step is the bare role (`bg-main`, `text-neutral`) and every other step carries its number (`text-neutral-60`, `border-neutral-60 hover:border-neutral-80`). The primary step of `neutral` on a light surface already holds 80, so its secondary step looks the same there.
+In code a step is a token, never an opacity modifier: the primary step is the bare role (`bg-main`, `text-neutral`) and every other step carries its number (`text-neutral-60`, `border-neutral-60` with `hover:border-neutral-80`). The primary step of `neutral` on a light surface already holds 80, so its secondary step looks the same there.
 
 ## Every role at every step
 
@@ -66,5 +66,5 @@ In code a step is a token, never an opacity modifier: the primary step is the ba
 - **Text:** `text-neutral` for running text.
 - **Low-emphasis text:** `text-neutral-60` for low-emphasis, lower or disabled text.
 - **Borders:** `border-neutral-60` idle, `hover:border-neutral-80` hovered, `disabled:border-neutral-40` disabled. A border never starts at the primary step.
-- **Disabled:** `disabled:border-neutral-40 disabled:text-neutral-60`.
+- **Disabled:** `disabled:border-neutral-40` and `disabled:text-neutral-60`.
 - **Faint fills:** `bg-main-10` behind a selected row, `shadow-neutral-20` under a raised card.
