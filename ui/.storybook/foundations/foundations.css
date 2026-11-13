@@ -314,31 +314,37 @@
 }
 
 .foundations-swatch[data-step='100'] {
-  background: var(--step-100);
+  --swatch: var(--step-100);
 }
 
 .foundations-swatch[data-step='80'] {
-  background: var(--step-80);
+  --swatch: var(--step-80);
 }
 
 .foundations-swatch[data-step='60'] {
-  background: var(--step-60);
+  --swatch: var(--step-60);
 }
 
 .foundations-swatch[data-step='40'] {
-  background: var(--step-40);
+  --swatch: var(--step-40);
 }
 
 .foundations-swatch[data-step='20'] {
-  background: var(--step-20);
+  --swatch: var(--step-20);
 }
 
 .foundations-swatch[data-step='10'] {
-  background: var(--step-10);
+  --swatch: var(--step-10);
 }
 
 .foundations-swatch {
   display: block;
+  background-image:
+    linear-gradient(var(--swatch), var(--swatch)),
+    repeating-conic-gradient(var(--color-neutral-20) 0 25%, var(--color-surface) 0 50%);
+  background-size:
+    auto,
+    calc(var(--spacing) * 8) calc(var(--spacing) * 8);
   inline-size: calc(var(--spacing) * 40);
   block-size: calc(var(--spacing) * 40);
   border: var(--spacing) solid var(--color-neutral-20);
