@@ -189,17 +189,47 @@ describe('Field', () => {
     expect(item.contains(control)).toBe(true)
     expect(control.getAttribute('aria-invalid')).toBe('true')
   })
-  it('publishes its inner radius, its radius less its block padding, which the pill input within it never reads', () => {
+  it('is a 64 pill with 12 of block padding and 24 inline, two steps below its height', () => {
+    const { container } = render(<Field label="Max bid">{(control) => <Input {...control} />}</Field>)
+    const root = rootOf(container)
+    expect(root.matches(selectorWith('min-height:var(--field-height,calc(var(--spacing)*64));'))).toBe(
+      true,
+    )
+    expect(root.matches(selectorWith('padding-block:var(--field-py,calc(var(--spacing)*12));'))).toBe(
+      true,
+    )
+    expect(root.matches(selectorWith('padding-inline:var(--field-px,calc(var(--spacing)*24));'))).toBe(
+      true,
+    )
+    expect(root.matches(selectorWith('--ui-container-radius:var(--ui-field-radius,9999px);'))).toBe(
+      true,
+    )
+    expect(root.matches(selectorWith('border-radius:var(--ui-container-radius);'))).toBe(true)
+  })
+  it('reads the inner radius of a card around it only once the product maps a numeric --field-radius', () => {
+    const { container } = render(<Field label="Max bid">{(control) => <Input {...control} />}</Field>)
+    expect(
+      rootOf(container).matches(
+        selectorWith(
+          '--ui-field-radius:calc(0*var(--field-radius)+var(--ui-inner-radius-card,var(--field-radius)));',
+        ),
+      ),
+    ).toBe(true)
+  })
+  it('publishes its inner radius, its radius less its inline padding, which the pill input within it never reads', () => {
     const { container } = render(<Field label="Max bid">{(control) => <Input {...control} />}</Field>)
     const root = rootOf(container)
     const input = container.querySelector('[data-slot="input"]')
     expect(
-      root.matches(selectorWith('--ui-container-radius:var(--field-radius,var(--radius-24));')),
+      root.matches(selectorWith('--ui-container-padding:var(--field-px,calc(var(--spacing)*24));')),
     ).toBe(true)
     expect(
-      root.matches(selectorWith('--ui-container-padding:var(--field-py,calc(var(--spacing)*12));')),
+      root.matches(
+        selectorWith(
+          '--ui-inner-radius-64:max(0px,var(--ui-container-radius)-var(--ui-container-padding));',
+        ),
+      ),
     ).toBe(true)
-    expect(root.matches(selectorWith('--ui-inner-radius-64:max('))).toBe(true)
     expect(input?.parentElement).toBe(root)
     expect(input?.matches(selectorWith('border-radius:var(--input-md-radius,9999px);'))).toBe(true)
     expect(STYLESHEET.replace(/\s/g, '')).not.toContain('border-radius:var(--ui-inner-radius-64,')

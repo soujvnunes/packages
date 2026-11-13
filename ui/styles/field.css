@@ -7,11 +7,13 @@
     gap: var(--field-gap, calc(var(--spacing) * 8));
     min-height: var(--field-height, calc(var(--spacing) * 64));
     padding-block: var(--field-py, calc(var(--spacing) * 12));
-    padding-inline: var(--field-px, calc(var(--spacing) * 12));
+    padding-inline: var(--field-px, calc(var(--spacing) * 24));
     border-style: solid;
     border-width: var(--field-border-width, 0px);
-    --ui-container-radius: var(--field-radius, var(--radius-24));
-    --ui-container-padding: var(--field-py, calc(var(--spacing) * 12));
+    --ui-field-radius: calc(0 * var(--field-radius) + var(--ui-inner-radius-card, var(--field-radius)));
+    --ui-container-radius: var(--ui-field-radius, 9999px);
+    --ui-container-padding: var(--field-px, calc(var(--spacing) * 24));
+    border-radius: var(--ui-container-radius);
     background-color: var(--field-background-color, transparent);
     color: var(--field-color);
     border-color: var(--field-border-color, transparent);

@@ -83,7 +83,7 @@ describe('Bar', () => {
     )
     expect(screen.getByRole('toolbar', { name: 'Lot actions' }).getAttribute('data-slot')).toBe('bar')
   })
-  it('holds controls of 40 in a 64 minimum height, through 12 of block padding', () => {
+  it('holds controls of 40 in a 64 minimum height, through 12 of block padding and 24 inline, two steps below its height', () => {
     const { container } = render(<Bar>Lot 12</Bar>)
     const root = rootOf(container)
     expect(root.matches(selectorWith('min-height:var(--bar-height,calc(var(--spacing)*64));'))).toBe(
@@ -92,7 +92,7 @@ describe('Bar', () => {
     expect(root.matches(selectorWith('padding-block:var(--bar-py,calc(var(--spacing)*12));'))).toBe(
       true,
     )
-    expect(root.matches(selectorWith('padding-inline:var(--bar-px,calc(var(--spacing)*40));'))).toBe(
+    expect(root.matches(selectorWith('padding-inline:var(--bar-px,calc(var(--spacing)*24));'))).toBe(
       true,
     )
   })
@@ -102,19 +102,29 @@ describe('Bar', () => {
   })
 })
 describe('Bar radius', () => {
-  it('publishes its inner radius, its radius less its block padding and never below zero', () => {
+  it('takes no radius by default, since it spans what holds it, and publishes none until a product maps --bar-radius', () => {
     const { container } = render(<Bar>Lot 12</Bar>)
     const root = rootOf(container)
     expect(
-      root.matches(selectorWith('--ui-container-radius:var(--bar-radius,var(--radius-24));')),
+      root.matches(
+        selectorWith(
+          '--ui-container-radius:calc(0*var(--bar-radius)+var(--ui-inner-radius-card,var(--bar-radius)));',
+        ),
+      ),
     ).toBe(true)
+    expect(root.matches(selectorWith('border-radius:var(--ui-container-radius,0px);'))).toBe(true)
+    expect(STYLESHEET.replace(/\s/g, '')).not.toContain('--bar-radius,')
+  })
+  it('publishes its inner radius, its radius less its inline padding and never below zero', () => {
+    const { container } = render(<Bar>Lot 12</Bar>)
+    const root = rootOf(container)
     expect(
-      root.matches(selectorWith('--ui-container-padding:var(--bar-py,calc(var(--spacing)*12));')),
+      root.matches(selectorWith('--ui-container-padding:var(--bar-px,calc(var(--spacing)*24));')),
     ).toBe(true)
     expect(
       root.matches(
         selectorWith(
-          '--ui-inner-radius-64:max(0px,var(--ui-inner-radius-card,var(--ui-container-radius))-var(--ui-container-padding));',
+          '--ui-inner-radius-64:max(0px,var(--ui-container-radius)-var(--ui-container-padding));',
         ),
       ),
     ).toBe(true)

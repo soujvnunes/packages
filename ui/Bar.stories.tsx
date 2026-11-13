@@ -21,6 +21,7 @@ const BAR_THEME: React.CSSProperties & Record<`--${string}`, string> = {
   '--bar-color': 'var(--color-neutral)',
   '--field-background-color': 'var(--color-neutral-10)',
   '--field-color': 'var(--color-neutral)',
+  '--button-group-background-color': 'var(--color-neutral-10)',
   '--card-background-color': 'var(--color-surface)',
   '--card-color': 'var(--color-neutral)',
   '--card-border-color': 'var(--color-neutral-20)',
@@ -71,18 +72,22 @@ export const RadiusCases: Story = {
     <div className="grid grid-cols-1 gap-40 overflow-x-auto">
       <figure className="flex flex-wrap items-start gap-16">
         <figcaption className="basis-full">
-          Within: a control takes the inner radius of what holds it
+          Within: a card button takes the inner radius of the card that holds it, and a pill stays a
+          pill
         </figcaption>
+        <Card className="grid justify-items-start gap-16">
+          <CardTitle>Lot 12</CardTitle>
+          <CardDescription>Open until 20h</CardDescription>
+          <Button kind="card" startItem="Lot 13">
+            Volkswagen Fusca 1973
+          </Button>
+          <Button data-tone="main">Place a bid</Button>
+        </Card>
+        <Field label="Plate">{(control) => <Input {...control} placeholder="ABC1D23" />}</Field>
         <Bar>
           <Button>Watch</Button>
           <Button data-tone="main">Bid</Button>
         </Bar>
-        <Field label="Plate">{(control) => <Input {...control} placeholder="ABC1D23" />}</Field>
-        <Card className="grid justify-items-start gap-16">
-          <CardTitle>Lot 12</CardTitle>
-          <CardDescription>Open until 20h</CardDescription>
-          <Button data-tone="main">Place a bid</Button>
-        </Card>
         <Button size="lg">
           <Badge>New</Badge>
           Lot 12

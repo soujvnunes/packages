@@ -149,12 +149,37 @@ describe('Card', () => {
     )
     expect(ref.current).toBe(screen.getByRole('article'))
   })
-  it('publishes its inner radius, its radius less its block padding, to a card button within it', () => {
+  it('pads 16 inline and 12 block inside a radius of 24 by default, the large pair of the card kind', () => {
+    render(
+      <Card>
+        <CardTitle>Lot 12</CardTitle>
+        <CardDescription>Open until 20h</CardDescription>
+      </Card>,
+    )
+    const card = screen.getByRole('article')
+    expect(card.matches(selectorWith('padding-inline:var(--card-px,calc(var(--spacing)*16));'))).toBe(
+      true,
+    )
+    expect(card.matches(selectorWith('padding-block:var(--card-py,calc(var(--spacing)*12));'))).toBe(
+      true,
+    )
+    expect(card.matches(selectorWith('border-radius:var(--ui-container-radius);'))).toBe(true)
+  })
+  it('leaves 8 for what it holds by default, its radius of 24 less its inline padding of 16', () => {
+    const declared = STYLESHEET.replace(/\s/g, '')
+    const radius = declared.match(/--ui-container-radius:var\(--card-radius,var\(--radius-(\d+)\)\);/)
+    const padding = declared.match(
+      /--ui-container-padding:var\(--card-px,calc\(var\(--spacing\)\*(\d+)\)\);/,
+    )
+    expect(Number(radius?.[1]) - Number(padding?.[1])).toBe(8)
+  })
+  it('publishes its inner radius, its radius less its inline padding, to a card button within it, while a text button stays a pill', () => {
     render(
       <Card>
         <CardTitle>Lot 12</CardTitle>
         <CardDescription>Open until 20h</CardDescription>
         <Button kind="card">Place a bid</Button>
+        <Button>Watch</Button>
       </Card>,
     )
     const card = screen.getByRole('article')
@@ -162,8 +187,11 @@ describe('Card', () => {
       card.matches(selectorWith('--ui-container-radius:var(--card-radius,var(--radius-24));')),
     ).toBe(true)
     expect(
-      card.matches(selectorWith('--ui-container-padding:var(--card-py,calc(var(--spacing)*16));')),
+      card.matches(selectorWith('--ui-container-padding:var(--card-px,calc(var(--spacing)*16));')),
     ).toBe(true)
+    const watch = screen.getByRole('button', { name: 'Watch' })
+    expect(watch.matches(selectorWith('border-radius:var(--button-md-radius,9999px);'))).toBe(true)
+    expect(watch.matches(selectorWith('border-radius:var(--ui-inner-radius-64,'))).toBe(false)
     expect(
       card.matches(
         selectorWith(
@@ -173,7 +201,7 @@ describe('Card', () => {
     ).toBe(true)
     expect(
       screen
-        .getByRole('button')
+        .getByRole('button', { name: 'Place a bid' })
         .matches(selectorWith('border-radius:var(--ui-inner-radius-64,var(--ui-inner-radius-card,')),
     ).toBe(true)
   })
@@ -191,7 +219,7 @@ describe('Card', () => {
       true,
     )
   })
-  it('gives a bar within it its inner radius, from which the bar publishes its own', () => {
+  it('gives a bar within it its inner radius once the product maps --bar-radius, and the bar publishes its own from it', () => {
     const { container } = render(
       <Card>
         <CardTitle>Lot 12</CardTitle>
@@ -204,10 +232,13 @@ describe('Card', () => {
     const bar = container.querySelector('[data-slot="bar"]')
     expect(
       bar?.matches(
-        selectorWith('border-radius:var(--ui-inner-radius-card,var(--ui-container-radius));'),
+        selectorWith(
+          '--ui-container-radius:calc(0*var(--bar-radius)+var(--ui-inner-radius-card,var(--bar-radius)));',
+        ),
       ),
     ).toBe(true)
-    expect(bar?.matches(selectorWith('--ui-inner-radius-64:max(0px,var(--ui-inner-radius-card,'))).toBe(
+    expect(bar?.matches(selectorWith('border-radius:var(--ui-container-radius,0px);'))).toBe(true)
+    expect(bar?.matches(selectorWith('--ui-inner-radius-64:max(0px,var(--ui-container-radius)-'))).toBe(
       true,
     )
   })

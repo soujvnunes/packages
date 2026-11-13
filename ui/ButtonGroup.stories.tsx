@@ -5,6 +5,7 @@ import './styles/button-group.css'
 import './styles/button.css'
 import './styles/radius.css'
 const BUTTON_GROUP_THEME: React.CSSProperties & Record<`--${string}`, string> = {
+  '--button-group-background-color': 'var(--color-neutral-10)',
   '--button-background-color': 'var(--color-surface)',
   '--button-background-color--hover': 'var(--color-neutral-10)',
   '--button-background-color--active': 'var(--color-neutral-20)',

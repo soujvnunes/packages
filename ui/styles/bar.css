@@ -7,12 +7,13 @@
     gap: var(--bar-gap, calc(var(--spacing) * 16));
     min-height: var(--bar-height, calc(var(--spacing) * 64));
     padding-block: var(--bar-py, calc(var(--spacing) * 12));
-    padding-inline: var(--bar-px, calc(var(--spacing) * 40));
+    padding-inline: var(--bar-px, calc(var(--spacing) * 24));
     font-size: var(--bar-content-size, calc(var(--spacing) * 24));
     border-style: solid;
     border-width: var(--bar-border-width, 0px);
-    --ui-container-radius: var(--bar-radius, var(--radius-24));
-    --ui-container-padding: var(--bar-py, calc(var(--spacing) * 12));
+    --ui-container-radius: calc(0 * var(--bar-radius) + var(--ui-inner-radius-card, var(--bar-radius)));
+    --ui-container-padding: var(--bar-px, calc(var(--spacing) * 24));
+    border-radius: var(--ui-container-radius, 0px);
     background-color: var(--bar-background-color, transparent);
     color: var(--bar-color);
     border-color: var(--bar-border-color, transparent);

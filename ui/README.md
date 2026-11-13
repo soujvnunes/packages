@@ -73,18 +73,19 @@ A control is a pill by default (`9999px`), and a pill reads no container radius,
 | `Button` (`text`, `icon`, `fullWidth`), `Input` | its own radius, a pill by default | `--ui-inner-radius-40`, a pill while the radius is one |
 | `Button` (`card`) | `--ui-inner-radius-64`, `--ui-inner-radius-card`, its own radius | `--ui-inner-radius-40`: 4, 4, 8 by default |
 | `Badge` | `--ui-inner-radius-40` once `--badge-radius` is mapped, then `--badge-radius`; a pill while it is unmapped | nothing |
-| `Bar`, `Field`, `ButtonGroup` | `--ui-inner-radius-card`, its own radius | `--ui-inner-radius-64`, and clears `--ui-inner-radius-card` for what it holds |
+| `Field`, `ButtonGroup` | `--ui-inner-radius-card` once its radius variable is mapped, then that variable; a pill while it is unmapped | `--ui-inner-radius-64`, and clears `--ui-inner-radius-card` for what it holds |
+| `Bar` | `--ui-inner-radius-card` once `--bar-radius` is mapped, then `--bar-radius`; no radius while it is unmapped | `--ui-inner-radius-64` once `--bar-radius` is mapped, and clears `--ui-inner-radius-card` for what it holds |
 | `Card` | its own radius | `--ui-inner-radius-card`, and clears `--ui-inner-radius-64` for what it holds |
 
-The badge computes an internal `--ui-badge-radius` that multiplies `--badge-radius` by zero before it adds the inner radius, so with `--badge-radius` unset the property is invalid and the border radius falls back to the pill.
+The badge computes an internal `--ui-badge-radius` that multiplies `--badge-radius` by zero before it adds the inner radius, so with `--badge-radius` unset the property is invalid and the border radius falls back to the pill. The `Field` and the `ButtonGroup` compute `--ui-field-radius` and `--ui-button-group-radius` the same way, and the `Bar` its container radius, which stays invalid while `--bar-radius` is unset: the bar then draws no radius and publishes no inner radius, so a card button in it keeps its own.
 
-A container subtracts its block padding, so the default bar of radius 24 with 12 of padding gives its controls 12, and the default card of radius 24 with 16 gives 8. Three cases follow:
+A container subtracts its inline padding, so the default card of radius 24 with 16 of inline padding gives what it holds 8, and a pill field or button group with 24 gives a pill. Three cases follow:
 
-- **Within.** A control nested in a container takes the container's inner radius, such as a button in a bar or a card, or a badge in a button.
-- **Close.** A control attached to its container's edge shares the container's own radius on the side it touches. A `ButtonGroup` has no padding, so its inner radius is its own: its first and last controls keep it on their outer side, and every inner side is square. A `Badge` with `data-corner` sits on that corner of its parent and inherits the parent's radius there.
-- **Outside.** A sibling keeps the default radius of its own height.
+- **Within.** A control with a numeric radius nested in a container takes the container's inner radius, such as a card button in a card, which reads 8. A pill control in the same container stays a pill.
+- **Close.** A control attached to its container's edge shares the container's own radius on the side it touches. The first and last controls of a `ButtonGroup` keep their pill on their outer side, in both orientations, and every inner side is square. A `Badge` with `data-corner` sits on that corner of its parent and inherits the parent's radius there.
+- **Outside.** A sibling keeps the default radius of its own height, a pill for every control.
 
-A full radius stays a pill: a container whose radius variable is `calc(infinity * 1px)` publishes an infinite inner radius, so what it holds is a pill too. A `rounded-full` class rounds the element it sits on and publishes nothing. Two containers of one level do not chain: a `ButtonGroup` inside a `Bar` starts from its own radius, since both publish `--ui-inner-radius-64`.
+A full radius stays a pill: an inner radius has a floor at zero and no ceiling, so a pill container publishes a radius larger than anything it holds, and what reads it is a pill too. A `rounded-full` class rounds the element it sits on and publishes nothing. Two containers of one level do not chain: a `ButtonGroup` inside a `Bar` starts from its own radius, since both publish `--ui-inner-radius-64`.
 
 ## Button
 
@@ -199,15 +200,15 @@ export const LotHeader = () => (
 )
 ```
 
-A `div` row with `data-slot="bar"`, at least 64 high, holding controls of 40 inside 12 of block padding and 40 of inline padding. Text and an `svg` directly inside take the content size. `asChild` renders the child instead, so a product makes it its `header`, its `nav` or a toolbar, which keeps its own role.
+A `div` row with `data-slot="bar"`, at least 64 high, holding controls of 40 inside 12 of block padding and 24 of inline padding, two steps below its height. It takes no radius by default, since it spans what holds it. Text and an `svg` directly inside take the content size. `asChild` renders the child instead, so a product makes it its `header`, its `nav` or a toolbar, which keeps its own role.
 
 | Variable | Default |
 | --- | --- |
 | `--bar-height` | 64, a minimum |
-| `--bar-py`, `--bar-px` | 12, 40 |
+| `--bar-py`, `--bar-px` | 12, 24 |
 | `--bar-gap` | 16 |
 | `--bar-content-size` | 24, the font size and the `svg` size |
-| `--bar-radius` | `--radius-24` |
+| `--bar-radius` | none, no radius |
 | `--bar-border-width` | 0, so a control of 40 keeps the bar at 64 |
 | `--bar-background-color`, `--bar-color`, `--bar-border-color` | none |
 
@@ -240,9 +241,9 @@ The Field uses no context, so a server component renders it. Its ids come from `
 | Variable | Default |
 | --- | --- |
 | `--field-height` | 64, a minimum |
-| `--field-py`, `--field-px` | 12, 12 |
+| `--field-py`, `--field-px` | 12, 24 |
 | `--field-gap` | 8 |
-| `--field-radius` | `--radius-24` |
+| `--field-radius` | none, a pill |
 | `--field-border-width` | 0 |
 | `--field-background-color[--invalid]`, `--field-color[--invalid]`, `--field-border-color[--invalid]` | none |
 | `--field-hint-color`, `--field-error-color` | the text colour |
@@ -261,11 +262,15 @@ export const Period = () => (
 )
 ```
 
-Joined controls that share one outer radius: a `div` with `role="group"`, `data-slot="button-group"` and `data-orientation`, `horizontal` by default or `vertical`, with no gap and no padding. A `Button` or an `Input` directly inside keeps the group radius on its outer side and is square on every inner side. With `asChild` the group passes no role of its own, so its child keeps the one it has.
+Joined controls that share one outer radius: a `div` with `role="group"`, `data-slot="button-group"` and `data-orientation`, `horizontal` by default or `vertical`. It is a 64 pill around the 40 controls it joins, with 12 of block padding, 24 of inline padding and no gap between them. A `Button` or an `Input` directly inside keeps its pill on its outer side and is square on every inner side, in both orientations. With `asChild` the group passes no role of its own, so its child keeps the one it has.
 
-| Variable                | Default                                               |
-| ----------------------- | ----------------------------------------------------- |
-| `--button-group-radius` | `--radius-12`, the radius of the 40 controls it joins |
+| Variable | Default |
+| --- | --- |
+| `--button-group-height` | 64, a minimum |
+| `--button-group-py`, `--button-group-px` | 12, 24 |
+| `--button-group-radius` | none, a pill |
+| `--button-group-border-width` | 0 |
+| `--button-group-background-color`, `--button-group-color`, `--button-group-border-color` | none |
 
 A tab list is a `ButtonGroup` and each tab a `Button`, both wrapped around a product's own tabs primitive, so the package ships no Tabs. The list keeps its `tablist` role and each trigger its `tab` role, and the selected tab shows as pressed:
 
@@ -299,13 +304,13 @@ export const LotCard = () => (
 )
 ```
 
-An `article` with `data-slot="card"`, padding and radius only, the static form of a `Button` of the `card` kind. It points `aria-labelledby` and `aria-describedby` at the `CardTitle` and the `CardDescription` inside it, wherever a product places them, around or inside its own markup. Each part is a `div` with `data-slot="card-title"` or `data-slot="card-description"`, no typography of its own and the id its card gives it. A Card needs both, so outside production it logs one error naming the part it is missing. The rest of a card, an action or a footer, is the product's own markup.
+An `article` with `data-slot="card"`, padding and radius only, the static form of a `Button` of the `card` kind: 16 of inline and 12 of block padding inside `--radius-24`, the large pair of that kind, which leaves an inner radius of 8 for a card button inside it. It points `aria-labelledby` and `aria-describedby` at the `CardTitle` and the `CardDescription` inside it, wherever a product places them, around or inside its own markup. Each part is a `div` with `data-slot="card-title"` or `data-slot="card-description"`, no typography of its own and the id its card gives it. A Card needs both, so outside production it logs one error naming the part it is missing. The rest of a card, an action or a footer, is the product's own markup.
 
 The ids travel through a context, so `Card`, `CardTitle` and `CardDescription` are client components, the only ones in the package, and what a server parent passes them as children stays server-rendered. Each takes `asChild`.
 
 | Variable                                                         | Default       |
 | ---------------------------------------------------------------- | ------------- |
-| `--card-py`, `--card-px`                                         | 16, 24        |
+| `--card-py`, `--card-px`                                         | 12, 16        |
 | `--card-radius`                                                  | `--radius-24` |
 | `--card-border-width`                                            | 1             |
 | `--card-background-color`, `--card-color`, `--card-border-color` | none          |
