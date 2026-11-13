@@ -40,7 +40,13 @@ const RULES = STYLESHEET.replace(/\s+/g, ' ')
   })
 const STATE_STEPS = { hover: 80, active: 60, pressed: 60, disabled: 40 } as const
 const STATES = Object.keys(STATE_STEPS) as readonly (keyof typeof STATE_STEPS)[]
-const PAINTS = ['background-color', 'color', 'border-color'] as const
+const PAINT_PROPERTIES = {
+  'background-color': 'background-color',
+  'text-color': 'color',
+  'border-color': 'border-color',
+} as const
+const PAINTS = Object.keys(PAINT_PROPERTIES) as readonly (keyof typeof PAINT_PROPERTIES)[]
+const DEFAULT_STEPS = { 'background-color': 20, 'border-color': 60 } as const
 const REST = 'rgb(1,2,3)'
 const MAPPED = 'rgb(4,5,6)'
 type Paint = (typeof PAINTS)[number]
@@ -68,8 +74,9 @@ const substitute = (value: string, variables: Variables): string | null => {
   if (replacement === null) return null
   return substitute(`${value.slice(0, start)}${replacement}${value.slice(end + 1)}`, variables)
 }
-const paintDeclaration = (property: Paint, state: keyof typeof STATE_STEPS | 'focus') => {
-  const head = `var(--button-${property}--${state},`
+const paintDeclaration = (paint: Paint, state: keyof typeof STATE_STEPS | 'focus' | 'rest') => {
+  const property = PAINT_PROPERTIES[paint]
+  const head = state === 'rest' ? `var(--button-${paint},` : `var(--button-${paint}--${state},`
   const declared = RULES.map((rule) => rule.declarations[property]).find((value) =>
     value?.startsWith(head),
   )
@@ -88,8 +95,10 @@ const tonedVariables = (tone: (typeof BUTTON_TONES)[number], product: Variables)
     ...own.filter((entry): entry is readonly [string, string] => entry[1] !== null),
   ])
 }
-const scaled = (state: keyof typeof STATE_STEPS) =>
-  `color-mix(in oklab,${REST} ${STATE_STEPS[state]}%,transparent)`
+const scaled = (state: keyof typeof STATE_STEPS, rest = REST) =>
+  `color-mix(in oklab,${rest} ${STATE_STEPS[state]}%,transparent)`
+const restFrom = (paint: Paint, color: string) =>
+  paint === 'text-color' ? color : `color-mix(in oklab,${color} ${DEFAULT_STEPS[paint]}%,transparent)`
 const TEXT_PADDING = { sm: 12, md: 16, lg: 24 } as const
 const TEXT_RADIUS = { sm: 12, md: 24, lg: 40 } as const
 const TEXT_INNER_RADIUS = { sm: 0, md: 8, lg: 16 } as const
@@ -586,14 +595,63 @@ describe('Button', () => {
       expect(substitute(paintDeclaration(paint, 'focus'), { [`--button-${paint}`]: REST })).toBe(REST)
     }
   })
-  it('leaves every state of an unmapped background and border transparent, and of an unmapped text colour inherited', () => {
-    for (const state of STATES) {
+  it('paints the text from --button-color, the background at its 20 step and the border at its 60 step', () => {
+    for (const paint of PAINTS) {
+      expect(substitute(paintDeclaration(paint, 'rest'), { '--button-color': REST })).toBe(
+        restFrom(paint, REST),
+      )
+    }
+  })
+  it('lets a background, text or border colour the theme maps win over the default --button-color feeds, with a tone and without', () => {
+    for (const paint of PAINTS) {
+      const plain = { '--button-color': REST, [`--button-${paint}`]: MAPPED }
+      const toned = tonedVariables('main', {
+        '--button-main-color': REST,
+        [`--button-main-${paint}`]: MAPPED,
+      })
+      expect(substitute(paintDeclaration(paint, 'rest'), plain)).toBe(MAPPED)
+      expect(substitute(paintDeclaration(paint, 'rest'), toned)).toBe(MAPPED)
+    }
+  })
+  it.each(BUTTON_TONES)(
+    'feeds the text, background and border of the %s tone from its one colour, over a colour the theme maps for no tone',
+    (tone) => {
+      const variables = tonedVariables(tone, {
+        [`--button-${tone}-color`]: REST,
+        '--button-color': MAPPED,
+      })
+      for (const paint of PAINTS) {
+        expect(substitute(paintDeclaration(paint, 'rest'), variables)).toBe(restFrom(paint, REST))
+      }
+    },
+  )
+  it.each(BUTTON_TONES)(
+    'derives every state of the %s tone from the rest values its one colour feeds',
+    (tone) => {
+      const variables = tonedVariables(tone, { [`--button-${tone}-color`]: REST })
+      for (const state of STATES) {
+        for (const paint of PAINTS) {
+          expect(substitute(paintDeclaration(paint, state), variables)).toBe(
+            scaled(state, restFrom(paint, REST)),
+          )
+        }
+      }
+    },
+  )
+  it('leaves an unmapped background and border transparent in every state, and an unmapped text colour inherited', () => {
+    for (const state of [...STATES, 'rest'] as const) {
       for (const paint of ['background-color', 'border-color'] as const) {
+        const rest = restFrom(paint, 'transparent')
         expect(substitute(paintDeclaration(paint, state), {})).toBe(
-          `color-mix(in oklab,transparent ${STATE_STEPS[state]}%,transparent)`,
+          state === 'rest' ? rest : scaled(state, rest),
         )
       }
-      expect(substitute(paintDeclaration('color', state), {})).toBeNull()
+      expect(substitute(paintDeclaration('text-color', state), {})).toBeNull()
+    }
+  })
+  it('gives the one colour no state, plain or per tone, since each state of the text reads --button-text-color', () => {
+    for (const prefix of ['', ...BUTTON_TONES.map((tone) => `${tone}-`)]) {
+      expect(STYLESHEET).not.toContain(`--button-${prefix}color--`)
     }
   })
   it('applies the hover colours only where the pointer can hover, so a tap leaves no stuck hover', () => {

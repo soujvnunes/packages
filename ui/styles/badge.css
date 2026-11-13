@@ -16,9 +16,15 @@
       --ui-inner-radius-40,
       var(--ui-inner-radius-64, var(--ui-inner-radius-card, var(--badge-radius, var(--radius-12))))
     );
-    background-color: var(--badge-background-color, transparent);
-    color: var(--badge-color);
-    border-color: var(--badge-border-color, transparent);
+    background-color: var(
+      --badge-background-color,
+      color-mix(in oklab, var(--badge-color, transparent) 20%, transparent)
+    );
+    color: var(--badge-text-color, var(--badge-color));
+    border-color: var(
+      --badge-border-color,
+      color-mix(in oklab, var(--badge-color, transparent) 60%, transparent)
+    );
   }
   [data-slot='badge-start-item'] {
     display: inline-flex;

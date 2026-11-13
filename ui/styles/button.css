@@ -17,9 +17,15 @@
     outline-style: none;
     outline-width: var(--button-outline-width, calc(var(--spacing) * 2));
     outline-offset: var(--button-outline-offset, calc(var(--spacing) * 2));
-    background-color: var(--button-background-color, transparent);
-    color: var(--button-color);
-    border-color: var(--button-border-color, transparent);
+    background-color: var(
+      --button-background-color,
+      color-mix(in oklab, var(--button-color, transparent) 20%, transparent)
+    );
+    color: var(--button-text-color, var(--button-color));
+    border-color: var(
+      --button-border-color,
+      color-mix(in oklab, var(--button-color, transparent) 60%, transparent)
+    );
     outline-color: var(--button-outline-color, currentColor);
   }
   [data-slot='button'][data-size='sm'] {
@@ -227,12 +233,31 @@
     ) {
       background-color: var(
         --button-background-color--hover,
-        color-mix(in oklab, var(--button-background-color, transparent) 80%, transparent)
+        color-mix(
+          in oklab,
+          var(
+              --button-background-color,
+              color-mix(in oklab, var(--button-color, transparent) 20%, transparent)
+            )
+            80%,
+          transparent
+        )
       );
-      color: var(--button-color--hover, color-mix(in oklab, var(--button-color) 80%, transparent));
+      color: var(
+        --button-text-color--hover,
+        color-mix(in oklab, var(--button-text-color, var(--button-color)) 80%, transparent)
+      );
       border-color: var(
         --button-border-color--hover,
-        color-mix(in oklab, var(--button-border-color, transparent) 80%, transparent)
+        color-mix(
+          in oklab,
+          var(
+              --button-border-color,
+              color-mix(in oklab, var(--button-color, transparent) 60%, transparent)
+            )
+            80%,
+          transparent
+        )
       );
       outline-color: var(--button-outline-color--hover, var(--button-outline-color, currentColor));
     }
@@ -241,10 +266,16 @@
     outline-style: solid;
     background-color: var(
       --button-background-color--focus,
-      var(--button-background-color, transparent)
+      var(
+        --button-background-color,
+        color-mix(in oklab, var(--button-color, transparent) 20%, transparent)
+      )
     );
-    color: var(--button-color--focus, var(--button-color));
-    border-color: var(--button-border-color--focus, var(--button-border-color, transparent));
+    color: var(--button-text-color--focus, var(--button-text-color, var(--button-color)));
+    border-color: var(
+      --button-border-color--focus,
+      var(--button-border-color, color-mix(in oklab, var(--button-color, transparent) 60%, transparent))
+    );
     outline-color: var(--button-outline-color--focus, var(--button-outline-color, currentColor));
   }
   [data-slot='button']:where(
@@ -252,12 +283,31 @@
   ) {
     background-color: var(
       --button-background-color--active,
-      color-mix(in oklab, var(--button-background-color, transparent) 60%, transparent)
+      color-mix(
+        in oklab,
+        var(
+            --button-background-color,
+            color-mix(in oklab, var(--button-color, transparent) 20%, transparent)
+          )
+          60%,
+        transparent
+      )
     );
-    color: var(--button-color--active, color-mix(in oklab, var(--button-color) 60%, transparent));
+    color: var(
+      --button-text-color--active,
+      color-mix(in oklab, var(--button-text-color, var(--button-color)) 60%, transparent)
+    );
     border-color: var(
       --button-border-color--active,
-      color-mix(in oklab, var(--button-border-color, transparent) 60%, transparent)
+      color-mix(
+        in oklab,
+        var(
+            --button-border-color,
+            color-mix(in oklab, var(--button-color, transparent) 60%, transparent)
+          )
+          60%,
+        transparent
+      )
     );
     outline-color: var(
       --button-outline-color--active,
@@ -271,12 +321,31 @@
     ) {
     background-color: var(
       --button-background-color--pressed,
-      color-mix(in oklab, var(--button-background-color, transparent) 60%, transparent)
+      color-mix(
+        in oklab,
+        var(
+            --button-background-color,
+            color-mix(in oklab, var(--button-color, transparent) 20%, transparent)
+          )
+          60%,
+        transparent
+      )
     );
-    color: var(--button-color--pressed, color-mix(in oklab, var(--button-color) 60%, transparent));
+    color: var(
+      --button-text-color--pressed,
+      color-mix(in oklab, var(--button-text-color, var(--button-color)) 60%, transparent)
+    );
     border-color: var(
       --button-border-color--pressed,
-      color-mix(in oklab, var(--button-border-color, transparent) 60%, transparent)
+      color-mix(
+        in oklab,
+        var(
+            --button-border-color,
+            color-mix(in oklab, var(--button-color, transparent) 60%, transparent)
+          )
+          60%,
+        transparent
+      )
     );
     outline-color: var(
       --button-outline-color--pressed,
@@ -287,12 +356,31 @@
     cursor: default;
     background-color: var(
       --button-background-color--disabled,
-      color-mix(in oklab, var(--button-background-color, transparent) 40%, transparent)
+      color-mix(
+        in oklab,
+        var(
+            --button-background-color,
+            color-mix(in oklab, var(--button-color, transparent) 20%, transparent)
+          )
+          40%,
+        transparent
+      )
     );
-    color: var(--button-color--disabled, color-mix(in oklab, var(--button-color) 40%, transparent));
+    color: var(
+      --button-text-color--disabled,
+      color-mix(in oklab, var(--button-text-color, var(--button-color)) 40%, transparent)
+    );
     border-color: var(
       --button-border-color--disabled,
-      color-mix(in oklab, var(--button-border-color, transparent) 40%, transparent)
+      color-mix(
+        in oklab,
+        var(
+            --button-border-color,
+            color-mix(in oklab, var(--button-color, transparent) 60%, transparent)
+          )
+          40%,
+        transparent
+      )
     );
     outline-color: var(
       --button-outline-color--disabled,
@@ -307,11 +395,12 @@
     --button-background-color--pressed: var(--button-main-background-color--pressed);
     --button-background-color--disabled: var(--button-main-background-color--disabled);
     --button-color: var(--button-main-color);
-    --button-color--hover: var(--button-main-color--hover);
-    --button-color--focus: var(--button-main-color--focus);
-    --button-color--active: var(--button-main-color--active);
-    --button-color--pressed: var(--button-main-color--pressed);
-    --button-color--disabled: var(--button-main-color--disabled);
+    --button-text-color: var(--button-main-text-color);
+    --button-text-color--hover: var(--button-main-text-color--hover);
+    --button-text-color--focus: var(--button-main-text-color--focus);
+    --button-text-color--active: var(--button-main-text-color--active);
+    --button-text-color--pressed: var(--button-main-text-color--pressed);
+    --button-text-color--disabled: var(--button-main-text-color--disabled);
     --button-border-color: var(--button-main-border-color);
     --button-border-color--hover: var(--button-main-border-color--hover);
     --button-border-color--focus: var(--button-main-border-color--focus);
@@ -333,11 +422,12 @@
     --button-background-color--pressed: var(--button-accent-background-color--pressed);
     --button-background-color--disabled: var(--button-accent-background-color--disabled);
     --button-color: var(--button-accent-color);
-    --button-color--hover: var(--button-accent-color--hover);
-    --button-color--focus: var(--button-accent-color--focus);
-    --button-color--active: var(--button-accent-color--active);
-    --button-color--pressed: var(--button-accent-color--pressed);
-    --button-color--disabled: var(--button-accent-color--disabled);
+    --button-text-color: var(--button-accent-text-color);
+    --button-text-color--hover: var(--button-accent-text-color--hover);
+    --button-text-color--focus: var(--button-accent-text-color--focus);
+    --button-text-color--active: var(--button-accent-text-color--active);
+    --button-text-color--pressed: var(--button-accent-text-color--pressed);
+    --button-text-color--disabled: var(--button-accent-text-color--disabled);
     --button-border-color: var(--button-accent-border-color);
     --button-border-color--hover: var(--button-accent-border-color--hover);
     --button-border-color--focus: var(--button-accent-border-color--focus);
@@ -359,11 +449,12 @@
     --button-background-color--pressed: var(--button-success-background-color--pressed);
     --button-background-color--disabled: var(--button-success-background-color--disabled);
     --button-color: var(--button-success-color);
-    --button-color--hover: var(--button-success-color--hover);
-    --button-color--focus: var(--button-success-color--focus);
-    --button-color--active: var(--button-success-color--active);
-    --button-color--pressed: var(--button-success-color--pressed);
-    --button-color--disabled: var(--button-success-color--disabled);
+    --button-text-color: var(--button-success-text-color);
+    --button-text-color--hover: var(--button-success-text-color--hover);
+    --button-text-color--focus: var(--button-success-text-color--focus);
+    --button-text-color--active: var(--button-success-text-color--active);
+    --button-text-color--pressed: var(--button-success-text-color--pressed);
+    --button-text-color--disabled: var(--button-success-text-color--disabled);
     --button-border-color: var(--button-success-border-color);
     --button-border-color--hover: var(--button-success-border-color--hover);
     --button-border-color--focus: var(--button-success-border-color--focus);
@@ -385,11 +476,12 @@
     --button-background-color--pressed: var(--button-warning-background-color--pressed);
     --button-background-color--disabled: var(--button-warning-background-color--disabled);
     --button-color: var(--button-warning-color);
-    --button-color--hover: var(--button-warning-color--hover);
-    --button-color--focus: var(--button-warning-color--focus);
-    --button-color--active: var(--button-warning-color--active);
-    --button-color--pressed: var(--button-warning-color--pressed);
-    --button-color--disabled: var(--button-warning-color--disabled);
+    --button-text-color: var(--button-warning-text-color);
+    --button-text-color--hover: var(--button-warning-text-color--hover);
+    --button-text-color--focus: var(--button-warning-text-color--focus);
+    --button-text-color--active: var(--button-warning-text-color--active);
+    --button-text-color--pressed: var(--button-warning-text-color--pressed);
+    --button-text-color--disabled: var(--button-warning-text-color--disabled);
     --button-border-color: var(--button-warning-border-color);
     --button-border-color--hover: var(--button-warning-border-color--hover);
     --button-border-color--focus: var(--button-warning-border-color--focus);
@@ -411,11 +503,12 @@
     --button-background-color--pressed: var(--button-error-background-color--pressed);
     --button-background-color--disabled: var(--button-error-background-color--disabled);
     --button-color: var(--button-error-color);
-    --button-color--hover: var(--button-error-color--hover);
-    --button-color--focus: var(--button-error-color--focus);
-    --button-color--active: var(--button-error-color--active);
-    --button-color--pressed: var(--button-error-color--pressed);
-    --button-color--disabled: var(--button-error-color--disabled);
+    --button-text-color: var(--button-error-text-color);
+    --button-text-color--hover: var(--button-error-text-color--hover);
+    --button-text-color--focus: var(--button-error-text-color--focus);
+    --button-text-color--active: var(--button-error-text-color--active);
+    --button-text-color--pressed: var(--button-error-text-color--pressed);
+    --button-text-color--disabled: var(--button-error-text-color--disabled);
     --button-border-color: var(--button-error-border-color);
     --button-border-color--hover: var(--button-error-border-color--hover);
     --button-border-color--focus: var(--button-error-border-color--focus);

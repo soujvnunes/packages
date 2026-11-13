@@ -9,9 +9,15 @@
     outline-style: none;
     outline-width: var(--input-outline-width, calc(var(--spacing) * 2));
     outline-offset: var(--input-outline-offset, calc(var(--spacing) * 2));
-    background-color: var(--input-background-color, transparent);
-    color: var(--input-color);
-    border-color: var(--input-border-color, transparent);
+    background-color: var(
+      --input-background-color,
+      color-mix(in oklab, var(--input-color, transparent) 20%, transparent)
+    );
+    color: var(--input-text-color, var(--input-color));
+    border-color: var(
+      --input-border-color,
+      color-mix(in oklab, var(--input-color, transparent) 60%, transparent)
+    );
     outline-color: var(--input-outline-color, currentColor);
   }
   [data-slot='input'][data-kind='fullWidth'] {
@@ -97,30 +103,64 @@
     [data-slot='input']:where(:not([data-disabled]):hover) {
       background-color: var(
         --input-background-color--hover,
-        color-mix(in oklab, var(--input-background-color, transparent) 80%, transparent)
+        color-mix(
+          in oklab,
+          var(
+              --input-background-color,
+              color-mix(in oklab, var(--input-color, transparent) 20%, transparent)
+            )
+            80%,
+          transparent
+        )
       );
-      color: var(--input-color--hover, color-mix(in oklab, var(--input-color) 80%, transparent));
+      color: var(
+        --input-text-color--hover,
+        color-mix(in oklab, var(--input-text-color, var(--input-color)) 80%, transparent)
+      );
       border-color: var(
         --input-border-color--hover,
-        color-mix(in oklab, var(--input-border-color, transparent) 80%, transparent)
+        color-mix(
+          in oklab,
+          var(
+              --input-border-color,
+              color-mix(in oklab, var(--input-color, transparent) 60%, transparent)
+            )
+            80%,
+          transparent
+        )
       );
       outline-color: var(--input-outline-color--hover, var(--input-outline-color, currentColor));
     }
   }
   [data-slot='input']:where(:has([data-slot='input-control']:focus-visible)) {
     outline-style: solid;
-    background-color: var(--input-background-color--focus, var(--input-background-color, transparent));
-    color: var(--input-color--focus, var(--input-color));
-    border-color: var(--input-border-color--focus, var(--input-border-color, transparent));
+    background-color: var(
+      --input-background-color--focus,
+      var(
+        --input-background-color,
+        color-mix(in oklab, var(--input-color, transparent) 20%, transparent)
+      )
+    );
+    color: var(--input-text-color--focus, var(--input-text-color, var(--input-color)));
+    border-color: var(
+      --input-border-color--focus,
+      var(--input-border-color, color-mix(in oklab, var(--input-color, transparent) 60%, transparent))
+    );
     outline-color: var(--input-outline-color--focus, var(--input-outline-color, currentColor));
   }
   [data-slot='input']:where([data-invalid]) {
     background-color: var(
       --input-background-color--invalid,
-      var(--input-background-color, transparent)
+      var(
+        --input-background-color,
+        color-mix(in oklab, var(--input-color, transparent) 20%, transparent)
+      )
     );
-    color: var(--input-color--invalid, var(--input-color));
-    border-color: var(--input-border-color--invalid, var(--input-border-color, transparent));
+    color: var(--input-text-color--invalid, var(--input-text-color, var(--input-color)));
+    border-color: var(
+      --input-border-color--invalid,
+      var(--input-border-color, color-mix(in oklab, var(--input-color, transparent) 60%, transparent))
+    );
     outline-color: var(
       --input-outline-color--invalid,
       var(--input-outline-color--focus, var(--input-outline-color, currentColor))
@@ -130,12 +170,28 @@
     cursor: default;
     background-color: var(
       --input-background-color--disabled,
-      color-mix(in oklab, var(--input-background-color, transparent) 40%, transparent)
+      color-mix(
+        in oklab,
+        var(
+            --input-background-color,
+            color-mix(in oklab, var(--input-color, transparent) 20%, transparent)
+          )
+          40%,
+        transparent
+      )
     );
-    color: var(--input-color--disabled, color-mix(in oklab, var(--input-color) 40%, transparent));
+    color: var(
+      --input-text-color--disabled,
+      color-mix(in oklab, var(--input-text-color, var(--input-color)) 40%, transparent)
+    );
     border-color: var(
       --input-border-color--disabled,
-      color-mix(in oklab, var(--input-border-color, transparent) 40%, transparent)
+      color-mix(
+        in oklab,
+        var(--input-border-color, color-mix(in oklab, var(--input-color, transparent) 60%, transparent))
+          40%,
+        transparent
+      )
     );
     outline-color: var(
       --input-outline-color--disabled,

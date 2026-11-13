@@ -24,12 +24,19 @@ const DECLARATIONS = readFileSync(`${import.meta.dirname}/styles/input.css`, 'ut
   .replace(/\s*\)/g, ')')
 const STATE_STEPS = { hover: 80, disabled: 40 } as const
 const STATES = Object.keys(STATE_STEPS) as readonly (keyof typeof STATE_STEPS)[]
-const REST_FALLBACKS = {
-  'background-color': ',transparent',
-  color: '',
-  'border-color': ',transparent',
+const PAINT_PROPERTIES = {
+  'background-color': 'background-color',
+  'text-color': 'color',
+  'border-color': 'border-color',
 } as const
-const PAINTS = Object.keys(REST_FALLBACKS) as readonly (keyof typeof REST_FALLBACKS)[]
+const REST_VALUES = {
+  'background-color':
+    'var(--input-background-color,color-mix(in oklab,var(--input-color,transparent) 20%,transparent))',
+  'text-color': 'var(--input-text-color,var(--input-color))',
+  'border-color':
+    'var(--input-border-color,color-mix(in oklab,var(--input-color,transparent) 60%,transparent))',
+} as const
+const PAINTS = Object.keys(PAINT_PROPERTIES) as readonly (keyof typeof PAINT_PROPERTIES)[]
 const THEME: React.CSSProperties & Record<`--${string}`, string> = {
   '--input-border-color--invalid': 'rgb(1, 2, 3)',
 }
@@ -161,10 +168,29 @@ describe('Input', () => {
     'reads the %s %s the theme maps first, and otherwise its rest value at the step of that state',
     (state, paint) => {
       expect(DECLARATIONS).toContain(
-        `${paint}:var(--input-${paint}--${state},color-mix(in oklab,var(--input-${paint}${REST_FALLBACKS[paint]}) ${STATE_STEPS[state]}%,transparent));`,
+        `${PAINT_PROPERTIES[paint]}:var(--input-${paint}--${state},color-mix(in oklab,${REST_VALUES[paint]} ${STATE_STEPS[state]}%,transparent));`,
       )
     },
   )
+  it.each(PAINTS)(
+    'paints the %s from the one colour --input-color unless the theme maps it, the text as is, the background at 20 and the border at 60',
+    (paint) => {
+      expect(DECLARATIONS).toContain(`;${PAINT_PROPERTIES[paint]}:${REST_VALUES[paint]};`)
+    },
+  )
+  it.each(['focus', 'invalid'] as const)(
+    'keeps the rest colours on %s unless the theme maps that state, so an invalid border reads the rest border until a product maps its error colour',
+    (state) => {
+      for (const paint of PAINTS) {
+        expect(DECLARATIONS).toContain(
+          `${PAINT_PROPERTIES[paint]}:var(--input-${paint}--${state},${REST_VALUES[paint]});`,
+        )
+      }
+    },
+  )
+  it('gives the one colour no state, since each state of the text reads --input-text-color', () => {
+    expect(STYLESHEET).not.toContain('--input-color--')
+  })
   it('applies the hover colours only where the pointer can hover, so a tap leaves no stuck hover', () => {
     expect(STYLESHEET).toContain(
       "@media(hover:hover){[data-slot='input']:where(:not([data-disabled]):hover)",

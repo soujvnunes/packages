@@ -44,8 +44,8 @@ A component's root carries `data-slot="<name>"` and one `data-<axis>` attribute 
 | `--button-main-border-color--hover` | the `main` tone of a button, its border colour while hovered |
 
 - **Structural values default to the ladder.** Size, padding, gap and radius read `calc(var(--spacing) * <number>)` and `var(--radius-<number>)`, so a theme that declares a one-pixel `--spacing` and the radius steps maps nothing to get them.
-- **Paint values have no default.** A background or border colour no theme maps is transparent, and an unmapped text colour inherits. An unmapped outline colour follows the text colour, so a focus ring never disappears.
-- **A state colour derives from the rest colour.** A product maps the rest paint, and the background, text and border colour of each state default to that rest value at an alpha step, `color-mix(in oklab, <rest> <step>%, transparent)`, so every state responds whatever colour the rest takes. The outline colour is not scaled.
+- **One colour feeds the paint, and it has no default.** `--<component>-color` is the one colour a component is painted from. The text colour, `--<component>-text-color`, defaults to it, the background colour to it at the 20 step, `color-mix(in oklab, <colour> 20%, transparent)`, and the border colour to it at the 60 step. A product that maps any of the three gets its value in place of the default. With no colour and nothing mapped, the background and the border are transparent and the text colour inherits. An unmapped outline colour follows the text colour, so a focus ring never disappears.
+- **A state colour derives from the rest colour.** The background, text and border colour of each state default to the rest value of the same property, the mapped one or the default the one colour feeds, at an alpha step, `color-mix(in oklab, <rest> <step>%, transparent)`, so one colour makes every property and every state respond. The outline colour is not scaled.
 
 | State      | Step                                     |
 | ---------- | ---------------------------------------- |
@@ -55,21 +55,23 @@ A component's root carries `data-slot="<name>"` and one `data-<axis>` attribute 
 | `disabled` | 40                                       |
 | `focus`    | the rest value, and the outline is drawn |
 
-A state variable the product maps wins over the derived value, so a product maps a state only where its palette steps differently on purpose, such as an input border that goes from the 60 step to the 80 step on hover. An unmapped rest background or border is transparent in every state, and an unmapped rest text colour inherits in every state.
+A state variable the product maps wins over the derived value, so a product maps a state only where its palette steps differently on purpose, such as an input border that goes from the 60 step to the 80 step on hover. With no colour and nothing mapped, the background and the border are transparent in every state, and the text colour inherits in every state.
 
 - **The mapping goes in a plain `:root` block, never in `@theme`:**
 
 ```css
 :root {
   --icon-md-size: calc(var(--spacing) * 24);
+  --button-main-color: var(--color-main);
 }
 ```
 
-A custom property resolves its `var()` on the element that declares it, and children inherit the result. So a tone's text colour mapped to `--color-neutral` goes on the toned root, where the theme declares the neutral of that ground, and never on `:root`, which would hand every tone the neutral of the page:
+A custom property resolves its `var()` on the element that declares it, and children inherit the result. So a colour mapped to a token the theme declares again on a toned ground, such as a tone's text colour mapped to `--color-neutral`, goes on the toned root, where the theme declares the neutral of that ground, and never on `:root`, which would hand every tone the neutral of the page:
 
 ```css
-[data-slot='button'][data-tone] {
-  --button-main-color: var(--color-neutral);
+[data-slot='button'][data-tone='main'] {
+  --button-main-background-color: var(--color-main);
+  --button-main-text-color: var(--color-neutral);
 }
 ```
 
@@ -124,12 +126,13 @@ export const PlaceBid = () => (
 | `--button-card-<size>-px`, `--button-card-<size>-py` | 8 by 4, 12 by 8, 16 by 12 |
 | `--button-card-<size>-radius` | `--radius-12`, `--radius-16`, `--radius-24` |
 | `--button-border-width`, `--button-outline-width`, `--button-outline-offset` | 1, 2, 2 |
-| `--button-[<tone>-]background-color[--<state>]` | none |
-| `--button-[<tone>-]color[--<state>]` | none |
-| `--button-[<tone>-]border-color[--<state>]` | none |
+| `--button-[<tone>-]color` | none, the one colour the text, background and border derive from |
+| `--button-[<tone>-]text-color[--<state>]` | `--button-color` |
+| `--button-[<tone>-]background-color[--<state>]` | `--button-color` at the 20 step |
+| `--button-[<tone>-]border-color[--<state>]` | `--button-color` at the 60 step |
 | `--button-[<tone>-]outline-color[--<state>]` | none |
 
-The states are `hover`, `focus` (drawn on `:focus-visible` as an outline), `active`, `pressed` and `disabled`. `pressed` applies on `aria-pressed="true"`, `aria-selected="true"` or `data-state="active"`, and `disabled` on `disabled` or `aria-disabled="true"`. An outline colour left unmapped for `active`, `pressed` or `disabled` falls back to the `focus` one, so a focused selected tab draws its ring in the focus colour. On a root with `data-tone`, the tone's variables stand in for the plain ones: a state reads `--button-<tone>-<property>--<state>` when the product maps it and otherwise derives from the tone's rest value, `--button-<tone>-<property>`, so one mapped colour per property makes every state of the tone respond, and an unmapped tone is transparent.
+The states are `hover`, `focus` (drawn on `:focus-visible` as an outline), `active`, `pressed` and `disabled`. `pressed` applies on `aria-pressed="true"`, `aria-selected="true"` or `data-state="active"`, and `disabled` on `disabled` or `aria-disabled="true"`. An outline colour left unmapped for `active`, `pressed` or `disabled` falls back to the `focus` one, so a focused selected tab draws its ring in the focus colour. On a root with `data-tone`, the tone's variables stand in for the plain ones: `--button-color` reads `--button-<tone>-color`, a property reads `--button-<tone>-<property>` when the product maps it and otherwise its default from that colour, and a state reads `--button-<tone>-<property>--<state>` when the product maps it and otherwise derives from the tone's rest value. So one mapped colour per tone makes every property and every state of the tone respond, and a tone with nothing mapped paints nothing. A colour no tone names goes on one button as `--button-color`, through its `style` or a class.
 
 A product builds a tab from the button with its own tabs primitive, and the selected tab shows as pressed:
 
@@ -157,13 +160,14 @@ The `Input` starts at `md`: a field 24 high with 12 text cannot be typed in or t
 | --- | --- |
 | `--input-<size>-height`, `-px`, `-content-size`, `-gap`, `-radius` | as the button's `md` and `lg` sizes: 40 and 64 high, 16 and 24 padding and content, 8 and 12 gap, `--radius-24` and `--radius-40` |
 | `--input-border-width`, `--input-outline-width`, `--input-outline-offset` | 1, 2, 2 |
-| `--input-background-color[--<state>]` | none |
-| `--input-color[--<state>]` | none |
-| `--input-border-color[--<state>]` | none |
+| `--input-color` | none, the one colour the text, background and border derive from |
+| `--input-text-color[--<state>]` | `--input-color` |
+| `--input-background-color[--<state>]` | `--input-color` at the 20 step |
+| `--input-border-color[--<state>]` | `--input-color` at the 60 step |
 | `--input-outline-color[--<state>]` | none |
 | `--input-placeholder-color` | the text colour |
 
-The states are `hover`, `focus` (while the input has visible focus), `invalid` and `disabled`. The `hover` and `disabled` colours derive from the rest colour at the steps of the variable grammar unless the product maps them, `focus` keeps the rest colour, and an unmapped `invalid` colour reads the rest colour. An outline colour left unmapped for `invalid` or `disabled` falls back to the `focus` one, so a focused invalid field draws its ring in the focus colour.
+The states are `hover`, `focus` (while the input has visible focus), `invalid` and `disabled`. The `hover` and `disabled` colours derive from the rest colour at the steps of the variable grammar unless the product maps them, and `focus` keeps the rest colour. `invalid` takes no step: each property reads its rest value until the product maps that state, so the invalid border reads the rest border until a product maps `--input-border-color--invalid` to its error colour. An outline colour left unmapped for `invalid` or `disabled` falls back to the `focus` one, so a focused invalid field draws its ring in the focus colour.
 
 ## Badge
 
@@ -175,12 +179,15 @@ export const LiveBadge = () => <Badge startItem={<DotIcon />}>Live</Badge>
 
 A `span` root with `data-slot="badge"`, 24 high with 12 inline padding and 12 content, and `--radius-12`, a pill at that height. `startItem` sits in an `aria-hidden` `badge-start-item` slot, pulled toward the edge by half the padding, and `asChild` renders the child instead. A badge sits inside a medium `Button` only, since in a small or a large one the optical correction does not hold, and the stylesheet pulls it on the `md` size alone. As the first or the last child of a `text` or `fullWidth` `md` `Button`, with no item on that side, it takes the pull of the button's items, half of `--button-md-px` (8), and a badge between two children takes none. A badge inside a `Button` or an `Input` takes the inner radius it publishes, 8 in a medium `Button`.
 
-| Variable                                                              | Default       |
-| --------------------------------------------------------------------- | ------------- |
+| Variable | Default |
+| --- | --- |
 | `--badge-height`, `--badge-px`, `--badge-content-size`, `--badge-gap` | 24, 12, 12, 4 |
-| `--badge-radius`                                                      | `--radius-12` |
-| `--badge-border-width`                                                | 1             |
-| `--badge-background-color`, `--badge-color`, `--badge-border-color`   | none          |
+| `--badge-radius` | `--radius-12` |
+| `--badge-border-width` | 1 |
+| `--badge-color` | none, the one colour the text, background and border derive from |
+| `--badge-text-color` | `--badge-color` |
+| `--badge-background-color` | `--badge-color` at the 20 step |
+| `--badge-border-color` | `--badge-color` at the 60 step |
 
 ## Storybook
 

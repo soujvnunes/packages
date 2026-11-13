@@ -67,6 +67,15 @@ describe('Badge', () => {
       ),
     ).toBe(true)
   })
+  it('paints the text from the one colour --badge-color, the background at its 20 step and the border at its 60 step, unless the theme maps each', () => {
+    expect(STYLESHEET).toContain(
+      'background-color:var(--badge-background-color,color-mix(inoklab,var(--badge-color,transparent)20%,transparent));',
+    )
+    expect(STYLESHEET).toContain('color:var(--badge-text-color,var(--badge-color));')
+    expect(STYLESHEET).toContain(
+      'border-color:var(--badge-border-color,color-mix(inoklab,var(--badge-color,transparent)60%,transparent));',
+    )
+  })
   it('renders no start item slot when it has none, so the label sits alone', () => {
     const { container } = render(<Badge>New</Badge>)
     expect(container.querySelector('[data-slot="badge-start-item"]')).toBeNull()

@@ -3,9 +3,9 @@ import { Icon } from './Icon'
 import { INPUT_KINDS, INPUT_SIZES, Input } from './Input'
 import './styles/input.css'
 const INPUT_THEME: React.CSSProperties & Record<`--${string}`, string> = {
-  '--input-background-color': 'var(--color-surface)',
   '--input-color': 'var(--color-neutral)',
-  '--input-color--disabled': 'var(--color-neutral-60)',
+  '--input-background-color': 'var(--color-surface)',
+  '--input-text-color--disabled': 'var(--color-neutral-60)',
   '--input-placeholder-color': 'var(--color-neutral-60)',
   '--input-border-color': 'var(--color-neutral-60)',
   '--input-border-color--hover': 'var(--color-neutral-80)',
