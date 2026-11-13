@@ -123,19 +123,15 @@ export const ContentBetween: Story = {
 }
 export const BadgeInButton: Story = {
   render: (args) => (
-    <div className="grid grid-cols-1 items-center justify-items-start gap-16 lg:grid-cols-3">
-      {BUTTON_SIZES.map((size) => (
-        <Button key={`first-${size}`} {...args} size={size}>
-          <Badge>New</Badge>
-          Lot 12
-        </Button>
-      ))}
-      {BUTTON_SIZES.map((size) => (
-        <Button key={`last-${size}`} {...args} size={size}>
-          Lot 12
-          <Badge>New</Badge>
-        </Button>
-      ))}
+    <div className="flex flex-col items-start gap-16 lg:flex-row lg:items-center">
+      <Button {...args} size="md">
+        <Badge>New</Badge>
+        Lot 12
+      </Button>
+      <Button {...args} size="md">
+        Lot 12
+        <Badge>New</Badge>
+      </Button>
     </div>
   ),
 }

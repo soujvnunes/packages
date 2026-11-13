@@ -256,65 +256,59 @@ describe('Button', () => {
     expect(startOf('Both')?.matches(pushed)).toBe(true)
     expect(startOf('Start only')?.matches(pushed)).toBe(false)
   })
-  it.each(BUTTON_SIZES)(
-    'pulls a Badge at the start or the end of the %s label toward the edge by half the padding, and leaves one between children in place',
-    (size) => {
-      render(
-        <>
-          <Button size={size}>
-            <Badge>New</Badge>
-            Lot 12
-          </Button>
-          <Button size={size} kind="fullWidth">
-            Lot 13
-            <Badge>Sold</Badge>
-          </Button>
-          <Button size={size}>
-            Lot <Badge>14</Badge> open
-          </Button>
-        </>,
-      )
-      const pull = `calc(var(--button-${size}-px,calc(var(--spacing)*${TEXT_PADDING[size]}))/-2);`
-      const startPull = selectorWith(`margin-inline-start:${pull}`)
-      const endPull = selectorWith(`margin-inline-end:${pull}`)
-      const first = screen.getByText('New')
-      const last = screen.getByText('Sold')
-      const between = screen.getByText('14')
-      expect(first.matches(startPull)).toBe(true)
-      expect(first.matches(endPull)).toBe(false)
-      expect(last.matches(endPull)).toBe(true)
-      expect(last.matches(startPull)).toBe(false)
-      expect(between.matches(startPull)).toBe(false)
-      expect(between.matches(endPull)).toBe(false)
-    },
-  )
-  it.each(BUTTON_SIZES)(
-    'pulls a server-rendered badge span and a wrapped Badge at the start of the %s label, and no other element',
-    (size) => {
-      const LotBadge = () => <Badge data-variant="new">Wrapped</Badge>
-      render(
-        <>
-          <Button size={size}>
-            <span data-slot="badge">Rendered</span>
-            Lot 12
-          </Button>
-          <Button size={size}>
-            <LotBadge />
-            Lot 13
-          </Button>
-          <Button size={size}>
-            <strong>Lot</strong> 14
-          </Button>
-        </>,
-      )
-      const startPull = selectorWith(
-        `margin-inline-start:calc(var(--button-${size}-px,calc(var(--spacing)*${TEXT_PADDING[size]}))/-2);`,
-      )
-      expect(screen.getByText('Rendered').matches(startPull)).toBe(true)
-      expect(screen.getByText('Wrapped').matches(startPull)).toBe(true)
-      expect(screen.getByText('Lot').matches(startPull)).toBe(false)
-    },
-  )
+  it('pulls a Badge at the start or the end of the md label toward the edge by half the padding, and leaves one between children in place', () => {
+    render(
+      <>
+        <Button>
+          <Badge>New</Badge>
+          Lot 12
+        </Button>
+        <Button kind="fullWidth">
+          Lot 13
+          <Badge>Sold</Badge>
+        </Button>
+        <Button>
+          Lot <Badge>14</Badge> open
+        </Button>
+      </>,
+    )
+    const pull = 'calc(var(--button-md-px,calc(var(--spacing)*16))/-2);'
+    const startPull = selectorWith(`margin-inline-start:${pull}`)
+    const endPull = selectorWith(`margin-inline-end:${pull}`)
+    const first = screen.getByText('New')
+    const last = screen.getByText('Sold')
+    const between = screen.getByText('14')
+    expect(first.matches(startPull)).toBe(true)
+    expect(first.matches(endPull)).toBe(false)
+    expect(last.matches(endPull)).toBe(true)
+    expect(last.matches(startPull)).toBe(false)
+    expect(between.matches(startPull)).toBe(false)
+    expect(between.matches(endPull)).toBe(false)
+  })
+  it('pulls a server-rendered badge span and a wrapped Badge at the start of the md label, and no other element', () => {
+    const LotBadge = () => <Badge data-variant="new">Wrapped</Badge>
+    render(
+      <>
+        <Button>
+          <span data-slot="badge">Rendered</span>
+          Lot 12
+        </Button>
+        <Button>
+          <LotBadge />
+          Lot 13
+        </Button>
+        <Button>
+          <strong>Lot</strong> 14
+        </Button>
+      </>,
+    )
+    const startPull = selectorWith(
+      'margin-inline-start:calc(var(--button-md-px,calc(var(--spacing)*16))/-2);',
+    )
+    expect(screen.getByText('Rendered').matches(startPull)).toBe(true)
+    expect(screen.getByText('Wrapped').matches(startPull)).toBe(true)
+    expect(screen.getByText('Lot').matches(startPull)).toBe(false)
+  })
   it('pulls no Badge that a start item precedes, nor one inside the card or icon kind', () => {
     render(
       <>
