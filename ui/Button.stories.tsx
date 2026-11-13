@@ -123,7 +123,7 @@ export const ContentBetween: Story = {
 }
 export const BadgeInButton: Story = {
   render: (args) => (
-    <div className="grid grid-cols-3 items-center justify-items-start gap-16">
+    <div className="grid grid-cols-1 items-center justify-items-start gap-16 lg:grid-cols-3">
       {BUTTON_SIZES.map((size) => (
         <Button key={`first-${size}`} {...args} size={size}>
           <Badge>New</Badge>
