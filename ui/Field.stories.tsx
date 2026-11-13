@@ -7,21 +7,19 @@ import './styles/field.css'
 import './styles/input.css'
 import './styles/radius.css'
 const FIELD_THEME: React.CSSProperties & Record<`--${string}`, string> = {
-  '--field-background-color': 'var(--color-surface)',
   '--field-color': 'var(--color-neutral)',
+  '--field-background-color': 'var(--color-surface)',
   '--field-hint-color': 'var(--color-neutral-60)',
   '--field-error-color': 'var(--color-error)',
-  '--input-background-color': 'var(--color-surface)',
   '--input-color': 'var(--color-neutral)',
+  '--input-background-color': 'var(--color-surface)',
   '--input-placeholder-color': 'var(--color-neutral-60)',
-  '--input-border-color': 'var(--color-neutral-20)',
-  '--input-border-color--hover': 'var(--color-neutral-40)',
-  '--input-border-color--focus': 'var(--color-main)',
-  '--input-border-color--invalid': 'var(--color-error)',
-  '--input-outline-color--focus': 'var(--color-main-40)',
-  '--button-main-background-color': 'var(--color-main)',
-  '--button-main-background-color--hover': 'var(--color-main-80)',
-  '--button-main-outline-color--focus': 'var(--color-main)',
+  '--input-border-color': 'var(--color-neutral-60)',
+  '--input-border-color--hover': 'var(--color-neutral-80)',
+  '--input-border-color--focus': 'var(--color-neutral-80)',
+  '--input-border-color--invalid': 'var(--color-error-80)',
+  '--input-outline-color--focus': 'var(--color-neutral)',
+  '--button-main-outline-color--focus': 'var(--color-neutral)',
 }
 const meta = {
   title: 'Components/Field',

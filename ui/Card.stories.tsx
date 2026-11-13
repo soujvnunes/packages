@@ -9,14 +9,12 @@ import './styles/button.css'
 import './styles/card.css'
 import './styles/radius.css'
 const CARD_THEME: React.CSSProperties & Record<`--${string}`, string> = {
-  '--card-background-color': 'var(--color-surface)',
   '--card-color': 'var(--color-neutral)',
+  '--card-background-color': 'var(--color-surface)',
   '--card-border-color': 'var(--color-neutral-20)',
-  '--badge-background-color': 'var(--color-main-20)',
-  '--badge-color': 'var(--color-neutral)',
-  '--button-main-background-color': 'var(--color-main)',
-  '--button-main-background-color--hover': 'var(--color-main-80)',
-  '--button-main-outline-color--focus': 'var(--color-main)',
+  '--badge-color': 'var(--color-main)',
+  '--badge-text-color': 'var(--color-neutral)',
+  '--button-main-outline-color--focus': 'var(--color-neutral)',
 }
 const meta = {
   title: 'Components/Card',

@@ -6,14 +6,14 @@ import './styles/button.css'
 import './styles/radius.css'
 const BUTTON_GROUP_THEME: React.CSSProperties & Record<`--${string}`, string> = {
   '--button-group-background-color': 'var(--color-neutral-10)',
-  '--button-background-color': 'var(--color-surface)',
-  '--button-background-color--hover': 'var(--color-neutral-10)',
-  '--button-background-color--active': 'var(--color-neutral-20)',
-  '--button-background-color--pressed': 'var(--color-main-20)',
   '--button-color': 'var(--color-neutral)',
-  '--button-border-color': 'var(--color-neutral-20)',
-  '--button-border-color--pressed': 'var(--color-main)',
-  '--button-outline-color--focus': 'var(--color-main)',
+  '--button-border-color': 'var(--color-neutral-60)',
+  '--button-background-color': 'var(--color-neutral-10)',
+  '--button-background-color--hover': 'var(--color-neutral-20)',
+  '--button-background-color--active': 'var(--color-neutral-40)',
+  '--button-background-color--pressed': 'var(--color-main-20)',
+  '--button-border-color--pressed': 'var(--color-main-80)',
+  '--button-outline-color--focus': 'var(--color-neutral)',
 }
 const meta = {
   title: 'Components/ButtonGroup',
