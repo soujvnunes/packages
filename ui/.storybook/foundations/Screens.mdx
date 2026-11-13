@@ -1,0 +1,28 @@
+import { Meta } from '@storybook/addon-docs/blocks'
+
+<Meta title="Foundations/Screens" />
+
+# Screens
+
+The base classes are the 320 design: a class with no variant is what a 320-wide phone shows, and everything else is an override.
+
+## One switch
+
+The switch from phone to desktop is the theme token `--breakpoint-lg`, which is 64rem, or 1024 at the default root size. A class names the switch and never a width, so moving the desktop start later is one theme line.
+
+- **No variant:** the 320 design.
+- **`lg:`:** the desktop override, and the only switch.
+- **`xl:` and `2xl:`:** refine a desktop layout that already works at `lg:`, and never carry the first desktop change.
+
+The stock `sm:` and `md:` variants are never written, and neither is a width variant such as `min-[600px]:`. The theme removes them, so a class written with one compiles to nothing.
+
+## Designs
+
+The designs are drawn at 320 and at 1024, in each mode the product ships. A product with a light and a dark mode has four frames per screen, and the `lg:` classes are checked against the 1024 frame.
+
+## Rules
+
+- Write the 320 class first, then the `lg:` override: `grid-cols-1 lg:grid-cols-12`.
+- A mode is a role and not a variant. Role tokens change value with the mode, so `bg-surface` is right in a light and a dark frame with no `dark:` beside it.
+- Motion waits for `motion-safe:`, so a reader who asked for reduced motion never gets it.
+- Render both variants and let CSS pick one (`lg:hidden`, `max-lg:hidden`). Never branch on a viewport measured in JavaScript.
