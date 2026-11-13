@@ -184,6 +184,21 @@ describe('ButtonGroup', () => {
     expect(squaredCornersOf(week)).toEqual([...CORNERS])
     expect(squaredCornersOf(month)).toEqual(['border-start-start-radius', 'border-start-end-radius'])
   })
+  it('pulls every button after the first back by one border width, so each seam is a single line', () => {
+    render(
+      <ButtonGroup aria-label="Period">
+        <Button>Day</Button>
+        <Button>Week</Button>
+      </ButtonGroup>,
+    )
+    const [day, week] = screen.getAllByRole('button')
+    if (!day || !week) throw new Error('A button of the group is missing.')
+    const PULLED_BACK = selectorWith(
+      'margin-inline-start:calc(var(--button-border-width,calc(var(--spacing)*1))*-1);',
+    )
+    expect(week.matches(PULLED_BACK)).toBe(true)
+    expect(day.matches(PULLED_BACK)).toBe(false)
+  })
   it('joins an input to a button the same way', () => {
     const { container } = render(
       <ButtonGroup aria-label="Search">

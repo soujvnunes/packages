@@ -162,6 +162,7 @@
   [data-slot='button-group'][data-orientation='horizontal'] > [data-slot='input']:not(:first-child) {
     border-start-start-radius: 0;
     border-end-start-radius: 0;
+    margin-inline-start: calc(var(--input-border-width, calc(var(--spacing) * 1)) * -1);
   }
   [data-slot='button-group'][data-orientation='horizontal'] > [data-slot='input']:not(:last-child) {
     border-start-end-radius: 0;
@@ -170,9 +171,14 @@
   [data-slot='button-group'][data-orientation='vertical'] > [data-slot='input']:not(:first-child) {
     border-start-start-radius: 0;
     border-start-end-radius: 0;
+    margin-block-start: calc(var(--input-border-width, calc(var(--spacing) * 1)) * -1);
   }
   [data-slot='button-group'][data-orientation='vertical'] > [data-slot='input']:not(:last-child) {
     border-end-start-radius: 0;
     border-end-end-radius: 0;
+  }
+  [data-slot='button-group'] > [data-slot='input']:is(:hover, :focus-within) {
+    position: relative;
+    z-index: 1;
   }
 }
