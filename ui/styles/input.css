@@ -99,22 +99,6 @@
     width: var(--input-lg-content-size, calc(var(--spacing) * 24));
     height: var(--input-lg-content-size, calc(var(--spacing) * 24));
   }
-  @media (hover: hover) {
-    [data-slot='input']:where(:not([data-disabled]):hover) {
-      border-color: var(
-        --input-border-color--hover,
-        color-mix(
-          in oklab,
-          var(
-              --input-border-color,
-              color-mix(in oklab, var(--input-color, transparent) 60%, transparent)
-            )
-            80%,
-          transparent
-        )
-      );
-    }
-  }
   [data-slot='input']:where(:has([data-slot='input-control']:focus-visible)) {
     outline-style: solid;
     background-color: var(
@@ -130,6 +114,22 @@
       var(--input-border-color, color-mix(in oklab, var(--input-color, transparent) 60%, transparent))
     );
     outline-color: var(--input-outline-color--focus, var(--input-outline-color, currentColor));
+  }
+  @media (hover: hover) {
+    [data-slot='input']:where(:not([data-disabled]):hover) {
+      border-color: var(
+        --input-border-color--hover,
+        color-mix(
+          in oklab,
+          var(
+              --input-border-color,
+              color-mix(in oklab, var(--input-color, transparent) 60%, transparent)
+            )
+            80%,
+          transparent
+        )
+      );
+    }
   }
   [data-slot='input']:where([data-invalid]) {
     background-color: var(
@@ -148,6 +148,22 @@
       --input-outline-color--invalid,
       var(--input-outline-color--focus, var(--input-outline-color, currentColor))
     );
+  }
+  @media (hover: hover) {
+    [data-slot='input']:where([data-invalid]:not([data-disabled]):hover) {
+      border-color: color-mix(
+        in oklab,
+        var(
+            --input-border-color--invalid,
+            var(
+              --input-border-color,
+              color-mix(in oklab, var(--input-color, transparent) 60%, transparent)
+            )
+          )
+          80%,
+        transparent
+      );
+    }
   }
   [data-slot='input']:where([data-disabled]) {
     cursor: default;

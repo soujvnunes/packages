@@ -44,6 +44,18 @@ const hoverDeclarations = () => {
   const body = DECLARATIONS.slice(DECLARATIONS.indexOf('{', start) + 1)
   return body.slice(0, body.indexOf('}'))
 }
+const STATE_SELECTORS = {
+  focus: "[data-slot='input']:where(:has([data-slot='input-control']:focus-visible))",
+  hover: "[data-slot='input']:where(:not([data-disabled]):hover)",
+  invalid: "[data-slot='input']:where([data-invalid])",
+  invalidHover: "[data-slot='input']:where([data-invalid]:not([data-disabled]):hover)",
+  disabled: "[data-slot='input']:where([data-disabled])",
+} as const
+const ruleIndex = (selector: string) => {
+  const index = DECLARATIONS.indexOf(`${selector}{`)
+  if (index === -1) throw new Error(`No rule of the stylesheet selects ${selector}.`)
+  return index
+}
 const THEME: React.CSSProperties & Record<`--${string}`, string> = {
   '--input-border-color--invalid': 'rgb(1, 2, 3)',
 }
@@ -169,6 +181,19 @@ describe('Input', () => {
     )
     expect(STYLESHEET).toContain(
       'outline-color:var(--input-outline-color--disabled,var(--input-outline-color--focus,',
+    )
+  })
+  it('orders the state rules focus, hover, invalid, invalid hover, disabled at one specificity, so hover still answers on a focused or an invalid field', () => {
+    const order = Object.values(STATE_SELECTORS).map(ruleIndex)
+    expect(order).toEqual([...order].sort((first, second) => first - second))
+  })
+  it('hovers an invalid field from its invalid border at the hover step, so the error colour stays while it answers', () => {
+    render(<Input aria-label="Plate" aria-invalid />)
+    const root = rootOf(screen.getByRole('textbox'))
+    expect(root.matches(STATE_SELECTORS.hover.replace(':hover', ''))).toBe(true)
+    expect(root.matches(STATE_SELECTORS.invalidHover.replace(':hover', ''))).toBe(true)
+    expect(DECLARATIONS).toContain(
+      `${STATE_SELECTORS.invalidHover}{border-color:color-mix(in oklab,var(--input-border-color--invalid,${REST_VALUES['border-color']}) 80%,transparent);}`,
     )
   })
   it('moves only the border on hover, so the typed text, the fill and the focus ring keep their value', () => {
