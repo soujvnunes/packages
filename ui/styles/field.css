@@ -1,0 +1,48 @@
+@layer components {
+  [data-slot='field'] {
+    box-sizing: border-box;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--field-gap, calc(var(--spacing) * 8));
+    min-height: var(--field-height, calc(var(--spacing) * 64));
+    padding-block: var(--field-py, calc(var(--spacing) * 12));
+    padding-inline: var(--field-px, calc(var(--spacing) * 12));
+    border-style: solid;
+    border-width: var(--field-border-width, 0px);
+    --ui-container-radius: var(--field-radius, var(--radius-24));
+    --ui-container-padding: var(--field-py, calc(var(--spacing) * 12));
+    background-color: var(--field-background-color, transparent);
+    color: var(--field-color);
+    border-color: var(--field-border-color, transparent);
+  }
+  [data-slot='field-label'],
+  [data-slot='field-hint'],
+  [data-slot='field-error'] {
+    flex-basis: 100%;
+  }
+  [data-slot='field-hint'] {
+    color: var(--field-hint-color);
+  }
+  [data-slot='field-error'] {
+    color: var(--field-error-color);
+  }
+  [data-slot='field'] > :not([data-slot^='field-']) {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+  [data-slot='field-start-item'],
+  [data-slot='field-end-item'] {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+  }
+  [data-slot='field']:where([data-invalid]) {
+    background-color: var(
+      --field-background-color--invalid,
+      var(--field-background-color, transparent)
+    );
+    color: var(--field-color--invalid, var(--field-color));
+    border-color: var(--field-border-color--invalid, var(--field-border-color, transparent));
+  }
+}

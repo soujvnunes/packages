@@ -1,0 +1,213 @@
+import { createRef } from 'react'
+import { cleanup, render, screen } from '@testing-library/react'
+import { readFileSync } from 'node:fs'
+import { afterEach, describe, expect, it } from 'vitest'
+import { Button } from './Button'
+import { Field } from './Field'
+import { Input } from './Input'
+const STYLESHEET = ['field', 'input', 'radius']
+  .map((name) => readFileSync(`${import.meta.dirname}/styles/${name}.css`, 'utf8'))
+  .join('\n')
+const selectorWith = (declaration: string) => {
+  const selectors = STYLESHEET.split('}')
+    .filter((chunk) => chunk.replace(/\s/g, '').includes(declaration))
+    .map((rule) => rule.split('{').at(-2)?.trim())
+    .filter(Boolean)
+  if (selectors.length === 0) throw new Error(`No rule of the stylesheets holds ${declaration}.`)
+  return selectors.join(', ')
+}
+const HINT = 'At least R$ 51.000'
+const ERROR = 'Your bid must be at least R$ 51.000'
+const rootOf = (container: HTMLElement) => {
+  const root = container.querySelector('[data-slot="field"]')
+  if (!root) throw new Error('The field root is missing.')
+  return root
+}
+afterEach(cleanup)
+describe('Field', () => {
+  it('names the control by its label and describes it by its hint', () => {
+    const { container } = render(
+      <Field label="Max bid" hint={HINT}>
+        <Input />
+      </Field>,
+    )
+    const control = screen.getByRole('textbox', { name: 'Max bid', description: HINT })
+    expect(container.querySelector('label[data-slot="field-label"]')?.getAttribute('for')).toBe(
+      control.id,
+    )
+    expect(container.querySelector('[data-slot="field-hint"]')?.textContent).toBe(HINT)
+  })
+  it('wires a native control as it wires an Input', () => {
+    render(
+      <Field label="Notes" hint="Shown to the buyer">
+        <textarea />
+      </Field>,
+    )
+    expect(
+      screen.getByRole('textbox', { name: 'Notes', description: 'Shown to the buyer' }),
+    ).toBeInstanceOf(HTMLTextAreaElement)
+  })
+  it('shows the error in place of the hint, describes the control by it and marks it invalid', () => {
+    const { container } = render(
+      <Field label="Max bid" hint={HINT} error={ERROR}>
+        <Input />
+      </Field>,
+    )
+    const control = screen.getByRole('textbox', { name: 'Max bid', description: ERROR })
+    expect(control.getAttribute('aria-invalid')).toBe('true')
+    expect(rootOf(container).getAttribute('data-invalid')).toBe('true')
+    expect(container.querySelector('[data-slot="field-error"]')?.textContent).toBe(ERROR)
+    expect(container.querySelector('[data-slot="field-hint"]')).toBeNull()
+  })
+  it('lets the Input it wraps show its own invalid state from the aria-invalid it receives', () => {
+    const { container } = render(
+      <Field label="Max bid" error={ERROR}>
+        <Input />
+      </Field>,
+    )
+    expect(container.querySelector('[data-slot="input"]')?.getAttribute('data-invalid')).toBe('true')
+  })
+  it.each([
+    ['no error', undefined],
+    ['a false error', false],
+    ['an empty error', ''],
+  ])('leaves the control valid and the root unmarked with %s', (_, error) => {
+    const { container } = render(
+      <Field label="Max bid" hint={HINT} error={error}>
+        <Input />
+      </Field>,
+    )
+    const control = screen.getByRole('textbox', { name: 'Max bid', description: HINT })
+    expect(control.hasAttribute('aria-invalid')).toBe(false)
+    expect(rootOf(container).hasAttribute('data-invalid')).toBe(false)
+  })
+  it('describes the control by nothing when it has neither a hint nor an error', () => {
+    render(
+      <Field label="Max bid">
+        <Input />
+      </Field>,
+    )
+    expect(screen.getByRole('textbox', { name: 'Max bid' }).hasAttribute('aria-describedby')).toBe(
+      false,
+    )
+  })
+  it('keeps the id the control brings and points the label at it', () => {
+    render(
+      <Field label="Plate">
+        <Input id="plate" />
+      </Field>,
+    )
+    expect(screen.getByRole('textbox', { name: 'Plate' }).id).toBe('plate')
+  })
+  it('adds its description to the one the control brings', () => {
+    render(
+      <>
+        <p id="rules">Bids close at 20h</p>
+        <Field label="Max bid" hint={HINT}>
+          <Input aria-describedby="rules" />
+        </Field>
+      </>,
+    )
+    expect(
+      screen.getByRole('textbox', { name: 'Max bid', description: `Bids close at 20h ${HINT}` }),
+    ).toBeTruthy()
+  })
+  it('gives two fields on one page ids of their own', () => {
+    render(
+      <>
+        <Field label="Max bid" hint={HINT}>
+          <Input />
+        </Field>
+        <Field label="Plate" hint="Seven characters">
+          <Input />
+        </Field>
+      </>,
+    )
+    const bid = screen.getByRole('textbox', { name: 'Max bid', description: HINT })
+    const plate = screen.getByRole('textbox', { name: 'Plate', description: 'Seven characters' })
+    expect(bid.id).not.toBe(plate.id)
+  })
+  it('renders the items beside the control in their own slots, where a control in one stays reachable', () => {
+    const { container } = render(
+      <Field label="Max bid" startItem="R$" endItem={<Button>Bid</Button>}>
+        <Input />
+      </Field>,
+    )
+    const slots = [...rootOf(container).children].map((child) => child.getAttribute('data-slot'))
+    expect(slots).toEqual(['field-label', 'field-start-item', 'input', 'field-end-item'])
+    expect(screen.getByRole('button', { name: 'Bid' })).toBeTruthy()
+  })
+  it('renders no item slot it was not given', () => {
+    const { container } = render(
+      <Field label="Max bid">
+        <Input />
+      </Field>,
+    )
+    expect(container.querySelector('[data-slot$="-item"]')).toBeNull()
+  })
+  it('passes className and the remaining div props through to the root', () => {
+    const { container } = render(
+      <Field label="Max bid" className="col-span-6" title="Your bid">
+        <Input />
+      </Field>,
+    )
+    const root = rootOf(container)
+    expect(root.tagName).toBe('DIV')
+    expect(root.getAttribute('class')).toBe('col-span-6')
+    expect(root.getAttribute('title')).toBe('Your bid')
+  })
+  it('hands its ref to the div root', () => {
+    const ref = createRef<HTMLDivElement>()
+    const { container } = render(
+      <Field ref={ref} label="Max bid">
+        <Input />
+      </Field>,
+    )
+    expect(ref.current).toBe(rootOf(container))
+  })
+  it('renders the child element as the root with asChild, around the control it holds', () => {
+    render(
+      <ul>
+        <Field asChild label="Plate" hint="Seven characters" error="Unknown plate" className="field">
+          <li className="row">
+            <Input />
+          </li>
+        </Field>
+      </ul>,
+    )
+    const item = screen.getByRole('listitem')
+    expect(item.getAttribute('data-slot')).toBe('field')
+    expect(item.getAttribute('data-invalid')).toBe('true')
+    expect(item.getAttribute('class')?.split(' ').sort()).toEqual(['field', 'row'])
+    const control = screen.getByRole('textbox', { name: 'Plate', description: 'Unknown plate' })
+    expect(item.contains(control)).toBe(true)
+    expect(control.getAttribute('aria-invalid')).toBe('true')
+  })
+  it('publishes its inner radius, its radius less its block padding, to the input within it', () => {
+    const { container } = render(
+      <Field label="Max bid">
+        <Input />
+      </Field>,
+    )
+    const root = rootOf(container)
+    const input = container.querySelector('[data-slot="input"]')
+    expect(
+      root.matches(selectorWith('--ui-container-radius:var(--field-radius,var(--radius-24));')),
+    ).toBe(true)
+    expect(
+      root.matches(selectorWith('--ui-container-padding:var(--field-py,calc(var(--spacing)*12));')),
+    ).toBe(true)
+    expect(root.matches(selectorWith('--ui-inner-radius-64:max('))).toBe(true)
+    expect(input?.parentElement).toBe(root)
+    expect(input?.matches(selectorWith('border-radius:var(--ui-inner-radius-64,'))).toBe(true)
+  })
+  it('lets the control take the room the items and the padding leave', () => {
+    const { container } = render(
+      <Field label="Max bid" endItem="BRL">
+        <Input />
+      </Field>,
+    )
+    const input = container.querySelector('[data-slot="input"]')
+    expect(input?.matches(selectorWith('flex:110;'))).toBe(true)
+  })
+})
