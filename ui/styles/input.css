@@ -1,0 +1,151 @@
+@layer components {
+  [data-slot='input'] {
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    cursor: text;
+    border-style: solid;
+    border-width: var(--input-border-width, calc(var(--spacing) * 1));
+    outline-style: none;
+    outline-width: var(--input-outline-width, calc(var(--spacing) * 2));
+    outline-offset: var(--input-outline-offset, calc(var(--spacing) * 2));
+    background-color: var(--input-background-color, transparent);
+    color: var(--input-color);
+    border-color: var(--input-border-color, transparent);
+    outline-color: var(--input-outline-color, currentColor);
+  }
+  [data-slot='input'][data-kind='fullWidth'] {
+    display: flex;
+    width: 100%;
+  }
+  [data-slot='input'][data-size='sm'] {
+    height: var(--input-sm-height, calc(var(--spacing) * 24));
+    padding-inline: var(--input-sm-px, calc(var(--spacing) * 16));
+    gap: var(--input-sm-gap, calc(var(--spacing) * 4));
+    font-size: var(--input-sm-content-size, calc(var(--spacing) * 12));
+    border-radius: var(
+      --ui-inner-radius-64,
+      var(--ui-inner-radius-card, var(--input-sm-radius, var(--radius-8)))
+    );
+    --ui-inner-radius-40: max(
+      0px,
+      var(--ui-inner-radius-64, var(--ui-inner-radius-card, var(--input-sm-radius, var(--radius-8)))) -
+        var(--input-sm-px, calc(var(--spacing) * 16))
+    );
+  }
+  [data-slot='input'][data-size='md'] {
+    height: var(--input-md-height, calc(var(--spacing) * 40));
+    padding-inline: var(--input-md-px, calc(var(--spacing) * 24));
+    gap: var(--input-md-gap, calc(var(--spacing) * 8));
+    font-size: var(--input-md-content-size, calc(var(--spacing) * 16));
+    border-radius: var(
+      --ui-inner-radius-64,
+      var(--ui-inner-radius-card, var(--input-md-radius, var(--radius-12)))
+    );
+    --ui-inner-radius-40: max(
+      0px,
+      var(--ui-inner-radius-64, var(--ui-inner-radius-card, var(--input-md-radius, var(--radius-12)))) -
+        var(--input-md-px, calc(var(--spacing) * 24))
+    );
+  }
+  [data-slot='input'][data-size='lg'] {
+    height: var(--input-lg-height, calc(var(--spacing) * 64));
+    padding-inline: var(--input-lg-px, calc(var(--spacing) * 40));
+    gap: var(--input-lg-gap, calc(var(--spacing) * 12));
+    font-size: var(--input-lg-content-size, calc(var(--spacing) * 24));
+    border-radius: var(
+      --ui-inner-radius-64,
+      var(--ui-inner-radius-card, var(--input-lg-radius, var(--radius-16)))
+    );
+    --ui-inner-radius-40: max(
+      0px,
+      var(--ui-inner-radius-64, var(--ui-inner-radius-card, var(--input-lg-radius, var(--radius-16)))) -
+        var(--input-lg-px, calc(var(--spacing) * 40))
+    );
+  }
+  [data-slot='input-control'] {
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    appearance: none;
+  }
+  [data-slot='input-control']::placeholder {
+    color: var(--input-placeholder-color, currentColor);
+    opacity: 1;
+  }
+  [data-slot='input-start-item'],
+  [data-slot='input-end-item'] {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+  }
+  [data-slot='input'][data-size='sm'] > [data-slot='input-start-item'] {
+    margin-inline-start: calc(var(--input-sm-px, calc(var(--spacing) * 16)) / -2);
+  }
+  [data-slot='input'][data-size='sm'] > [data-slot='input-end-item'] {
+    margin-inline-end: calc(var(--input-sm-px, calc(var(--spacing) * 16)) / -2);
+  }
+  [data-slot='input'][data-size='md'] > [data-slot='input-start-item'] {
+    margin-inline-start: calc(var(--input-md-px, calc(var(--spacing) * 24)) / -2);
+  }
+  [data-slot='input'][data-size='md'] > [data-slot='input-end-item'] {
+    margin-inline-end: calc(var(--input-md-px, calc(var(--spacing) * 24)) / -2);
+  }
+  [data-slot='input'][data-size='lg'] > [data-slot='input-start-item'] {
+    margin-inline-start: calc(var(--input-lg-px, calc(var(--spacing) * 40)) / -2);
+  }
+  [data-slot='input'][data-size='lg'] > [data-slot='input-end-item'] {
+    margin-inline-end: calc(var(--input-lg-px, calc(var(--spacing) * 40)) / -2);
+  }
+  :where([data-slot='input'][data-size='sm']) svg {
+    width: var(--input-sm-content-size, calc(var(--spacing) * 12));
+    height: var(--input-sm-content-size, calc(var(--spacing) * 12));
+  }
+  :where([data-slot='input'][data-size='md']) svg {
+    width: var(--input-md-content-size, calc(var(--spacing) * 16));
+    height: var(--input-md-content-size, calc(var(--spacing) * 16));
+  }
+  :where([data-slot='input'][data-size='lg']) svg {
+    width: var(--input-lg-content-size, calc(var(--spacing) * 24));
+    height: var(--input-lg-content-size, calc(var(--spacing) * 24));
+  }
+  [data-slot='input']:where(:not([data-disabled]):hover) {
+    background-color: var(--input-background-color--hover, var(--input-background-color, transparent));
+    color: var(--input-color--hover, var(--input-color));
+    border-color: var(--input-border-color--hover, var(--input-border-color, transparent));
+    outline-color: var(--input-outline-color--hover, var(--input-outline-color, currentColor));
+  }
+  [data-slot='input']:where(:has([data-slot='input-control']:focus-visible)) {
+    outline-style: solid;
+    background-color: var(--input-background-color--focus, var(--input-background-color, transparent));
+    color: var(--input-color--focus, var(--input-color));
+    border-color: var(--input-border-color--focus, var(--input-border-color, transparent));
+    outline-color: var(--input-outline-color--focus, var(--input-outline-color, currentColor));
+  }
+  [data-slot='input']:where([data-invalid]) {
+    background-color: var(
+      --input-background-color--invalid,
+      var(--input-background-color, transparent)
+    );
+    color: var(--input-color--invalid, var(--input-color));
+    border-color: var(--input-border-color--invalid, var(--input-border-color, transparent));
+    outline-color: var(--input-outline-color--invalid, var(--input-outline-color, currentColor));
+  }
+  [data-slot='input']:where([data-disabled]) {
+    cursor: default;
+    background-color: var(
+      --input-background-color--disabled,
+      var(--input-background-color, transparent)
+    );
+    color: var(--input-color--disabled, var(--input-color));
+    border-color: var(--input-border-color--disabled, var(--input-border-color, transparent));
+    outline-color: var(--input-outline-color--disabled, var(--input-outline-color, currentColor));
+  }
+}
