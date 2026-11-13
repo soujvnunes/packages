@@ -12,12 +12,12 @@ type IconProps = SvgProps & { size?: IconSize } & (
   )
 const IconSlot = createSlot<SVGSVGElement, React.SVGProps<SVGSVGElement>>('Icon')
 const nameOf = ({ 'aria-label': label, 'aria-labelledby': labelledBy }: AccessibleName) =>
-  label ?? labelledBy
+  [labelledBy, label].find(Boolean)
 const accessibilityOf = (name: string | undefined) => (name ? { role: 'img' } : { 'aria-hidden': true })
 const renderNode = ([elementName, { key, ...attrs }]: IconNode[number]) =>
   createElement(elementName, { key: key ?? JSON.stringify(attrs), ...attrs })
 export const Icon = ({ size = 'md', asChild, iconNode, children, ...rest }: IconProps) => {
-  const name = nameOf(rest) ?? (asChild ? nameOf(children.props) : undefined)
+  const name = [nameOf(rest), asChild ? nameOf(children.props) : undefined].find(Boolean)
   const rootProps = { ...accessibilityOf(name), 'data-slot': 'icon', 'data-size': size }
   if (asChild) {
     return (

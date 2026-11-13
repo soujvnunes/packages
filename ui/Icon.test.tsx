@@ -65,6 +65,16 @@ describe('Icon', () => {
     const image = screen.getByRole('img', { name: 'Accepted' })
     expect(image.getAttribute('aria-hidden')).toBeNull()
   })
+  it('skips a blank aria-label, so a wrapper that defaults it to an empty string keeps aria-labelledby', () => {
+    render(
+      <>
+        <span id="caption">Accepted</span>
+        <ProductIcon name="check" aria-label="" aria-labelledby="caption" />
+      </>,
+    )
+    const image = screen.getByRole('img', { name: 'Accepted' })
+    expect(image.getAttribute('aria-hidden')).toBeNull()
+  })
   it('is an image named by the aria-label a product svg passed with asChild carries itself', () => {
     render(
       <Icon asChild>
