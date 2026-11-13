@@ -1,6 +1,6 @@
 {
   "name": "@soujvnunes/ui",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Unstyled React component skeletons that a product themes through CSS custom properties.",
   "license": "MIT",
   "author": "soujvnunes",
