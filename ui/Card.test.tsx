@@ -159,7 +159,7 @@ describe('Card', () => {
     )
     expect(ref.current).toBe(screen.getByRole('article'))
   })
-  it('pads 16 inline and 12 block inside a radius of 24 by default, the large pair of the card kind', () => {
+  it('pads 12 on every side inside a radius of 24 by default, so a control at its corner sits as far from the side as from the top', () => {
     render(
       <Card>
         <CardTitle>Lot 12</CardTitle>
@@ -167,7 +167,7 @@ describe('Card', () => {
       </Card>,
     )
     const card = screen.getByRole('article')
-    expect(card.matches(selectorWith('padding-inline:var(--card-px,calc(var(--spacing)*16));'))).toBe(
+    expect(card.matches(selectorWith('padding-inline:var(--card-px,calc(var(--spacing)*12));'))).toBe(
       true,
     )
     expect(card.matches(selectorWith('padding-block:var(--card-py,calc(var(--spacing)*12));'))).toBe(
@@ -175,13 +175,13 @@ describe('Card', () => {
     )
     expect(card.matches(selectorWith('border-radius:var(--ui-container-radius);'))).toBe(true)
   })
-  it('leaves 8 for what it holds by default, its radius of 24 less its inline padding of 16', () => {
+  it('leaves 12 for what it holds by default, its radius of 24 less its padding of 12', () => {
     const declared = STYLESHEET.replace(/\s/g, '')
     const radius = declared.match(/--ui-container-radius:var\(--card-radius,var\(--radius-(\d+)\)\);/)
     const padding = declared.match(
       /--ui-container-padding:var\(--card-px,calc\(var\(--spacing\)\*(\d+)\)\);/,
     )
-    expect(Number(radius?.[1]) - Number(padding?.[1])).toBe(8)
+    expect(Number(radius?.[1]) - Number(padding?.[1])).toBe(12)
   })
   it('publishes its inner radius, its radius less its inline padding, to the controls within it', () => {
     render(
@@ -196,7 +196,7 @@ describe('Card', () => {
       card.matches(selectorWith('--ui-container-radius:var(--card-radius,var(--radius-24));')),
     ).toBe(true)
     expect(
-      card.matches(selectorWith('--ui-container-padding:var(--card-px,calc(var(--spacing)*16));')),
+      card.matches(selectorWith('--ui-container-padding:var(--card-px,calc(var(--spacing)*12));')),
     ).toBe(true)
     expect(
       card.matches(

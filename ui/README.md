@@ -96,9 +96,9 @@ So a `Badge` in a medium `Button` draws at 8, 24 minus 16.
 
 The `Bar` computes an internal container radius that multiplies `--bar-radius` by zero before it adds the card's inner radius or `--bar-radius`, so the property stays invalid while `--bar-radius` is unset: the bar then draws no radius and publishes no inner radius, so what it holds keeps its own default. A bar whose radius the product maps publishes that radius minus its 24 of inline padding.
 
-A container subtracts its inline padding, so the default card of radius 24 with 16 of inline padding gives what it holds 8, and a field or a button group of radius 40 with 24 gives 16. Three cases follow:
+A container subtracts its inline padding, so the default card of radius 24 with 12 of padding on every side gives what it holds 12, and a field or a button group of radius 40 with 24 gives 16. Three cases follow:
 
-- **Within.** A control nested in a container takes the container's inner radius, whatever its own default: a button, an input or a badge in a card reads 8, and an input in a field or the joined controls of a button group read 16.
+- **Within.** A control nested in a container takes the container's inner radius, whatever its own default: a button, an input or a badge in a card reads 12, and an input in a field or the joined controls of a button group read 16.
 - **Close.** A control attached to its container's edge shares the container's own radius on the side it touches. The first and last controls of a `ButtonGroup` keep their radius, the group's inner radius, on their outer side, in both orientations, and every inner side is square. A `Badge` with `data-corner` sits on that corner of its parent and shares there the radius the parent publishes in `--ui-corner-radius`.
 - **Outside.** A sibling keeps the default radius of its own height: 12 at 24, 24 at 40 and 40 at 64.
 
@@ -335,7 +335,7 @@ export const LotCard = () => (
 )
 ```
 
-An `article` with `data-slot="card"`, padding and radius only, the static form of a `Button` of the `card` kind: 16 of inline and 12 of block padding inside `--radius-24`, the large pair of that kind, which leaves an inner radius of 8 for a card button inside it. It points `aria-labelledby` and `aria-describedby` at the `CardTitle` and the `CardDescription` inside it, wherever a product places them, around or inside its own markup. The title is an `h2` and the description a `p`, with `data-slot="card-title"` or `data-slot="card-description"`, no typography of its own and the id its card gives it. A Card needs both, so outside production it logs one error naming the part it is missing. The rest of a card, an action or a footer, is the product's own markup.
+An `article` with `data-slot="card"`, padding and radius only, the static form of a `Button` of the `card` kind: 12 of padding on every side inside `--radius-24`, which leaves an inner radius of 12 for a control inside it. A card has no height, so the height ladder gives it no padding; one value on every side puts a control at its corner as far from the side as from the top. It points `aria-labelledby` and `aria-describedby` at the `CardTitle` and the `CardDescription` inside it, wherever a product places them, around or inside its own markup. The title is an `h2` and the description a `p`, with `data-slot="card-title"` or `data-slot="card-description"`, no typography of its own and the id its card gives it. A Card needs both, so outside production it logs one error naming the part it is missing. The rest of a card, an action or a footer, is the product's own markup.
 
 Each of the three takes its children either as nodes, rendered in its own element, or as a function that receives the props it would put there (its other props, `data-slot` and the wired ids) and returns the product's own element, which spreads them. The product's ref goes on that element too. A key the element sets before the spread loses to the wired one:
 
@@ -354,7 +354,7 @@ The ids travel through a context, so `Card`, `CardTitle` and `CardDescription` a
 
 | Variable                                                         | Default       |
 | ---------------------------------------------------------------- | ------------- |
-| `--card-py`, `--card-px`                                         | 12, 16        |
+| `--card-py`, `--card-px`                                         | 12, 12        |
 | `--card-radius`                                                  | `--radius-24` |
 | `--card-border-width`                                            | 1             |
 | `--card-background-color`, `--card-color`, `--card-border-color` | none          |
