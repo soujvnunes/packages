@@ -50,7 +50,11 @@ The weights differ so that two texts that share a size on the phone still read a
 
 Each line below reads its size and weight from the theme, so resize the window across the `lg` switch to see both sides.
 
-<div className="foundations-panel sb-unstyled">
+<div
+  aria-label="Every type alias at this window's width"
+  className="foundations-panel foundations-scroll sb-unstyled"
+  role="region"
+  tabIndex={0}>
   {ALIASES.map((alias) => (
     <p key={alias} data-alias={alias}>
       {alias}
