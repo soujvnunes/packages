@@ -31,7 +31,11 @@ In code a step is a token, never an opacity modifier: the primary step is the ba
 
 ## Every role at every step
 
-<div className="foundations-panel foundations-scroll sb-unstyled">
+<div
+  aria-label="Every role at every alpha step"
+  className="foundations-panel foundations-scroll sb-unstyled"
+  role="region"
+  tabIndex={0}>
   <table className="foundations-alphas">
     <caption>Each swatch is a role at one alpha step, drawn over the ground.</caption>
     <thead>
