@@ -116,7 +116,7 @@ export const RadiusCases: Story = {
           Outside: siblings keep the radius of their own height
         </figcaption>
         <Button>Watch</Button>
-        <Input aria-label="Lot number" placeholder="12" />
+        <Input aria-label="Lot number" placeholder="12" className={{ root: 'flex-1' }} />
         <Badge>New</Badge>
       </figure>
     </div>
