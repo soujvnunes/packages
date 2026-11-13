@@ -70,7 +70,7 @@ A container publishes its inner radius, its own radius minus its padding and nev
 
 | Component | Reads, in order | Publishes |
 | --- | --- | --- |
-| `Bar`, `Field`, `ButtonGroup` | `--ui-inner-radius-card`, its own radius | `--ui-inner-radius-64` |
+| `Bar`, `Field`, `ButtonGroup` | `--ui-inner-radius-card`, its own radius | `--ui-inner-radius-64`, and clears `--ui-inner-radius-card` for what it holds |
 | `Card` | its own radius | `--ui-inner-radius-card`, and clears `--ui-inner-radius-64` for what it holds |
 | `Button`, `Input` | `--ui-inner-radius-64`, `--ui-inner-radius-card`, its own radius | `--ui-inner-radius-40` |
 | `Badge` | `--ui-inner-radius-40`, its own radius | nothing |

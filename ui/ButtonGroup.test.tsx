@@ -2,8 +2,12 @@ import { createRef } from 'react'
 import { cleanup, render, screen } from '@testing-library/react'
 import { readFileSync } from 'node:fs'
 import { afterEach, describe, expect, it } from 'vitest'
+import { Bar } from './Bar'
 import { Button } from './Button'
 import { BUTTON_GROUP_ORIENTATIONS, ButtonGroup } from './ButtonGroup'
+import { Card } from './Card'
+import { CardDescription } from './CardDescription'
+import { CardTitle } from './CardTitle'
 import { Input } from './Input'
 const STYLESHEET = ['button-group', 'button', 'input', 'radius']
   .map((name) => readFileSync(`${import.meta.dirname}/styles/${name}.css`, 'utf8'))
@@ -136,6 +140,21 @@ describe('ButtonGroup', () => {
     for (const button of screen.getAllByRole('button')) {
       expect(button.matches(selectorWith('border-radius:var(--ui-inner-radius-64,'))).toBe(true)
     }
+  })
+  it('starts from its own radius in a bar inside a card, since the bar clears the card inner radius for what it holds', () => {
+    render(
+      <Card>
+        <CardTitle>Lot 12</CardTitle>
+        <CardDescription>Open until 20h</CardDescription>
+        <Bar>
+          <ButtonGroup aria-label="Period">
+            <Button>Day</Button>
+            <Button>Week</Button>
+          </ButtonGroup>
+        </Bar>
+      </Card>,
+    )
+    expect(screen.getByRole('group').matches(selectorWith('--ui-inner-radius-card:initial;'))).toBe(true)
   })
   it('keeps the group radius on the outer side of the first and last buttons and squares every inner side', () => {
     render(

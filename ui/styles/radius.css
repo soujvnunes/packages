@@ -8,6 +8,9 @@
       var(--ui-inner-radius-card, var(--ui-container-radius)) - var(--ui-container-padding)
     );
   }
+  :is([data-slot='bar'], [data-slot='field'], [data-slot='button-group']) > * {
+    --ui-inner-radius-card: initial;
+  }
   [data-slot='card'] {
     border-radius: var(--ui-container-radius);
     --ui-inner-radius-card: max(0px, var(--ui-container-radius) - var(--ui-container-padding));
