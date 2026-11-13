@@ -5,7 +5,7 @@ import './styles/badge.css'
 const BADGE_THEME: React.CSSProperties & Record<`--${string}`, string> = {
   '--badge-background-color': 'var(--color-main-20)',
   '--badge-color': 'var(--color-neutral)',
-  '--badge-border-color': 'var(--color-main-40)',
+  '--badge-border-color': 'var(--color-main-60)',
 }
 const DOT = (
   <Icon
