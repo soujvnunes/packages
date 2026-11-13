@@ -1,3 +1,4 @@
+import { createRef } from 'react'
 import { cleanup, render, screen } from '@testing-library/react'
 import { type MockInstance, afterEach, describe, expect, it, vi } from 'vitest'
 import { ICON_SIZES, Icon, type IconNode } from './Icon'
@@ -91,6 +92,22 @@ describe('Icon', () => {
     const root = rootOf(container)
     expect(root.getAttribute('class')).toBe('text-main')
     expect(root.getAttribute('stroke-width')).toBe('1.5')
+  })
+  it('hands its ref to the svg root, so a ref or a trigger wrapping the icon gets the element', () => {
+    const ref = createRef<SVGSVGElement>()
+    const { container } = render(<Icon ref={ref} iconNode={NODES.check} />)
+    expect(ref.current).toBe(rootOf(container))
+  })
+  it('hands its ref to a product svg passed with asChild', () => {
+    const ref = createRef<SVGSVGElement>()
+    const { container } = render(
+      <Icon ref={ref} asChild>
+        <svg viewBox="0 0 10 10">
+          <circle cx="5" cy="5" r="4" />
+        </svg>
+      </Icon>,
+    )
+    expect(ref.current).toBe(rootOf(container))
   })
   it('keys each node by its own key, so a node keeps its element when it moves and changes', () => {
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
