@@ -61,3 +61,5 @@ pnpm build-storybook    # the static build, in ui/storybook-static
 ```
 
 It serves on port 6006 and answers component docs to agents at `http://localhost:6006/mcp`. Its theme, in `.storybook/theme.css`, is a reference theme with placeholder values, in a light and a dark mode that follow the system setting; it is not published.
+
+The Storybook of `main` is published at [main--6af4b1d8205ec2517800544d.chromatic.com](https://main--6af4b1d8205ec2517800544d.chromatic.com), and it serves the component docs to agents at `/mcp` there too. The Chromatic workflow publishes a build on every push, with `chromatic.config.json` as its CLI config.
