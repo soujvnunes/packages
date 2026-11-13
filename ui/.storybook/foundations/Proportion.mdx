@@ -1,4 +1,5 @@
-import { Meta } from '@storybook/addon-docs/blocks'
+import { Canvas, Meta } from '@storybook/addon-docs/blocks'
+import * as BarStories from '../../Bar.stories'
 import './foundations.css'
 import { ProportionChart } from './ProportionChart'
 
@@ -50,6 +51,12 @@ Three cases follow from it:
 - An outside sibling keeps the default of its height.
 
 A sum off the ladder means the padding is wrong: an inner 12 with a padding of 16 gives 28, which is no step, so move the padding to 12 or the inner radius to 8.
+
+## Nested radius in the components
+
+The components apply the rule themselves. A container publishes its inner radius, its own radius less its padding and never below zero, in a custom property named by its level: `--ui-inner-radius-64` for a Bar, a Field and a ButtonGroup, `--ui-inner-radius-card` for a Card, and `--ui-inner-radius-40` for a Button and an Input. A control reads the property of what holds it before its own radius. A Bar of radius 24 with 12 of block padding gives its buttons 12, and a Card of radius 24 with 16 gives 8. A ButtonGroup has no padding, so its buttons keep its radius on their outer side, and a Badge on a corner inherits the radius of that corner. A full radius stays a pill at every level.
+
+<Canvas of={BarStories.RadiusCases} />
 
 ## The steps against the two screens
 

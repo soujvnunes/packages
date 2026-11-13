@@ -17,9 +17,9 @@ import './styles/field.css'
 import './styles/input.css'
 import './styles/radius.css'
 const BAR_THEME: React.CSSProperties & Record<`--${string}`, string> = {
-  '--bar-background-color': 'var(--color-surface)',
+  '--bar-background-color': 'var(--color-neutral-10)',
   '--bar-color': 'var(--color-neutral)',
-  '--field-background-color': 'var(--color-surface)',
+  '--field-background-color': 'var(--color-neutral-10)',
   '--field-color': 'var(--color-neutral)',
   '--card-background-color': 'var(--color-surface)',
   '--card-color': 'var(--color-neutral)',
