@@ -2,6 +2,7 @@ import { createRef } from 'react'
 import { cleanup, render, screen } from '@testing-library/react'
 import { readFileSync } from 'node:fs'
 import { afterEach, describe, expect, it } from 'vitest'
+import { Badge } from './Badge'
 import { BUTTON_KINDS, BUTTON_SIZES, BUTTON_TONES, Button } from './Button'
 import { Icon, type IconNode } from './Icon'
 const STYLESHEET = readFileSync(`${import.meta.dirname}/styles/button.css`, 'utf8')
@@ -254,6 +255,74 @@ describe('Button', () => {
       screen.getByRole('button', { name }).querySelector('[data-slot="button-start-item"]')
     expect(startOf('Both')?.matches(pushed)).toBe(true)
     expect(startOf('Start only')?.matches(pushed)).toBe(false)
+  })
+  it.each(BUTTON_SIZES)(
+    'pulls a Badge at the start or the end of the %s label toward the edge by half the padding, and leaves one between children in place',
+    (size) => {
+      render(
+        <>
+          <Button size={size}>
+            <Badge>New</Badge>
+            Lot 12
+          </Button>
+          <Button size={size} kind="fullWidth">
+            Lot 13
+            <Badge>Sold</Badge>
+          </Button>
+          <Button size={size}>
+            Lot <Badge>14</Badge> open
+          </Button>
+        </>,
+      )
+      const pull = `calc(var(--button-${size}-px,calc(var(--spacing)*${TEXT_PADDING[size]}))/-2);`
+      const startPull = selectorWith(`margin-inline-start:${pull}`)
+      const endPull = selectorWith(`margin-inline-end:${pull}`)
+      const first = screen.getByText('New')
+      const last = screen.getByText('Sold')
+      const between = screen.getByText('14')
+      expect(first.matches(startPull)).toBe(true)
+      expect(first.matches(endPull)).toBe(false)
+      expect(last.matches(endPull)).toBe(true)
+      expect(last.matches(startPull)).toBe(false)
+      expect(between.matches(startPull)).toBe(false)
+      expect(between.matches(endPull)).toBe(false)
+    },
+  )
+  it('pulls no Badge that a start item precedes, nor one inside the card or icon kind', () => {
+    render(
+      <>
+        <Button startItem={PLUS}>
+          <Badge>After item</Badge>
+          Lot 12
+        </Button>
+        <Button kind="card">
+          <Badge>Card</Badge>
+          Lot 13
+        </Button>
+        <Button kind="icon" aria-label="Lot 14">
+          <Badge>Icon</Badge>
+        </Button>
+      </>,
+    )
+    const startPull = selectorWith('margin-inline-start:calc(var(--button-md-px,')
+    const endPull = selectorWith('margin-inline-end:calc(var(--button-md-px,')
+    for (const text of ['After item', 'Card', 'Icon']) {
+      expect(screen.getByText(text).matches(startPull)).toBe(false)
+      expect(screen.getByText(text).matches(endPull)).toBe(false)
+    }
+  })
+  it('pulls a Badge at the start of the child it renders with asChild', () => {
+    render(
+      <Button asChild>
+        <a href="/lots/12">
+          <Badge>New</Badge>
+          Lot 12
+        </a>
+      </Button>,
+    )
+    expect(
+      screen.getByText('New').matches(selectorWith('margin-inline-start:calc(var(--button-md-px,')),
+    ).toBe(true)
   })
   it('passes className and the remaining button props through to the root', () => {
     render(

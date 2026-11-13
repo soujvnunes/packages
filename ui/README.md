@@ -99,12 +99,12 @@ export const PlaceBid = () => (
 | `responsive` | `false` drops the hover, focus, active and pressed styles, makes the text unselectable and sets `tabIndex` to -1, so the element leaves the tab order; a `tabIndex` prop overrides it | `true` |
 | `asChild` | renders its one child with the button's attributes | `false` |
 
-`type` defaults to `button`. The root carries `data-slot="button"`, `data-kind`, `data-size`, `data-responsive` and `data-content-between`; the items sit in `button-start-item` and `button-end-item` slots, and the card kind puts both in a `button-items` row above the label. An `svg` inside takes the content size unless it sets its own. The package's `Icon` left at its default size takes it too, since the root sets `--icon-md-size` to its content size, as the `Input` and `Badge` roots do; an `Icon` given another `size` keeps that size.
+`type` defaults to `button`. The root carries `data-slot="button"`, `data-kind`, `data-size`, `data-responsive` and `data-content-between`, and on the `text` and `fullWidth` kinds `data-badge-edge` (`start`, `end` or both) when a `Badge` is the first or the last child of the label, since a selector cannot tell whether text stands beside it; the items sit in `button-start-item` and `button-end-item` slots, and the card kind puts both in a `button-items` row above the label. An `svg` inside takes the content size unless it sets its own. The package's `Icon` left at its default size takes it too, since the root sets `--icon-md-size` to its content size, as the `Input` and `Badge` roots do; an `Icon` given another `size` keeps that size.
 
 | Variable | Default |
 | --- | --- |
 | `--button-<size>-height` | 24, 40, 64, a minimum that a wrapped label grows past, and the fixed height of the icon kind; the card kind reads none and takes its height from its padding and content |
-| `--button-<size>-px` | 12, 16, 24, two steps below the height and equal to the content size; the items pull toward the edge by half of it |
+| `--button-<size>-px` | 12, 16, 24, two steps below the height and equal to the content size; the items, and a `Badge` at either end of the label, pull toward the edge by half of it |
 | `--button-<size>-content-size` | 12, 16, 24, the font size and the `svg` size |
 | `--button-<size>-gap` | 4, 8, 12 |
 | `--button-<size>-radius` | `9999px`, a pill at every size |
@@ -158,7 +158,7 @@ import { Badge } from '@soujvnunes/ui'
 export const LiveBadge = () => <Badge startItem={<DotIcon />}>Live</Badge>
 ```
 
-A `span` root with `data-slot="badge"`, 24 high with 12 inline padding and 12 content, a pill by default. `startItem` sits in an `aria-hidden` `badge-start-item` slot, pulled toward the edge by half the padding, and `asChild` renders the child instead. Inside a `Button` or an `Input` it stays a pill; a product that maps a numeric `--badge-radius` makes it take their inner radius instead.
+A `span` root with `data-slot="badge"`, 24 high with 12 inline padding and 12 content, a pill by default. `startItem` sits in an `aria-hidden` `badge-start-item` slot, pulled toward the edge by half the padding, and `asChild` renders the child instead. As the first or the last child of a `text` or `fullWidth` `Button`, with no item on that side, it takes the pull of the button's items, half the button's inline padding (6, 8 and 12 by size), and a badge between two children takes none. A badge inside a pill `Button` or an `Input` is a pill, and a badge inside a card-kind `Button` reads the inner radius that kind publishes once the product maps a numeric `--badge-radius`.
 
 | Variable                                                              | Default       |
 | --------------------------------------------------------------------- | ------------- |
