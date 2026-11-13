@@ -1,0 +1,21 @@
+import { Meta } from '@storybook/addon-docs/blocks'
+import { StepLadder } from './StepLadder'
+
+<Meta title="Foundations/Spacing" />
+
+# Spacing
+
+Padding, gap, margin and inset take one of nine steps: 4, 8, 12, 16, 24, 40, 64, 104 and 168. Nothing below 4 and nothing above 168. The theme sets the spacing base to one pixel in rem, so the class number is the pixel value (`gap-8`, `px-24`, `mt-104`), and browser zoom and the reader's font size still scale every step.
+
+<StepLadder />
+
+The names (3xs to 3xl) are the names of the Figma variables. Code writes the number: `px-24`, never `px-md`.
+
+## Usage
+
+- 4 and 8 sit inside a control, such as an icon beside its label.
+- 12 and 16 sit between the controls of one group.
+- 24 and 40 sit between groups and around a card's content.
+- 64 to 168 sit between the sections of a page.
+- Space siblings with a `gap` on the parent. A `mt-*` on one child is a decision the next child does not share.
+- A number off the list is a new design decision: `gap-5` compiles, but the scale holds by review.

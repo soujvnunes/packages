@@ -1,0 +1,66 @@
+import { Meta } from '@storybook/addon-docs/blocks'
+import './foundations.css'
+
+<Meta title="Foundations/PageGrid" />
+
+export const COLUMNS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+
+export const VALUES = [
+  ['Columns', '12', '12'],
+  ['Column gap', '16', '24'],
+  ['Row gap', '64', '104'],
+  ['Page padding', '16', '40'],
+]
+
+# Page grid
+
+A page's `body` holds three children: the app header, one `main` and the app footer. The `main` carries a grid of twelve columns, and the hero, the sections, the articles and the aside are its children, each spanning columns. Grid lays out the page, and flex lays out the inside of a container such as a card or a button.
+
+<table>
+  <thead>
+    <tr>
+      <th scope="col">Value</th>
+      <th scope="col">
+        Below <code>lg</code>
+      </th>
+      <th scope="col">
+        From <code>lg</code>
+      </th>
+    </tr>
+  </thead>
+  <tbody>
+    {VALUES.map(([value, below, above]) => (
+      <tr key={value}>
+        <th scope="row">{value}</th>
+        <td>{below}</td>
+        <td>{above}</td>
+      </tr>
+    ))}
+  </tbody>
+</table>
+
+## The twelve columns
+
+Resize the window across the `lg` switch to see the column gap and the page padding change.
+
+<div className="foundations-grid sb-unstyled" aria-hidden="true">
+  {COLUMNS.map((column) => (
+    <span key={column} />
+  ))}
+</div>
+
+## Blocks span columns
+
+A block spans 12 columns on the phone and fewer from `lg`. Here the hero takes 8 columns and the aside takes 4.
+
+<div className="foundations-grid sb-unstyled">
+  <span data-span="hero">Hero</span>
+  <span data-span="aside">Aside</span>
+</div>
+
+## Rules
+
+- A block spans columns and never sizes itself: `col-span-12 lg:col-span-8`.
+- A second `main` breaks the landmark, so a page renders sections, never a `main`.
+- A wrapper between `main` and a block loses the columns. Drop the wrapper or make it a subgrid.
+- A band of colour stays inside the grid and never reaches past its padding with a negative margin.

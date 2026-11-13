@@ -1,0 +1,26 @@
+import { Meta } from '@storybook/addon-docs/blocks'
+import { StepLadder } from './StepLadder'
+
+<Meta title="Foundations/Sizing" />
+
+# Sizing
+
+Every identifiable element takes its size from five values: 12, 16, 24, 40 and 64. They are five steps of the spacing scale, read through the same one-pixel base.
+
+<StepLadder names={['xs', 'sm', 'md', 'lg', 'xl']} />
+
+## What takes each size
+
+- **12:** an icon, or the icon inside a 24 badge.
+- **16:** an icon, or the icon inside a 40 button or input.
+- **24:** an icon, a badge, or the height of a small button or input.
+- **40:** an icon, or a button or an input. This is the default a product reaches for.
+- **64:** an icon, a bar (an app header, a field group), or a large button or input.
+
+The sizes nest: a badge sits inside a button, and a button or an input sits inside a bar. An icon matches its container two steps down, so a 40 button takes a 16 icon, a 64 bar a 24 icon and a 24 badge a 12 icon.
+
+## Widths
+
+An element whose width can hug its content does. Anything that cannot takes its width from grid columns, never from a fixed width or a `max-w-*` class. The one cap is on the element that carries the page grid, so a wide screen keeps its line length.
+
+A label that can wrap takes `min-h-40`, never `h-40`, since a fixed height clips text that wraps.
