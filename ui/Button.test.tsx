@@ -3,8 +3,10 @@ import { cleanup, render, screen } from '@testing-library/react'
 import { readFileSync } from 'node:fs'
 import { afterEach, describe, expect, it } from 'vitest'
 import { BUTTON_KINDS, BUTTON_SIZES, BUTTON_TONES, Button } from './Button'
+import { Icon, type IconNode } from './Icon'
 const STYLESHEET = readFileSync(`${import.meta.dirname}/styles/button.css`, 'utf8')
 const PLUS = <svg viewBox="0 0 24 24" />
+const PLUS_NODE: IconNode = [['path', { d: 'M5 12h14M12 5v14', key: 'plus' }]]
 const THEME: React.CSSProperties & Record<`--${string}`, string> = {
   '--button-main-background-color': 'rgb(1, 2, 3)',
 }
@@ -84,6 +86,21 @@ describe('Button', () => {
     expect(end?.getAttribute('data-slot')).toBe('button-end-item')
     expect(end?.getAttribute('aria-hidden')).toBe('true')
   })
+  it.each(BUTTON_SIZES)(
+    'hands the %s content size to an Icon left at its default size, so the icon stays two steps below the height',
+    (size) => {
+      render(
+        <Button size={size} startItem={<Icon iconNode={PLUS_NODE} />}>
+          Place a bid
+        </Button>,
+      )
+      const button = screen.getByRole('button', { name: 'Place a bid' })
+      expect(button.querySelector('[data-slot="icon"]')?.getAttribute('data-size')).toBe('md')
+      expect(button.matches(selectorWith(`--icon-md-size:var(--button-${size}-content-size,`))).toBe(
+        true,
+      )
+    },
+  )
   it('renders no item slot it was not given', () => {
     const { container } = render(<Button>Add</Button>)
     expect(container.querySelector('[data-slot$="-item"]')).toBeNull()

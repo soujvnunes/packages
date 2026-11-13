@@ -7,6 +7,7 @@
     height: var(--badge-height, calc(var(--spacing) * 24));
     padding-inline: var(--badge-px, calc(var(--spacing) * 16));
     font-size: var(--badge-content-size, calc(var(--spacing) * 12));
+    --icon-md-size: var(--badge-content-size, calc(var(--spacing) * 12));
     line-height: 1;
     white-space: nowrap;
     border-style: solid;
