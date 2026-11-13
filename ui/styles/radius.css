@@ -8,4 +8,9 @@
       var(--ui-inner-radius-card, var(--ui-container-radius)) - var(--ui-container-padding)
     );
   }
+  [data-slot='card'] {
+    border-radius: var(--ui-container-radius);
+    --ui-inner-radius-card: max(0px, var(--ui-container-radius) - var(--ui-container-padding));
+    --ui-inner-radius-64: initial;
+  }
 }

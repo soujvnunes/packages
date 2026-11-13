@@ -1,0 +1,14 @@
+@layer components {
+  [data-slot='card'] {
+    box-sizing: border-box;
+    padding-block: var(--card-py, calc(var(--spacing) * 16));
+    padding-inline: var(--card-px, calc(var(--spacing) * 24));
+    border-style: solid;
+    border-width: var(--card-border-width, calc(var(--spacing) * 1));
+    --ui-container-radius: var(--card-radius, var(--radius-24));
+    --ui-container-padding: var(--card-py, calc(var(--spacing) * 16));
+    background-color: var(--card-background-color, transparent);
+    color: var(--card-color);
+    border-color: var(--card-border-color, transparent);
+  }
+}
