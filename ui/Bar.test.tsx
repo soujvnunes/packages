@@ -96,6 +96,10 @@ describe('Bar', () => {
       true,
     )
   })
+  it('wraps its controls onto another row when they do not fit, so none breaks inside or overflows the bar', () => {
+    const { container } = render(<Bar>Lot 12</Bar>)
+    expect(rootOf(container).matches(selectorWith('flex-wrap:wrap;'))).toBe(true)
+  })
 })
 describe('Bar radius', () => {
   it('publishes its inner radius, its radius less its block padding and never below zero', () => {
