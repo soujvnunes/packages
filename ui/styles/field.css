@@ -22,6 +22,7 @@
   [data-slot='field-hint'],
   [data-slot='field-error'] {
     flex-basis: 100%;
+    padding-inline: var(--field-text-px, calc(var(--spacing) * 16));
   }
   [data-slot='field-hint'] {
     color: var(--field-hint-color);

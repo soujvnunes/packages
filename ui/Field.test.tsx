@@ -216,6 +216,23 @@ describe('Field', () => {
     )
     expect(root.matches(selectorWith('border-radius:var(--ui-container-radius);'))).toBe(true)
   })
+  it('insets the label, the hint and the error rows by the control padding, so their text clears the pill curve as the input text does', () => {
+    const { container } = render(
+      <>
+        <Field label="Max bid" hint={HINT}>
+          {(control) => <Input {...control} />}
+        </Field>
+        <Field label="Plate" error="Unknown plate">
+          {(control) => <Input {...control} />}
+        </Field>
+      </>,
+    )
+    const rows = ['field-label', 'field-hint', 'field-error'].map((slot) =>
+      container.querySelector(`[data-slot="${slot}"]`),
+    )
+    const insets = selectorWith('padding-inline:var(--field-text-px,calc(var(--spacing)*16));')
+    expect(rows.map((row) => row?.matches(insets))).toEqual([true, true, true])
+  })
   it('reads the inner radius of a card around it only once the product maps a numeric --field-radius', () => {
     const { container } = render(<Field label="Max bid">{(control) => <Input {...control} />}</Field>)
     expect(

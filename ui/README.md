@@ -236,12 +236,13 @@ A 64 bar for one control: its `label` above, `startItem` and `endItem` beside it
 </Field>
 ```
 
-The Field uses no context, so a server component renders it. Its ids come from `useId` and reach the function as one object, `{ id, 'aria-describedby', 'aria-invalid' }`, which the product spreads on its control: the `id` the label's `htmlFor` points at, the id of the hint or the error while one shows, and `aria-invalid` while an error shows. The Field never reads or clones the control, so its values land wherever the spread puts them: a prop set before the spread loses to the Field's, and one set after it wins, so a product that adds a description of its own joins it to `control['aria-describedby']`. An empty or boolean error counts as none, as an empty or boolean item renders no item slot, and an `Input` shows its own invalid state from the `aria-invalid` it receives. The root carries `data-slot="field"`, and `data-invalid` while an error shows; the parts carry `field-label`, `field-start-item`, `field-end-item`, `field-hint` and `field-error`. The items are not hidden from assistive technology, since an item can be a control such as a `Button`. The label and the hint have no typography of their own.
+The Field uses no context, so a server component renders it. Its ids come from `useId` and reach the function as one object, `{ id, 'aria-describedby', 'aria-invalid' }`, which the product spreads on its control: the `id` the label's `htmlFor` points at, the id of the hint or the error while one shows, and `aria-invalid` while an error shows. The Field never reads or clones the control, so its values land wherever the spread puts them: a prop set before the spread loses to the Field's, and one set after it wins, so a product that adds a description of its own joins it to `control['aria-describedby']`. An empty or boolean error counts as none, as an empty or boolean item renders no item slot, and an `Input` shows its own invalid state from the `aria-invalid` it receives. The root carries `data-slot="field"`, and `data-invalid` while an error shows; the parts carry `field-label`, `field-start-item`, `field-end-item`, `field-hint` and `field-error`. The items are not hidden from assistive technology, since an item can be a control such as a `Button`. The label and the hint have no typography of their own. The label, the hint and the error each take a row of their own, which makes the Field taller than 64, and its pill radius then grows to half that height, so those rows are inset by `--field-text-px` (16, the inline padding of a medium input). Their text then lines up with the input's text and clears the curve as the input does.
 
 | Variable | Default |
 | --- | --- |
 | `--field-height` | 64, a minimum |
 | `--field-py`, `--field-px` | 12, 24 |
+| `--field-text-px` | 16 |
 | `--field-gap` | 8 |
 | `--field-radius` | none, a pill |
 | `--field-border-width` | 0 |
