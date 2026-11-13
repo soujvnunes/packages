@@ -410,7 +410,14 @@
     border-end-start-radius: 0;
     border-end-end-radius: 0;
   }
-  [data-slot='button-group'] > [data-slot='button']:is(:hover, :focus-visible) {
+  [data-slot='button-group']
+    > [data-slot='button']:is(
+      :hover,
+      :focus-visible,
+      [aria-pressed='true'],
+      [aria-selected='true'],
+      [data-state='active']
+    ) {
     position: relative;
     z-index: 1;
   }

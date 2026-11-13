@@ -201,6 +201,27 @@ describe('ButtonGroup', () => {
     expect(week.matches(PULLED_BACK)).toBe(true)
     expect(day.matches(PULLED_BACK)).toBe(false)
   })
+  it('lifts the selected tab above the next one, so the pulled-back seam never covers its pressed border', () => {
+    render(
+      <ButtonGroup asChild>
+        <div role="tablist" aria-label="Lot">
+          <Button asChild>
+            <button type="button" role="tab" aria-selected>
+              Bids
+            </button>
+          </Button>
+          <Button asChild>
+            <button type="button" role="tab" aria-selected={false}>
+              History
+            </button>
+          </Button>
+        </div>
+      </ButtonGroup>,
+    )
+    const LIFTED = selectorWith('z-index:1;')
+    expect(screen.getByRole('tab', { name: 'Bids', selected: true }).matches(LIFTED)).toBe(true)
+    expect(screen.getByRole('tab', { name: 'History', selected: false }).matches(LIFTED)).toBe(false)
+  })
   it('joins an input to a button the same way', () => {
     const { container } = render(
       <ButtonGroup aria-label="Search">
