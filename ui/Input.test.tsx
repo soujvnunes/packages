@@ -1,7 +1,9 @@
 import { createRef } from 'react'
 import { cleanup, render, screen } from '@testing-library/react'
+import { readFileSync } from 'node:fs'
 import { afterEach, describe, expect, it } from 'vitest'
 import { INPUT_KINDS, INPUT_SIZES, Input } from './Input'
+const STYLESHEET = readFileSync(`${import.meta.dirname}/styles/input.css`, 'utf8').replace(/\s/g, '')
 const SEARCH = <svg viewBox="0 0 24 24" />
 const THEME: React.CSSProperties & Record<`--${string}`, string> = {
   '--input-border-color--invalid': 'rgb(1, 2, 3)',
@@ -87,6 +89,19 @@ describe('Input', () => {
     const input = screen.getByRole('textbox')
     expect(input.hasAttribute('disabled')).toBe(true)
     expect(rootOf(input).hasAttribute('data-disabled')).toBe(true)
+  })
+  it('falls the invalid and disabled outlines back to the focus colour, so a focused invalid field keeps its ring', () => {
+    expect(STYLESHEET).toContain(
+      'outline-color:var(--input-outline-color--invalid,var(--input-outline-color--focus,',
+    )
+    expect(STYLESHEET).toContain(
+      'outline-color:var(--input-outline-color--disabled,var(--input-outline-color--focus,',
+    )
+  })
+  it('applies the hover colours only where the pointer can hover, so a tap leaves no stuck hover', () => {
+    expect(STYLESHEET).toContain(
+      "@media(hover:hover){[data-slot='input']:where(:not([data-disabled]):hover)",
+    )
   })
   it('hands its ref to the input, so a form library can focus and read it', () => {
     const ref = createRef<HTMLInputElement>()
