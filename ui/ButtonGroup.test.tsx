@@ -222,6 +222,25 @@ describe('ButtonGroup', () => {
     expect(screen.getByRole('tab', { name: 'Bids', selected: true }).matches(LIFTED)).toBe(true)
     expect(screen.getByRole('tab', { name: 'History', selected: false }).matches(LIFTED)).toBe(false)
   })
+  it('lifts an invalid input above the next button, so the pulled-back seam never covers its error border', () => {
+    const { container } = render(
+      <>
+        <ButtonGroup aria-label="Bid">
+          <Input aria-label="Max bid" aria-invalid />
+          <Button>Bid</Button>
+        </ButtonGroup>
+        <ButtonGroup aria-label="Search">
+          <Input aria-label="Plate" />
+          <Button>Search</Button>
+        </ButtonGroup>
+      </>,
+    )
+    const [invalid, valid] = container.querySelectorAll('[data-slot="input"]')
+    if (!invalid || !valid) throw new Error('An input of the groups is missing.')
+    const LIFTED = selectorWith('z-index:1;')
+    expect(invalid.matches(LIFTED)).toBe(true)
+    expect(valid.matches(LIFTED)).toBe(false)
+  })
   it('joins an input to a button the same way', () => {
     const { container } = render(
       <ButtonGroup aria-label="Search">

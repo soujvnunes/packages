@@ -180,7 +180,7 @@
     border-end-start-radius: 0;
     border-end-end-radius: 0;
   }
-  [data-slot='button-group'] > [data-slot='input']:is(:hover, :focus-within) {
+  [data-slot='button-group'] > [data-slot='input']:is(:hover, :focus-within, [data-invalid]) {
     position: relative;
     z-index: 1;
   }
