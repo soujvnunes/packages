@@ -1,5 +1,6 @@
 import { Children, forwardRef, isValidElement } from 'react'
 import { createSlot, createSlottable } from '@radix-ui/react-slot'
+import { Badge } from './Badge'
 export const BUTTON_KINDS = ['text', 'icon', 'fullWidth', 'card'] as const
 export const BUTTON_SIZES = ['sm', 'md', 'lg'] as const
 export const BUTTON_TONES = ['main', 'accent', 'success', 'warning', 'error'] as const
@@ -29,12 +30,14 @@ const itemOf = (slot: string, item: React.ReactNode) =>
       {item}
     </span>
   )
-const isElement = (node: React.ReactNode) => isValidElement(node)
+const marksEdge = (node: React.ReactNode, elementCount: number) =>
+  isValidElement(node) && (typeof node.type === 'string' || node.type === Badge || elementCount === 1)
 const elementEdgesOf = (nodes: React.ReactNode, pullStart: boolean, pullEnd: boolean) => {
   const content = Children.toArray(nodes).filter((node) => !rendersNothing(node))
+  const elementCount = content.filter((node) => isValidElement(node)).length
   return [
-    pullStart && isElement(content.at(0)) && 'start',
-    pullEnd && isElement(content.at(-1)) && 'end',
+    pullStart && marksEdge(content.at(0), elementCount) && 'start',
+    pullEnd && marksEdge(content.at(-1), elementCount) && 'end',
   ]
     .filter(Boolean)
     .join(' ')
