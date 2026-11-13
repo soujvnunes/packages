@@ -15,7 +15,7 @@ Monorepo for the shared `@soujvnunes/*` packages.
 | [`@soujvnunes/lib`](./lib) | Stateful modules (subpath exports): a Mongoose client and Typegoose bases |
 | [`@soujvnunes/react`](./react) | React utilities (subpath exports): hooked-context, error-boundary, motion |
 | [`@soujvnunes/nextjs`](./nextjs) | Next.js utilities (subpath exports): server-seeded, cookie-persisted state (`createPersistedToggle`) |
-| [`@soujvnunes/ui`](./ui) | Unstyled React component skeletons (`Icon`), themed through CSS custom properties |
+| [`@soujvnunes/ui`](./ui) | Unstyled React component skeletons (`Icon`), themed through CSS custom properties, with a Storybook |
 
 Separate packages when deps are bundled (the configs); subpaths in one package when deps are peer or zero (`util`, `lib`, `react`, `nextjs`). `ui` is one package with a module per component and an index that re-exports them all, since a product imports its components together.
 
@@ -39,6 +39,7 @@ export default createNextConfig({ ignores: ['generated/**'], importGroups: [/* p
 
 ```bash
 pnpm install
+pnpm dev         # the ui Storybook, on port 6006
 pnpm test
 pnpm lint
 pnpm format

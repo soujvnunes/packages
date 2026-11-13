@@ -1,7 +1,7 @@
 import { createBaseConfig } from '@soujvnunes/eslint-config'
 
 export default createBaseConfig({
-  ignores: ['**/*.md', '**/*.d.ts', '.changeset/**'],
+  ignores: ['**/*.md', '**/*.d.ts', '.changeset/**', '**/storybook-static/**'],
   extend: [
     {
       files: [
@@ -11,6 +11,10 @@ export default createBaseConfig({
       ],
       rules: { 'max-lines': 'off' },
     },
-    { files: ['ui/*.config.ts'], rules: { 'import-x/no-default-export': 'off' } },
+    {
+      files: ['ui/*.config.ts', 'ui/*.stories.tsx', 'ui/.storybook/*.ts'],
+      rules: { 'import-x/no-default-export': 'off' },
+    },
+    { files: ['ui/.storybook/main.ts'], rules: { 'import-x/no-cycle': 'off' } },
   ],
 })

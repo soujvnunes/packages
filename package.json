@@ -7,6 +7,7 @@
   },
   "packageManager": "pnpm@10.12.4",
   "scripts": {
+    "dev": "pnpm --filter @soujvnunes/ui storybook",
     "build": "pnpm -r build",
     "typecheck": "pnpm -r typecheck",
     "test": "vitest run",

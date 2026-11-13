@@ -51,3 +51,13 @@ A component's root carries `data-slot="<name>"` and one `data-<axis>` attribute 
 ```
 
 Every component takes `asChild` and then renders its child with the same attributes, so a product extends one by wrapping its own element, such as its own `svg` inside an `Icon`.
+
+## Storybook
+
+```bash
+pnpm dev                # from the repo root
+pnpm storybook          # from ui/
+pnpm build-storybook    # the static build, in ui/storybook-static
+```
+
+It serves on port 6006 and answers component docs to agents at `http://localhost:6006/mcp`. Its theme, in `.storybook/theme.css`, is a reference theme with placeholder values, in a light and a dark mode that follow the system setting; it is not published.

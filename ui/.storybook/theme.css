@@ -1,0 +1,136 @@
+@import 'tailwindcss';
+
+@theme {
+  --breakpoint-*: initial;
+  --breakpoint-lg: 64rem;
+
+  --spacing: 0.0625rem;
+
+  --radius-*: initial;
+  --radius-4: 0.25rem;
+  --radius-8: 0.5rem;
+  --radius-12: 0.75rem;
+  --radius-16: 1rem;
+  --radius-24: 1.5rem;
+  --radius-40: 2.5rem;
+
+  --palette-black: oklch(0.15 0 0);
+  --palette-white: oklch(1 0 0);
+  --palette-grey-100: oklch(0.96 0 0);
+  --palette-grey-900: oklch(0.22 0 0);
+  --palette-gold: oklch(0.78 0.12 85);
+  --palette-teal: oklch(0.6 0.1 190);
+  --palette-green: oklch(0.65 0.15 150);
+  --palette-amber: oklch(0.75 0.15 65);
+  --palette-red: oklch(0.6 0.2 25);
+
+  --color-*: initial;
+  --color-background: var(--palette-grey-100);
+  --color-background-80: color-mix(in oklab, var(--palette-grey-100) 80%, transparent);
+  --color-background-60: color-mix(in oklab, var(--palette-grey-100) 60%, transparent);
+  --color-background-40: color-mix(in oklab, var(--palette-grey-100) 40%, transparent);
+  --color-background-20: color-mix(in oklab, var(--palette-grey-100) 20%, transparent);
+  --color-background-10: color-mix(in oklab, var(--palette-grey-100) 10%, transparent);
+  --color-surface: var(--palette-white);
+  --color-surface-80: color-mix(in oklab, var(--palette-white) 80%, transparent);
+  --color-surface-60: color-mix(in oklab, var(--palette-white) 60%, transparent);
+  --color-surface-40: color-mix(in oklab, var(--palette-white) 40%, transparent);
+  --color-surface-20: color-mix(in oklab, var(--palette-white) 20%, transparent);
+  --color-surface-10: color-mix(in oklab, var(--palette-white) 10%, transparent);
+  --color-neutral: color-mix(in oklab, var(--palette-black) 80%, transparent);
+  --color-neutral-80: color-mix(in oklab, var(--palette-black) 80%, transparent);
+  --color-neutral-60: color-mix(in oklab, var(--palette-black) 60%, transparent);
+  --color-neutral-40: color-mix(in oklab, var(--palette-black) 40%, transparent);
+  --color-neutral-20: color-mix(in oklab, var(--palette-black) 20%, transparent);
+  --color-neutral-10: color-mix(in oklab, var(--palette-black) 10%, transparent);
+  --color-main: var(--palette-gold);
+  --color-main-80: color-mix(in oklab, var(--palette-gold) 80%, transparent);
+  --color-main-60: color-mix(in oklab, var(--palette-gold) 60%, transparent);
+  --color-main-40: color-mix(in oklab, var(--palette-gold) 40%, transparent);
+  --color-main-20: color-mix(in oklab, var(--palette-gold) 20%, transparent);
+  --color-main-10: color-mix(in oklab, var(--palette-gold) 10%, transparent);
+  --color-accent: var(--palette-teal);
+  --color-accent-80: color-mix(in oklab, var(--palette-teal) 80%, transparent);
+  --color-accent-60: color-mix(in oklab, var(--palette-teal) 60%, transparent);
+  --color-accent-40: color-mix(in oklab, var(--palette-teal) 40%, transparent);
+  --color-accent-20: color-mix(in oklab, var(--palette-teal) 20%, transparent);
+  --color-accent-10: color-mix(in oklab, var(--palette-teal) 10%, transparent);
+  --color-success: var(--palette-green);
+  --color-success-80: color-mix(in oklab, var(--palette-green) 80%, transparent);
+  --color-success-60: color-mix(in oklab, var(--palette-green) 60%, transparent);
+  --color-success-40: color-mix(in oklab, var(--palette-green) 40%, transparent);
+  --color-success-20: color-mix(in oklab, var(--palette-green) 20%, transparent);
+  --color-success-10: color-mix(in oklab, var(--palette-green) 10%, transparent);
+  --color-warning: var(--palette-amber);
+  --color-warning-80: color-mix(in oklab, var(--palette-amber) 80%, transparent);
+  --color-warning-60: color-mix(in oklab, var(--palette-amber) 60%, transparent);
+  --color-warning-40: color-mix(in oklab, var(--palette-amber) 40%, transparent);
+  --color-warning-20: color-mix(in oklab, var(--palette-amber) 20%, transparent);
+  --color-warning-10: color-mix(in oklab, var(--palette-amber) 10%, transparent);
+  --color-error: var(--palette-red);
+  --color-error-80: color-mix(in oklab, var(--palette-red) 80%, transparent);
+  --color-error-60: color-mix(in oklab, var(--palette-red) 60%, transparent);
+  --color-error-40: color-mix(in oklab, var(--palette-red) 40%, transparent);
+  --color-error-20: color-mix(in oklab, var(--palette-red) 20%, transparent);
+  --color-error-10: color-mix(in oklab, var(--palette-red) 10%, transparent);
+
+  --text-*: initial;
+  --text-caption: 0.75rem;
+  --text-caption--font-weight: 500;
+  --text-body: 1rem;
+  --text-body--font-weight: 400;
+  --text-subtitle: 1.5rem;
+  --text-subtitle--font-weight: 500;
+  --text-title: 1.5rem;
+  --text-title--font-weight: 600;
+  --text-heading: 2.5rem;
+  --text-heading--font-weight: 600;
+  --text-headline: 4rem;
+  --text-headline--font-weight: 700;
+  --text-display: 6.5rem;
+  --text-display--font-weight: 700;
+}
+
+@layer base {
+  :root {
+    @variant lg {
+      --text-caption: 1rem;
+      --text-caption--font-weight: 400;
+      --text-body--font-weight: 500;
+      --text-title: 2.5rem;
+      --text-title--font-weight: 500;
+      --text-heading: 4rem;
+      --text-heading--font-weight: 500;
+      --text-headline: 6.5rem;
+      --text-headline--font-weight: 600;
+    }
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --color-background: var(--palette-black);
+      --color-background-80: color-mix(in oklab, var(--palette-black) 80%, transparent);
+      --color-background-60: color-mix(in oklab, var(--palette-black) 60%, transparent);
+      --color-background-40: color-mix(in oklab, var(--palette-black) 40%, transparent);
+      --color-background-20: color-mix(in oklab, var(--palette-black) 20%, transparent);
+      --color-background-10: color-mix(in oklab, var(--palette-black) 10%, transparent);
+      --color-surface: var(--palette-grey-900);
+      --color-surface-80: color-mix(in oklab, var(--palette-grey-900) 80%, transparent);
+      --color-surface-60: color-mix(in oklab, var(--palette-grey-900) 60%, transparent);
+      --color-surface-40: color-mix(in oklab, var(--palette-grey-900) 40%, transparent);
+      --color-surface-20: color-mix(in oklab, var(--palette-grey-900) 20%, transparent);
+      --color-surface-10: color-mix(in oklab, var(--palette-grey-900) 10%, transparent);
+      --color-neutral: var(--palette-white);
+      --color-neutral-80: color-mix(in oklab, var(--palette-white) 80%, transparent);
+      --color-neutral-60: color-mix(in oklab, var(--palette-white) 60%, transparent);
+      --color-neutral-40: color-mix(in oklab, var(--palette-white) 40%, transparent);
+      --color-neutral-20: color-mix(in oklab, var(--palette-white) 20%, transparent);
+      --color-neutral-10: color-mix(in oklab, var(--palette-white) 10%, transparent);
+    }
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-neutral);
+  }
+}
