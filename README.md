@@ -17,9 +17,9 @@ Monorepo for the shared `@soujvnunes/*` packages.
 | [`@soujvnunes/nextjs`](./nextjs) | Next.js utilities (subpath exports): server-seeded, cookie-persisted state (`createPersistedToggle`) |
 | [`@soujvnunes/ui`](./ui) | Unstyled React component skeletons (`Icon`), themed through CSS custom properties, with a Storybook |
 
-Separate packages when deps are bundled (the configs); subpaths in one package when deps are peer or zero (`util`, `lib`, `react`, `nextjs`). `ui` is one package with a module per component and an index that re-exports them all, since a product imports its components together.
+Separate packages when deps are bundled (the configs); subpaths in one package when deps are peer or zero (`util`, `lib`, `react`, `nextjs`). `ui` is one package too, with a module per component and an index that re-exports them all, since its components share one stylesheet and one variable grammar.
 
-This repo lints itself with the base preset of `@soujvnunes/eslint-config` and formats itself with `@soujvnunes/prettier-config`, minus the Tailwind plugin and its options, since no package here holds Tailwind classes. The ESLint config is stricter than most shared configs on a few points: no blank lines between statements, no warning severity (a rule either fails or is absent), and type-aware rules enabled. See [its README](./eslint-config#style-rules-worth-knowing-before-you-adopt) before adopting it elsewhere.
+This repo lints itself with the base preset of `@soujvnunes/eslint-config` and formats itself with `@soujvnunes/prettier-config`, minus the Tailwind plugin and its options, since no published module here holds Tailwind classes (only a few stories in the ui Storybook do). The ESLint config is stricter than most shared configs on a few points: no blank lines between statements, no warning severity (a rule either fails or is absent), and type-aware rules enabled. See [its README](./eslint-config#style-rules-worth-knowing-before-you-adopt) before adopting it elsewhere.
 
 ## Convention: every package is a customizable factory
 
