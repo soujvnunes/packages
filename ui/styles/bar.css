@@ -14,9 +14,15 @@
     --ui-container-radius: calc(0 * var(--bar-radius) + var(--ui-inner-radius-card, var(--bar-radius)));
     --ui-container-padding: var(--bar-px, calc(var(--spacing) * 24));
     border-radius: var(--ui-container-radius, 0px);
-    background-color: var(--bar-background-color, transparent);
-    color: var(--bar-color);
-    border-color: var(--bar-border-color, transparent);
+    background-color: var(
+      --bar-background-color,
+      color-mix(in oklab, var(--bar-color, transparent) 20%, transparent)
+    );
+    color: var(--bar-text-color, var(--bar-color));
+    border-color: var(
+      --bar-border-color,
+      color-mix(in oklab, var(--bar-color, transparent) 60%, transparent)
+    );
   }
   :where([data-slot='bar']) > svg {
     width: var(--bar-content-size, calc(var(--spacing) * 24));

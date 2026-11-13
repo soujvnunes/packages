@@ -18,6 +18,17 @@ const selectorWith = (declaration: string) => {
   if (selectors.length === 0) throw new Error(`No rule of the stylesheets holds ${declaration}.`)
   return selectors.join(', ')
 }
+const DECLARATIONS = STYLESHEET.replace(/\s+/g, ' ')
+  .replace(/\s*([(,:;{}])\s*/g, '$1')
+  .replace(/\s*\)/g, ')')
+const PAINTS = {
+  'background-color': [
+    'background-color',
+    'color-mix(in oklab,var(--card-color,transparent) 20%,transparent)',
+  ],
+  'text-color': ['color', 'var(--card-color)'],
+  'border-color': ['border-color', 'color-mix(in oklab,var(--card-color,transparent) 60%,transparent)'],
+} as const
 const consoleError = vi.spyOn(console, 'error')
 beforeEach(() => {
   consoleError.mockReset().mockImplementation(() => {})
@@ -175,6 +186,12 @@ describe('Card', () => {
     )
     expect(card.matches(selectorWith('border-radius:var(--ui-container-radius);'))).toBe(true)
   })
+  it.each(Object.entries(PAINTS))(
+    'paints its %s from the one colour --card-color unless the theme maps it, the text as is, the background at 20 and the border at 60',
+    (paint, [property, fallback]) => {
+      expect(DECLARATIONS).toContain(`;${property}:var(--card-${paint},${fallback});`)
+    },
+  )
   it('leaves 12 for what it holds by default, its radius of 24 less its padding of 12', () => {
     const declared = STYLESHEET.replace(/\s/g, '')
     const radius = declared.match(/--ui-container-radius:var\(--card-radius,var\(--radius-(\d+)\)\);/)

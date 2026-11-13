@@ -20,6 +20,20 @@ const selectorWith = (declaration: string) => {
   if (selectors.length === 0) throw new Error(`No rule of the stylesheets holds ${declaration}.`)
   return selectors.join(', ')
 }
+const DECLARATIONS = STYLESHEET.replace(/\s+/g, ' ')
+  .replace(/\s*([(,:;{}])\s*/g, '$1')
+  .replace(/\s*\)/g, ')')
+const PAINTS = {
+  'background-color': [
+    'background-color',
+    'color-mix(in oklab,var(--button-group-color,transparent) 20%,transparent)',
+  ],
+  'text-color': ['color', 'var(--button-group-color)'],
+  'border-color': [
+    'border-color',
+    'color-mix(in oklab,var(--button-group-color,transparent) 60%,transparent)',
+  ],
+} as const
 const CORNERS = [
   'border-start-start-radius',
   'border-start-end-radius',
@@ -150,6 +164,12 @@ describe('ButtonGroup', () => {
     ).toBe(true)
     expect(group.matches(selectorWith('border-radius:var(--ui-container-radius);'))).toBe(true)
   })
+  it.each(Object.entries(PAINTS))(
+    'paints its %s from the one colour --button-group-color unless the theme maps it, the text as is, the background at 20 and the border at 60',
+    (paint, [property, fallback]) => {
+      expect(DECLARATIONS).toContain(`;${property}:var(--button-group-${paint},${fallback});`)
+    },
+  )
   it('leaves 16 for what it holds by default, its radius of 40 less its inline padding of 24', () => {
     const declared = STYLESHEET.replace(/\s/g, '')
     const radius = declared.match(/--button-group-radius,var\(--radius-(\d+)\)\)\);/)

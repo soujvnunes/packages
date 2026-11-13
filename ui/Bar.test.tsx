@@ -16,6 +16,17 @@ const selectorWith = (declaration: string) => {
   if (selectors.length === 0) throw new Error(`No rule of the stylesheets holds ${declaration}.`)
   return selectors.join(', ')
 }
+const DECLARATIONS = STYLESHEET.replace(/\s+/g, ' ')
+  .replace(/\s*([(,:;{}])\s*/g, '$1')
+  .replace(/\s*\)/g, ')')
+const PAINTS = {
+  'background-color': [
+    'background-color',
+    'color-mix(in oklab,var(--bar-color,transparent) 20%,transparent)',
+  ],
+  'text-color': ['color', 'var(--bar-color)'],
+  'border-color': ['border-color', 'color-mix(in oklab,var(--bar-color,transparent) 60%,transparent)'],
+} as const
 const PUBLISHES_64 = selectorWith('--ui-inner-radius-64:max(')
 const READS_64_FIRST = selectorWith('border-radius:var(--ui-inner-radius-64,')
 const CORNER_RADIUS: Record<(typeof BADGE_CORNERS)[number], string> = {
@@ -107,6 +118,12 @@ describe('Bar', () => {
     const { container } = render(<Bar>Lot 12</Bar>)
     expect(rootOf(container).matches(selectorWith('flex-wrap:wrap;'))).toBe(true)
   })
+  it.each(Object.entries(PAINTS))(
+    'paints its %s from the one colour --bar-color unless the theme maps it, the text as is, the background at 20 and the border at 60',
+    (paint, [property, fallback]) => {
+      expect(DECLARATIONS).toContain(`;${property}:var(--bar-${paint},${fallback});`)
+    },
+  )
 })
 describe('Bar radius', () => {
   it('takes no radius by default, since it spans what holds it, and publishes none until a product maps --bar-radius', () => {

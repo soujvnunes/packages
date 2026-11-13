@@ -13,9 +13,15 @@
     --ui-container-radius: var(--ui-inner-radius-card, var(--field-radius, var(--radius-40)));
     --ui-container-padding: var(--field-px, calc(var(--spacing) * 24));
     border-radius: var(--ui-container-radius);
-    background-color: var(--field-background-color, transparent);
-    color: var(--field-color);
-    border-color: var(--field-border-color, transparent);
+    background-color: var(
+      --field-background-color,
+      color-mix(in oklab, var(--field-color, transparent) 20%, transparent)
+    );
+    color: var(--field-text-color, var(--field-color));
+    border-color: var(
+      --field-border-color,
+      color-mix(in oklab, var(--field-color, transparent) 60%, transparent)
+    );
   }
   [data-slot='field-label'],
   [data-slot='field-hint'],
@@ -42,9 +48,15 @@
   [data-slot='field']:where([data-invalid]) {
     background-color: var(
       --field-background-color--invalid,
-      var(--field-background-color, transparent)
+      var(
+        --field-background-color,
+        color-mix(in oklab, var(--field-color, transparent) 20%, transparent)
+      )
     );
-    color: var(--field-color--invalid, var(--field-color));
-    border-color: var(--field-border-color--invalid, var(--field-border-color, transparent));
+    color: var(--field-text-color--invalid, var(--field-text-color, var(--field-color)));
+    border-color: var(
+      --field-border-color--invalid,
+      var(--field-border-color, color-mix(in oklab, var(--field-color, transparent) 60%, transparent))
+    );
   }
 }

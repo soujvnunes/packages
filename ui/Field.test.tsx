@@ -16,6 +16,28 @@ const selectorWith = (declaration: string) => {
   if (selectors.length === 0) throw new Error(`No rule of the stylesheets holds ${declaration}.`)
   return selectors.join(', ')
 }
+const DECLARATIONS = STYLESHEET.replace(/\s+/g, ' ')
+  .replace(/\s*([(,:;{}])\s*/g, '$1')
+  .replace(/\s*\)/g, ')')
+const REST_VALUES = {
+  'background-color':
+    'var(--field-background-color,color-mix(in oklab,var(--field-color,transparent) 20%,transparent))',
+  'text-color': 'var(--field-text-color,var(--field-color))',
+  'border-color':
+    'var(--field-border-color,color-mix(in oklab,var(--field-color,transparent) 60%,transparent))',
+} as const
+const PAINT_PROPERTIES = {
+  'background-color': 'background-color',
+  'text-color': 'color',
+  'border-color': 'border-color',
+} as const
+const PAINTS = Object.keys(PAINT_PROPERTIES) as readonly (keyof typeof PAINT_PROPERTIES)[]
+const invalidDeclarations = () => {
+  const start = DECLARATIONS.indexOf("[data-slot='field']:where([data-invalid]){")
+  if (start === -1) throw new Error('No invalid rule of the stylesheet.')
+  const body = DECLARATIONS.slice(DECLARATIONS.indexOf('{', start) + 1)
+  return body.slice(0, body.indexOf('}'))
+}
 const HINT = 'At least R$ 51.000'
 const ERROR = 'Your bid must be at least R$ 51.000'
 const rootOf = (container: HTMLElement) => {
@@ -266,6 +288,23 @@ describe('Field', () => {
       ),
     ).toBe(true)
     expect(input?.parentElement).toBe(root)
+  })
+  it.each(PAINTS)(
+    'paints its %s from the one colour --field-color unless the theme maps it, the text as is, the background at 20 and the border at 60',
+    (paint) => {
+      expect(DECLARATIONS).toContain(`;${PAINT_PROPERTIES[paint]}:${REST_VALUES[paint]};`)
+    },
+  )
+  it.each(PAINTS)(
+    'keeps its rest %s while invalid unless the theme maps that state, so the invalid border is its own variable',
+    (paint) => {
+      expect(invalidDeclarations()).toContain(
+        `${PAINT_PROPERTIES[paint]}:var(--field-${paint}--invalid,${REST_VALUES[paint]});`,
+      )
+    },
+  )
+  it('gives the one colour no state, since each state of the text reads --field-text-color', () => {
+    expect(DECLARATIONS).not.toContain('--field-color--')
   })
   it('lets the control take the room the items and the padding leave', () => {
     const { container } = render(

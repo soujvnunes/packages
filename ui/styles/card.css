@@ -8,8 +8,14 @@
     --ui-container-radius: var(--card-radius, var(--radius-24));
     --ui-container-padding: var(--card-px, calc(var(--spacing) * 12));
     border-radius: var(--ui-container-radius);
-    background-color: var(--card-background-color, transparent);
-    color: var(--card-color);
-    border-color: var(--card-border-color, transparent);
+    background-color: var(
+      --card-background-color,
+      color-mix(in oklab, var(--card-color, transparent) 20%, transparent)
+    );
+    color: var(--card-text-color, var(--card-color));
+    border-color: var(
+      --card-border-color,
+      color-mix(in oklab, var(--card-color, transparent) 60%, transparent)
+    );
   }
 }

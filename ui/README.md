@@ -234,15 +234,18 @@ export const LotHeader = () => (
 
 A `div` row with `data-slot="bar"`, at least 64 high, holding controls of 40 inside 12 of block padding and 24 of inline padding, two steps below its height. It takes no radius by default, since it spans what holds it. Text and an `svg` directly inside take the content size. `asChild` renders the child instead, so a product makes it its `header`, its `nav` or a toolbar, which keeps its own role.
 
-| Variable | Default |
-| --- | --- |
-| `--bar-height` | 64, a minimum |
-| `--bar-py`, `--bar-px` | 12, 24 |
-| `--bar-gap` | 16 |
-| `--bar-content-size` | 24, the font size and the `svg` size |
-| `--bar-radius` | none, no radius |
-| `--bar-border-width` | 0, so a control of 40 keeps the bar at 64 |
-| `--bar-background-color`, `--bar-color`, `--bar-border-color` | none |
+| Variable                 | Default                                                          |
+| ------------------------ | ---------------------------------------------------------------- |
+| `--bar-height`           | 64, a minimum                                                    |
+| `--bar-py`, `--bar-px`   | 12, 24                                                           |
+| `--bar-gap`              | 16                                                               |
+| `--bar-content-size`     | 24, the font size and the `svg` size                             |
+| `--bar-radius`           | none, no radius                                                  |
+| `--bar-border-width`     | 0, so a control of 40 keeps the bar at 64                        |
+| `--bar-color`            | none, the one colour the text, background and border derive from |
+| `--bar-text-color`       | `--bar-color`                                                    |
+| `--bar-background-color` | `--bar-color` at the 20 step                                     |
+| `--bar-border-color`     | `--bar-color` at the 60 step                                     |
 
 ## Field
 
@@ -268,7 +271,7 @@ A 64 bar for one control: its `label` above, `startItem` and `endItem` beside it
 </Field>
 ```
 
-The Field uses no context, so a server component renders it. Its ids come from `useId` and reach the function as one object, `{ id, 'aria-describedby', 'aria-invalid' }`, which the product spreads on its control: the `id` the label's `htmlFor` points at, the id of the hint or the error while one shows, and `aria-invalid` while an error shows. The Field never reads or clones the control, so its values land wherever the spread puts them: a prop set before the spread loses to the Field's, and one set after it wins, so a product that adds a description of its own joins it to `control['aria-describedby']`. An empty or boolean error counts as none, as an empty or boolean item renders no item slot, and an `Input` shows its own invalid state from the `aria-invalid` it receives. The root carries `data-slot="field"`, and `data-invalid` while an error shows; the parts carry `field-label`, `field-start-item`, `field-end-item`, `field-hint` and `field-error`. The items are not hidden from assistive technology, since an item can be a control such as a `Button`. The label and the hint have no typography of their own. The label, the hint and the error each take a row of their own, which makes the Field taller than 64 while it keeps its corner of 40, and those rows are inset by `--field-text-px` (16, the inline padding of a medium input), so their text lines up with the input's text and clears the corner as the input does.
+The Field uses no context, so a server component renders it. Its ids come from `useId` and reach the function as one object, `{ id, 'aria-describedby', 'aria-invalid' }`, which the product spreads on its control: the `id` the label's `htmlFor` points at, the id of the hint or the error while one shows, and `aria-invalid` while an error shows. The Field never reads or clones the control, so its values land wherever the spread puts them: a prop set before the spread loses to the Field's, and one set after it wins, so a product that adds a description of its own joins it to `control['aria-describedby']`. An empty or boolean error counts as none, as an empty or boolean item renders no item slot, and an `Input` shows its own invalid state from the `aria-invalid` it receives. The root carries `data-slot="field"`, and `data-invalid` while an error shows; the parts carry `field-label`, `field-start-item`, `field-end-item`, `field-hint` and `field-error`. The items are not hidden from assistive technology, since an item can be a control such as a `Button`. The label and the hint have no typography of their own. The label, the hint and the error each take a row of their own, which makes the Field taller than 64 while it keeps its corner of 40, and those rows are inset by `--field-text-px` (16, the inline padding of a medium input), so their text lines up with the input's text and clears the corner as the input does. A container is painted from one colour as a control is, and the Field's one state, `invalid`, takes no step: each property reads its rest value until the product maps that state, so the invalid border is a variable of its own, `--field-border-color--invalid`, and reads the rest border until a product maps it to its error colour.
 
 | Variable | Default |
 | --- | --- |
@@ -278,7 +281,10 @@ The Field uses no context, so a server component renders it. Its ids come from `
 | `--field-gap` | 8 |
 | `--field-radius` | `--radius-40` |
 | `--field-border-width` | 0 |
-| `--field-background-color[--invalid]`, `--field-color[--invalid]`, `--field-border-color[--invalid]` | none |
+| `--field-color` | none, the one colour the text, background and border derive from |
+| `--field-text-color[--invalid]` | `--field-color` |
+| `--field-background-color[--invalid]` | `--field-color` at the 20 step |
+| `--field-border-color[--invalid]` | `--field-color` at the 60 step |
 | `--field-hint-color`, `--field-error-color` | the text colour |
 
 ## ButtonGroup
@@ -303,7 +309,10 @@ Joined controls that share one outer radius: a `div` with `role="group"`, `data-
 | `--button-group-py`, `--button-group-px` | 12, 24 |
 | `--button-group-radius` | `--radius-40` |
 | `--button-group-border-width` | 0 |
-| `--button-group-background-color`, `--button-group-color`, `--button-group-border-color` | none |
+| `--button-group-color` | none, the one colour the text, background and border derive from |
+| `--button-group-text-color` | `--button-group-color` |
+| `--button-group-background-color` | `--button-group-color` at the 20 step |
+| `--button-group-border-color` | `--button-group-color` at the 60 step |
 
 A tab list is a `ButtonGroup` and each tab a `Button`, both wrapped around a product's own tabs primitive, so the package ships no Tabs. The list keeps its `tablist` role and each trigger its `tab` role, and the selected tab shows as pressed:
 
@@ -352,12 +361,15 @@ Each of the three takes its children either as nodes, rendered in its own elemen
 
 The ids travel through a context, so `Card`, `CardTitle` and `CardDescription` are client components, the only ones in the package, and what a server parent passes them as node children stays server-rendered. A function cannot be passed from a server component to a client one, so the function form is written inside a client component.
 
-| Variable                                                         | Default       |
-| ---------------------------------------------------------------- | ------------- |
-| `--card-py`, `--card-px`                                         | 12, 12        |
-| `--card-radius`                                                  | `--radius-24` |
-| `--card-border-width`                                            | 1             |
-| `--card-background-color`, `--card-color`, `--card-border-color` | none          |
+| Variable                  | Default                                                          |
+| ------------------------- | ---------------------------------------------------------------- |
+| `--card-py`, `--card-px`  | 12, 12                                                           |
+| `--card-radius`           | `--radius-24`                                                    |
+| `--card-border-width`     | 1                                                                |
+| `--card-color`            | none, the one colour the text, background and border derive from |
+| `--card-text-color`       | `--card-color`                                                   |
+| `--card-background-color` | `--card-color` at the 20 step                                    |
+| `--card-border-color`     | `--card-color` at the 60 step                                    |
 
 ## Storybook
 
