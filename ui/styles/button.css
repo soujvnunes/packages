@@ -196,14 +196,18 @@
     cursor: default;
     user-select: none;
   }
-  [data-slot='button']:where(:not([data-responsive='false'], :disabled, [aria-disabled='true']):hover) {
-    background-color: var(
-      --button-background-color--hover,
-      var(--button-background-color, transparent)
-    );
-    color: var(--button-color--hover, var(--button-color));
-    border-color: var(--button-border-color--hover, var(--button-border-color, transparent));
-    outline-color: var(--button-outline-color--hover, var(--button-outline-color, currentColor));
+  @media (hover: hover) {
+    [data-slot='button']:where(
+      :not([data-responsive='false'], :disabled, [aria-disabled='true']):hover
+    ) {
+      background-color: var(
+        --button-background-color--hover,
+        var(--button-background-color, transparent)
+      );
+      color: var(--button-color--hover, var(--button-color));
+      border-color: var(--button-border-color--hover, var(--button-border-color, transparent));
+      outline-color: var(--button-outline-color--hover, var(--button-outline-color, currentColor));
+    }
   }
   [data-slot='button']:where(:not([data-responsive='false']):focus-visible) {
     outline-style: solid;

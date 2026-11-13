@@ -116,11 +116,16 @@
     width: var(--input-lg-content-size, calc(var(--spacing) * 24));
     height: var(--input-lg-content-size, calc(var(--spacing) * 24));
   }
-  [data-slot='input']:where(:not([data-disabled]):hover) {
-    background-color: var(--input-background-color--hover, var(--input-background-color, transparent));
-    color: var(--input-color--hover, var(--input-color));
-    border-color: var(--input-border-color--hover, var(--input-border-color, transparent));
-    outline-color: var(--input-outline-color--hover, var(--input-outline-color, currentColor));
+  @media (hover: hover) {
+    [data-slot='input']:where(:not([data-disabled]):hover) {
+      background-color: var(
+        --input-background-color--hover,
+        var(--input-background-color, transparent)
+      );
+      color: var(--input-color--hover, var(--input-color));
+      border-color: var(--input-border-color--hover, var(--input-border-color, transparent));
+      outline-color: var(--input-outline-color--hover, var(--input-outline-color, currentColor));
+    }
   }
   [data-slot='input']:where(:has([data-slot='input-control']:focus-visible)) {
     outline-style: solid;
