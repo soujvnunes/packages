@@ -25,6 +25,14 @@ const CORNER_RADIUS: Record<(typeof BADGE_CORNERS)[number], string> = {
   'bottom-start': 'border-end-start-radius',
   'bottom-end': 'border-end-end-radius',
 }
+const BLOCK_NEIGHBOUR: Record<(typeof BADGE_CORNERS)[number], (typeof BADGE_CORNERS)[number]> = {
+  'top-start': 'bottom-start',
+  'top-end': 'bottom-end',
+  'bottom-start': 'top-start',
+  'bottom-end': 'top-end',
+}
+const cornersMatching = (element: Element, value: string) =>
+  BADGE_CORNERS.filter((corner) => element.matches(selectorWith(`${CORNER_RADIUS[corner]}:${value};`)))
 const ancestorsOf = (element: Element): Element[] =>
   element.parentElement ? [element.parentElement, ...ancestorsOf(element.parentElement)] : []
 const rootOf = (container: HTMLElement) => {
@@ -167,7 +175,7 @@ describe('Bar radius', () => {
 })
 describe('A badge on the corner of a bar or a button', () => {
   it.each(BADGE_CORNERS)(
-    'takes the %s corner, where it inherits the radius of what holds it on that corner alone',
+    'takes the %s corner, where it shares the radius of what holds it on that corner alone',
     (corner) => {
       const { container } = render(
         <Bar>
@@ -177,13 +185,43 @@ describe('A badge on the corner of a bar or a button', () => {
       const badge = screen.getByText('New')
       expect(badge.getAttribute('data-corner')).toBe(corner)
       expect(badge.parentElement).toBe(rootOf(container))
-      expect(
-        Object.values(CORNER_RADIUS).filter((radius) =>
-          badge.matches(selectorWith(`${radius}:inherit;`)),
-        ),
-      ).toEqual([CORNER_RADIUS[corner]])
+      expect(cornersMatching(badge, 'var(--ui-badge-corner-radius)')).toEqual([corner])
     },
   )
+  it.each(BADGE_CORNERS)(
+    'squares the corner beside %s on its block side and rounds the free ones by half its height, so no side of the badge holds more radius than its length and the browser scales no corner',
+    (corner) => {
+      render(
+        <Bar>
+          <Badge data-corner={corner}>New</Badge>
+        </Bar>,
+      )
+      const badge = screen.getByText('New')
+      expect(cornersMatching(badge, '0')).toEqual([BLOCK_NEIGHBOUR[corner]])
+      expect(
+        badge.matches(
+          selectorWith('border-radius:calc(var(--badge-height,calc(var(--spacing)*24))/2);'),
+        ),
+      ).toBe(true)
+      expect(
+        badge.matches(
+          selectorWith(
+            '--ui-badge-corner-radius:min(var(--ui-corner-radius,0px),var(--badge-height,calc(var(--spacing)*24)));',
+          ),
+        ),
+      ).toBe(true)
+    },
+  )
+  it('shares the radius a bar publishes for its corners, none until a product maps --bar-radius', () => {
+    const { container } = render(
+      <Bar>
+        <Badge data-corner="top-end">New</Badge>
+      </Bar>,
+    )
+    expect(
+      rootOf(container).matches(selectorWith('--ui-corner-radius:var(--ui-container-radius,0px);')),
+    ).toBe(true)
+  })
   it('shares the own radius of the button it sits on, not the inner radius a badge within it reads', () => {
     render(
       <Button kind="card" startItem="Lot 12">
@@ -194,8 +232,34 @@ describe('A badge on the corner of a bar or a button', () => {
     const button = screen.getByRole('button')
     const badge = screen.getByText('New')
     expect(badge.parentElement).toBe(button)
-    expect(badge.matches(selectorWith('border-start-end-radius:inherit;'))).toBe(true)
+    expect(badge.matches(selectorWith('border-start-end-radius:var(--ui-badge-corner-radius);'))).toBe(
+      true,
+    )
     expect(button.matches(selectorWith('border-radius:var(--ui-inner-radius-64,'))).toBe(true)
+    expect(
+      button.matches(
+        selectorWith(
+          '--ui-corner-radius:var(--ui-inner-radius-64,var(--ui-inner-radius-card,var(--button-card-md-radius,var(--radius-16))));',
+        ),
+      ),
+    ).toBe(true)
+  })
+  it('shares the drawn corner of a pill button, its radius held to half its height', () => {
+    render(
+      <Button>
+        Lot 12
+        <Badge data-corner="top-end">New</Badge>
+      </Button>,
+    )
+    expect(
+      screen
+        .getByRole('button')
+        .matches(
+          selectorWith(
+            '--ui-corner-radius:min(var(--button-md-radius,9999px),var(--button-md-height,calc(var(--spacing)*40))/2);',
+          ),
+        ),
+    ).toBe(true)
   })
   it('lifts the badge onto the corner and positions what holds it, so the corner is its own', () => {
     render(

@@ -7,6 +7,12 @@
   :is([data-slot='bar'], [data-slot='field'], [data-slot='button-group']) > * {
     --ui-inner-radius-card: initial;
   }
+  [data-slot='bar'],
+  [data-slot='field'],
+  [data-slot='button-group'],
+  [data-slot='card'] {
+    --ui-corner-radius: var(--ui-container-radius, 0px);
+  }
   [data-slot='card'] {
     --ui-inner-radius-card: max(0px, var(--ui-container-radius) - var(--ui-container-padding));
     --ui-inner-radius-64: initial;
