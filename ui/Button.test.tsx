@@ -183,6 +183,35 @@ describe('Button', () => {
     const button = screen.getByRole('button', { name: 'Bold', pressed: true })
     expect(button.matches(selectorReading('--button-background-color--pressed'))).toBe(true)
   })
+  it('falls the pressed and disabled outlines back to the focus colour, so a focused pressed button keeps its ring', () => {
+    render(
+      <>
+        <Button aria-pressed>Bold</Button>
+        <Button aria-disabled>Announced</Button>
+      </>,
+    )
+    const pressed = screen.getByRole('button', { name: 'Bold', pressed: true })
+    const disabled = screen.getByRole('button', { name: 'Announced' })
+    expect(
+      pressed.matches(
+        selectorWith(
+          'outline-color:var(--button-outline-color--pressed,var(--button-outline-color--focus,',
+        ),
+      ),
+    ).toBe(true)
+    expect(
+      disabled.matches(
+        selectorWith(
+          'outline-color:var(--button-outline-color--disabled,var(--button-outline-color--focus,',
+        ),
+      ),
+    ).toBe(true)
+  })
+  it('applies the hover colours only where the pointer can hover, so a tap leaves no stuck hover', () => {
+    expect(STYLESHEET.replace(/\s/g, '')).toContain(
+      "@media(hover:hover){[data-slot='button']:where(:not([data-responsive='false'],:disabled,[aria-disabled='true']):hover)",
+    )
+  })
   it('carries data-state when stateful, active while pressed and inactive otherwise', () => {
     render(
       <>
