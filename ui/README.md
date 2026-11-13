@@ -92,7 +92,7 @@ export const PlaceBid = () => (
 
 | Variable | Default |
 | --- | --- |
-| `--button-<size>-height` | 24, 40, 64 |
+| `--button-<size>-height` | 24, 40, 64, a minimum that a wrapped label grows past, and the fixed height of the icon kind |
 | `--button-<size>-px` | 16, 24, 40 |
 | `--button-<size>-content-size` | 12, 16, 24, the font size and the `svg` size |
 | `--button-<size>-gap` | 4, 8, 12 |

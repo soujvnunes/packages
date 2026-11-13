@@ -55,6 +55,21 @@ describe('Button', () => {
       expect(screen.getByRole('button').getAttribute('data-tone')).toBe(tone)
     },
   )
+  it('takes its size height as a minimum, so a wrapped label grows the button, and fixes it only on the icon kind', () => {
+    render(
+      <>
+        <Button>Label</Button>
+        <Button kind="icon" aria-label="Add">
+          {PLUS}
+        </Button>
+      </>,
+    )
+    const text = screen.getByRole('button', { name: 'Label' })
+    const icon = screen.getByRole('button', { name: 'Add' })
+    expect(text.matches(selectorWith('{min-height:var(--button-md-height,'))).toBe(true)
+    expect(text.matches(selectorWith('{height:var(--button-md-height,'))).toBe(false)
+    expect(icon.matches(selectorWith('{height:var(--button-md-height,'))).toBe(true)
+  })
   it('renders the start and end items in their own slots, hidden from assistive technology', () => {
     render(
       <Button startItem={PLUS} endItem="12">
