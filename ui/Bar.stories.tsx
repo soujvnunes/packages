@@ -68,7 +68,7 @@ export const HeaderWithButtons: Story = {
 }
 export const RadiusCases: Story = {
   render: () => (
-    <div className="grid gap-40 overflow-x-auto">
+    <div className="grid grid-cols-1 gap-40 overflow-x-auto">
       <figure className="flex flex-wrap items-start gap-16">
         <figcaption className="basis-full">
           Within: a control takes the inner radius of what holds it
