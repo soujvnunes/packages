@@ -1,0 +1,561 @@
+@layer components {
+  [data-slot='button'] {
+    box-sizing: border-box;
+    display: inline-flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    font: inherit;
+    line-height: var(--button-line-height, 1.25);
+    text-decoration: none;
+    cursor: pointer;
+    appearance: none;
+    border-style: solid;
+    border-width: var(--button-border-width, calc(var(--spacing) * 1));
+    outline-style: none;
+    outline-width: var(--button-outline-width, calc(var(--spacing) * 2));
+    outline-offset: var(--button-outline-offset, calc(var(--spacing) * 2));
+    background-color: var(
+      --button-background-color,
+      color-mix(in oklab, var(--button-color, transparent) 20%, transparent)
+    );
+    color: var(--button-text-color, var(--button-color));
+    border-color: var(
+      --button-border-color,
+      color-mix(in oklab, var(--button-color, transparent) 60%, transparent)
+    );
+    outline-color: var(--button-outline-color, currentColor);
+  }
+  [data-slot='button'][data-size='sm'] {
+    min-height: var(--button-sm-height, calc(var(--spacing) * 24));
+    padding-block: var(
+      --button-sm-py,
+      max(
+        0px,
+        (var(--button-sm-height, calc(var(--spacing) * 24)) - 1lh) / 2 -
+          var(--button-border-width, calc(var(--spacing) * 1))
+      )
+    );
+    padding-inline: var(--button-sm-px, calc(var(--spacing) * 12));
+    gap: var(--button-sm-gap, calc(var(--spacing) * 4));
+    font-size: var(--button-sm-content-size, calc(var(--spacing) * 12));
+    --icon-md-size: var(--button-sm-content-size, calc(var(--spacing) * 12));
+    border-radius: var(
+      --ui-inner-radius-64,
+      var(--ui-inner-radius-card, var(--button-sm-radius, var(--radius-12)))
+    );
+    --ui-inner-radius-40: max(
+      0px,
+      var(
+          --ui-inner-radius-64,
+          var(--ui-inner-radius-card, var(--button-sm-radius, var(--radius-12)))
+        ) -
+        var(--button-sm-px, calc(var(--spacing) * 12))
+    );
+  }
+  [data-slot='button'][data-size='md'] {
+    min-height: var(--button-md-height, calc(var(--spacing) * 40));
+    padding-block: var(
+      --button-md-py,
+      max(
+        0px,
+        (var(--button-md-height, calc(var(--spacing) * 40)) - 1lh) / 2 -
+          var(--button-border-width, calc(var(--spacing) * 1))
+      )
+    );
+    padding-inline: var(--button-md-px, calc(var(--spacing) * 16));
+    gap: var(--button-md-gap, calc(var(--spacing) * 8));
+    font-size: var(--button-md-content-size, calc(var(--spacing) * 16));
+    --icon-md-size: var(--button-md-content-size, calc(var(--spacing) * 16));
+    border-radius: var(
+      --ui-inner-radius-64,
+      var(--ui-inner-radius-card, var(--button-md-radius, var(--radius-24)))
+    );
+    --ui-inner-radius-40: max(
+      0px,
+      var(
+          --ui-inner-radius-64,
+          var(--ui-inner-radius-card, var(--button-md-radius, var(--radius-24)))
+        ) -
+        var(--button-md-px, calc(var(--spacing) * 16))
+    );
+  }
+  [data-slot='button'][data-size='lg'] {
+    min-height: var(--button-lg-height, calc(var(--spacing) * 64));
+    padding-block: var(
+      --button-lg-py,
+      max(
+        0px,
+        (var(--button-lg-height, calc(var(--spacing) * 64)) - 1lh) / 2 -
+          var(--button-border-width, calc(var(--spacing) * 1))
+      )
+    );
+    padding-inline: var(--button-lg-px, calc(var(--spacing) * 24));
+    gap: var(--button-lg-gap, calc(var(--spacing) * 12));
+    font-size: var(--button-lg-content-size, calc(var(--spacing) * 24));
+    --icon-md-size: var(--button-lg-content-size, calc(var(--spacing) * 24));
+    border-radius: var(
+      --ui-inner-radius-64,
+      var(--ui-inner-radius-card, var(--button-lg-radius, var(--radius-40)))
+    );
+    --ui-inner-radius-40: max(
+      0px,
+      var(
+          --ui-inner-radius-64,
+          var(--ui-inner-radius-card, var(--button-lg-radius, var(--radius-40)))
+        ) -
+        var(--button-lg-px, calc(var(--spacing) * 24))
+    );
+  }
+  :where([data-slot='button'][data-size='sm']) svg {
+    width: var(--button-sm-content-size, calc(var(--spacing) * 12));
+    height: var(--button-sm-content-size, calc(var(--spacing) * 12));
+  }
+  :where([data-slot='button'][data-size='md']) svg {
+    width: var(--button-md-content-size, calc(var(--spacing) * 16));
+    height: var(--button-md-content-size, calc(var(--spacing) * 16));
+  }
+  :where([data-slot='button'][data-size='lg']) svg {
+    width: var(--button-lg-content-size, calc(var(--spacing) * 24));
+    height: var(--button-lg-content-size, calc(var(--spacing) * 24));
+  }
+  [data-slot='button-start-item'],
+  [data-slot='button-end-item'] {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+  }
+  [data-slot='button']:not([data-kind='icon']) > [data-slot='button-end-item'] {
+    margin-inline-start: auto;
+  }
+  [data-slot='button'][data-content-between='true']:not([data-kind='icon'])
+    > [data-slot='button-start-item']:has(~ [data-slot='button-end-item']) {
+    margin-inline-end: auto;
+  }
+  [data-slot='button'][data-size='sm']:not([data-kind='icon']) > [data-slot='button-start-item'] {
+    margin-inline-start: calc(var(--button-sm-px, calc(var(--spacing) * 12)) / -2);
+  }
+  [data-slot='button'][data-size='sm']:not([data-kind='icon']) > [data-slot='button-end-item'] {
+    margin-inline-end: calc(var(--button-sm-px, calc(var(--spacing) * 12)) / -2);
+  }
+  [data-slot='button'][data-size='md']:not([data-kind='icon']) > [data-slot='button-start-item'],
+  [data-slot='button'][data-size='md'][data-element-edge~='start'] > [data-slot='badge']:first-child {
+    margin-inline-start: calc(var(--button-md-px, calc(var(--spacing) * 16)) / -2);
+  }
+  [data-slot='button'][data-size='md']:not([data-kind='icon']) > [data-slot='button-end-item'],
+  [data-slot='button'][data-size='md'][data-element-edge~='end'] > [data-slot='badge']:last-child {
+    margin-inline-end: calc(var(--button-md-px, calc(var(--spacing) * 16)) / -2);
+  }
+  [data-slot='button'][data-size='md']:not([data-kind='card']) [data-slot='badge'] {
+    margin-block: min(
+      0px,
+      (
+          var(--button-md-content-size, calc(var(--spacing) * 16)) * var(--button-line-height, 1.25) -
+            var(--badge-height, calc(var(--spacing) * 24))
+        ) /
+        2
+    );
+  }
+  [data-slot='button'][data-size='lg']:not([data-kind='icon']) > [data-slot='button-start-item'] {
+    margin-inline-start: calc(var(--button-lg-px, calc(var(--spacing) * 24)) / -2);
+  }
+  [data-slot='button'][data-size='lg']:not([data-kind='icon']) > [data-slot='button-end-item'] {
+    margin-inline-end: calc(var(--button-lg-px, calc(var(--spacing) * 24)) / -2);
+  }
+  [data-slot='button'][data-kind='icon'] {
+    aspect-ratio: 1;
+    padding: 0;
+  }
+  [data-slot='button'][data-kind='icon'][data-size='sm'] {
+    height: var(--button-sm-height, calc(var(--spacing) * 24));
+    --ui-inner-radius-40: var(
+      --ui-inner-radius-64,
+      var(--ui-inner-radius-card, var(--button-sm-radius, var(--radius-12)))
+    );
+  }
+  [data-slot='button'][data-kind='icon'][data-size='md'] {
+    height: var(--button-md-height, calc(var(--spacing) * 40));
+    --ui-inner-radius-40: var(
+      --ui-inner-radius-64,
+      var(--ui-inner-radius-card, var(--button-md-radius, var(--radius-24)))
+    );
+  }
+  [data-slot='button'][data-kind='icon'][data-size='lg'] {
+    height: var(--button-lg-height, calc(var(--spacing) * 64));
+    --ui-inner-radius-40: var(
+      --ui-inner-radius-64,
+      var(--ui-inner-radius-card, var(--button-lg-radius, var(--radius-40)))
+    );
+  }
+  [data-slot='button'][data-kind='fullWidth'] {
+    display: flex;
+    width: 100%;
+  }
+  [data-slot='button'][data-kind='card'] {
+    display: flex;
+    min-height: auto;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    text-align: start;
+  }
+  [data-slot='button'][data-kind='card'][data-size='sm'] {
+    padding-block: var(--button-card-sm-py, calc(var(--spacing) * 4));
+    padding-inline: var(--button-card-sm-px, calc(var(--spacing) * 8));
+    border-radius: var(
+      --ui-inner-radius-64,
+      var(--ui-inner-radius-card, var(--button-card-sm-radius, var(--radius-12)))
+    );
+    --ui-inner-radius-40: max(
+      0px,
+      var(
+          --ui-inner-radius-64,
+          var(--ui-inner-radius-card, var(--button-card-sm-radius, var(--radius-12)))
+        ) -
+        var(--button-card-sm-px, calc(var(--spacing) * 8))
+    );
+  }
+  [data-slot='button'][data-kind='card'][data-size='md'] {
+    padding-block: var(--button-card-md-py, calc(var(--spacing) * 8));
+    padding-inline: var(--button-card-md-px, calc(var(--spacing) * 12));
+    border-radius: var(
+      --ui-inner-radius-64,
+      var(--ui-inner-radius-card, var(--button-card-md-radius, var(--radius-16)))
+    );
+    --ui-inner-radius-40: max(
+      0px,
+      var(
+          --ui-inner-radius-64,
+          var(--ui-inner-radius-card, var(--button-card-md-radius, var(--radius-16)))
+        ) -
+        var(--button-card-md-px, calc(var(--spacing) * 12))
+    );
+  }
+  [data-slot='button'][data-kind='card'][data-size='lg'] {
+    padding-block: var(--button-card-lg-py, calc(var(--spacing) * 12));
+    padding-inline: var(--button-card-lg-px, calc(var(--spacing) * 16));
+    border-radius: var(
+      --ui-inner-radius-64,
+      var(--ui-inner-radius-card, var(--button-card-lg-radius, var(--radius-24)))
+    );
+    --ui-inner-radius-40: max(
+      0px,
+      var(
+          --ui-inner-radius-64,
+          var(--ui-inner-radius-card, var(--button-card-lg-radius, var(--radius-24)))
+        ) -
+        var(--button-card-lg-px, calc(var(--spacing) * 16))
+    );
+  }
+  [data-slot='button-items'] {
+    display: flex;
+    align-items: center;
+    gap: inherit;
+  }
+  [data-slot='button-items'] > [data-slot='button-end-item'] {
+    margin-inline-start: auto;
+  }
+  [data-slot='button'][data-responsive='false'] {
+    cursor: default;
+    user-select: none;
+  }
+  [data-slot='button']:where(:not([data-responsive='false']):focus-visible) {
+    outline-style: solid;
+    background-color: var(
+      --button-background-color--focus,
+      var(
+        --button-background-color,
+        color-mix(in oklab, var(--button-color, transparent) 20%, transparent)
+      )
+    );
+    color: var(--button-text-color--focus, var(--button-text-color, var(--button-color)));
+    border-color: var(
+      --button-border-color--focus,
+      var(--button-border-color, color-mix(in oklab, var(--button-color, transparent) 60%, transparent))
+    );
+    outline-color: var(--button-outline-color--focus, var(--button-outline-color, currentColor));
+  }
+  [data-slot='button']:where(:not([data-responsive='false'])):where(
+      [aria-pressed='true'],
+      [aria-selected='true'],
+      [data-state='active']
+    ) {
+    background-color: var(
+      --button-background-color--pressed,
+      color-mix(
+        in oklab,
+        var(
+            --button-background-color,
+            color-mix(in oklab, var(--button-color, transparent) 20%, transparent)
+          )
+          60%,
+        transparent
+      )
+    );
+    color: var(
+      --button-text-color--pressed,
+      color-mix(in oklab, var(--button-text-color, var(--button-color)) 60%, transparent)
+    );
+    border-color: var(
+      --button-border-color--pressed,
+      color-mix(
+        in oklab,
+        var(
+            --button-border-color,
+            color-mix(in oklab, var(--button-color, transparent) 60%, transparent)
+          )
+          60%,
+        transparent
+      )
+    );
+    outline-color: var(
+      --button-outline-color--pressed,
+      var(--button-outline-color--focus, var(--button-outline-color, currentColor))
+    );
+  }
+  @media (hover: hover) {
+    [data-slot='button']:where(
+      :not([data-responsive='false'], :disabled, [aria-disabled='true']):hover
+    ) {
+      background-color: var(
+        --button-background-color--hover,
+        color-mix(
+          in oklab,
+          var(
+              --button-background-color,
+              color-mix(in oklab, var(--button-color, transparent) 20%, transparent)
+            )
+            80%,
+          transparent
+        )
+      );
+      color: var(
+        --button-text-color--hover,
+        color-mix(in oklab, var(--button-text-color, var(--button-color)) 80%, transparent)
+      );
+      border-color: var(
+        --button-border-color--hover,
+        color-mix(
+          in oklab,
+          var(
+              --button-border-color,
+              color-mix(in oklab, var(--button-color, transparent) 60%, transparent)
+            )
+            80%,
+          transparent
+        )
+      );
+      outline-color: var(
+        --button-outline-color--hover,
+        var(--button-outline-color--focus, var(--button-outline-color, currentColor))
+      );
+    }
+  }
+  [data-slot='button']:where(
+    :not([data-responsive='false'], :disabled, [aria-disabled='true']):active
+  ) {
+    background-color: var(
+      --button-background-color--active,
+      color-mix(
+        in oklab,
+        var(
+            --button-background-color,
+            color-mix(in oklab, var(--button-color, transparent) 20%, transparent)
+          )
+          60%,
+        transparent
+      )
+    );
+    color: var(
+      --button-text-color--active,
+      color-mix(in oklab, var(--button-text-color, var(--button-color)) 60%, transparent)
+    );
+    border-color: var(
+      --button-border-color--active,
+      color-mix(
+        in oklab,
+        var(
+            --button-border-color,
+            color-mix(in oklab, var(--button-color, transparent) 60%, transparent)
+          )
+          60%,
+        transparent
+      )
+    );
+    outline-color: var(
+      --button-outline-color--active,
+      var(--button-outline-color--focus, var(--button-outline-color, currentColor))
+    );
+  }
+  [data-slot='button']:where(:disabled, [aria-disabled='true']) {
+    cursor: default;
+    background-color: var(
+      --button-background-color--disabled,
+      color-mix(
+        in oklab,
+        var(
+            --button-background-color,
+            color-mix(in oklab, var(--button-color, transparent) 20%, transparent)
+          )
+          40%,
+        transparent
+      )
+    );
+    color: var(
+      --button-text-color--disabled,
+      color-mix(in oklab, var(--button-text-color, var(--button-color)) 40%, transparent)
+    );
+    border-color: var(
+      --button-border-color--disabled,
+      color-mix(
+        in oklab,
+        var(
+            --button-border-color,
+            color-mix(in oklab, var(--button-color, transparent) 60%, transparent)
+          )
+          40%,
+        transparent
+      )
+    );
+    outline-color: var(
+      --button-outline-color--disabled,
+      var(--button-outline-color--focus, var(--button-outline-color, currentColor))
+    );
+  }
+  [data-slot='button'][data-tone='main'] {
+    --button-background-color: var(--button-main-background-color);
+    --button-background-color--hover: var(--button-main-background-color--hover);
+    --button-background-color--focus: var(--button-main-background-color--focus);
+    --button-background-color--active: var(--button-main-background-color--active);
+    --button-background-color--pressed: var(--button-main-background-color--pressed);
+    --button-background-color--disabled: var(--button-main-background-color--disabled);
+    --button-color: var(--button-main-color);
+    --button-text-color: var(--button-main-text-color);
+    --button-text-color--hover: var(--button-main-text-color--hover);
+    --button-text-color--focus: var(--button-main-text-color--focus);
+    --button-text-color--active: var(--button-main-text-color--active);
+    --button-text-color--pressed: var(--button-main-text-color--pressed);
+    --button-text-color--disabled: var(--button-main-text-color--disabled);
+    --button-border-color: var(--button-main-border-color);
+    --button-border-color--hover: var(--button-main-border-color--hover);
+    --button-border-color--focus: var(--button-main-border-color--focus);
+    --button-border-color--active: var(--button-main-border-color--active);
+    --button-border-color--pressed: var(--button-main-border-color--pressed);
+    --button-border-color--disabled: var(--button-main-border-color--disabled);
+    --button-outline-color: var(--button-main-outline-color);
+    --button-outline-color--hover: var(--button-main-outline-color--hover);
+    --button-outline-color--focus: var(--button-main-outline-color--focus);
+    --button-outline-color--active: var(--button-main-outline-color--active);
+    --button-outline-color--pressed: var(--button-main-outline-color--pressed);
+    --button-outline-color--disabled: var(--button-main-outline-color--disabled);
+  }
+  [data-slot='button'][data-tone='accent'] {
+    --button-background-color: var(--button-accent-background-color);
+    --button-background-color--hover: var(--button-accent-background-color--hover);
+    --button-background-color--focus: var(--button-accent-background-color--focus);
+    --button-background-color--active: var(--button-accent-background-color--active);
+    --button-background-color--pressed: var(--button-accent-background-color--pressed);
+    --button-background-color--disabled: var(--button-accent-background-color--disabled);
+    --button-color: var(--button-accent-color);
+    --button-text-color: var(--button-accent-text-color);
+    --button-text-color--hover: var(--button-accent-text-color--hover);
+    --button-text-color--focus: var(--button-accent-text-color--focus);
+    --button-text-color--active: var(--button-accent-text-color--active);
+    --button-text-color--pressed: var(--button-accent-text-color--pressed);
+    --button-text-color--disabled: var(--button-accent-text-color--disabled);
+    --button-border-color: var(--button-accent-border-color);
+    --button-border-color--hover: var(--button-accent-border-color--hover);
+    --button-border-color--focus: var(--button-accent-border-color--focus);
+    --button-border-color--active: var(--button-accent-border-color--active);
+    --button-border-color--pressed: var(--button-accent-border-color--pressed);
+    --button-border-color--disabled: var(--button-accent-border-color--disabled);
+    --button-outline-color: var(--button-accent-outline-color);
+    --button-outline-color--hover: var(--button-accent-outline-color--hover);
+    --button-outline-color--focus: var(--button-accent-outline-color--focus);
+    --button-outline-color--active: var(--button-accent-outline-color--active);
+    --button-outline-color--pressed: var(--button-accent-outline-color--pressed);
+    --button-outline-color--disabled: var(--button-accent-outline-color--disabled);
+  }
+  [data-slot='button'][data-tone='success'] {
+    --button-background-color: var(--button-success-background-color);
+    --button-background-color--hover: var(--button-success-background-color--hover);
+    --button-background-color--focus: var(--button-success-background-color--focus);
+    --button-background-color--active: var(--button-success-background-color--active);
+    --button-background-color--pressed: var(--button-success-background-color--pressed);
+    --button-background-color--disabled: var(--button-success-background-color--disabled);
+    --button-color: var(--button-success-color);
+    --button-text-color: var(--button-success-text-color);
+    --button-text-color--hover: var(--button-success-text-color--hover);
+    --button-text-color--focus: var(--button-success-text-color--focus);
+    --button-text-color--active: var(--button-success-text-color--active);
+    --button-text-color--pressed: var(--button-success-text-color--pressed);
+    --button-text-color--disabled: var(--button-success-text-color--disabled);
+    --button-border-color: var(--button-success-border-color);
+    --button-border-color--hover: var(--button-success-border-color--hover);
+    --button-border-color--focus: var(--button-success-border-color--focus);
+    --button-border-color--active: var(--button-success-border-color--active);
+    --button-border-color--pressed: var(--button-success-border-color--pressed);
+    --button-border-color--disabled: var(--button-success-border-color--disabled);
+    --button-outline-color: var(--button-success-outline-color);
+    --button-outline-color--hover: var(--button-success-outline-color--hover);
+    --button-outline-color--focus: var(--button-success-outline-color--focus);
+    --button-outline-color--active: var(--button-success-outline-color--active);
+    --button-outline-color--pressed: var(--button-success-outline-color--pressed);
+    --button-outline-color--disabled: var(--button-success-outline-color--disabled);
+  }
+  [data-slot='button'][data-tone='warning'] {
+    --button-background-color: var(--button-warning-background-color);
+    --button-background-color--hover: var(--button-warning-background-color--hover);
+    --button-background-color--focus: var(--button-warning-background-color--focus);
+    --button-background-color--active: var(--button-warning-background-color--active);
+    --button-background-color--pressed: var(--button-warning-background-color--pressed);
+    --button-background-color--disabled: var(--button-warning-background-color--disabled);
+    --button-color: var(--button-warning-color);
+    --button-text-color: var(--button-warning-text-color);
+    --button-text-color--hover: var(--button-warning-text-color--hover);
+    --button-text-color--focus: var(--button-warning-text-color--focus);
+    --button-text-color--active: var(--button-warning-text-color--active);
+    --button-text-color--pressed: var(--button-warning-text-color--pressed);
+    --button-text-color--disabled: var(--button-warning-text-color--disabled);
+    --button-border-color: var(--button-warning-border-color);
+    --button-border-color--hover: var(--button-warning-border-color--hover);
+    --button-border-color--focus: var(--button-warning-border-color--focus);
+    --button-border-color--active: var(--button-warning-border-color--active);
+    --button-border-color--pressed: var(--button-warning-border-color--pressed);
+    --button-border-color--disabled: var(--button-warning-border-color--disabled);
+    --button-outline-color: var(--button-warning-outline-color);
+    --button-outline-color--hover: var(--button-warning-outline-color--hover);
+    --button-outline-color--focus: var(--button-warning-outline-color--focus);
+    --button-outline-color--active: var(--button-warning-outline-color--active);
+    --button-outline-color--pressed: var(--button-warning-outline-color--pressed);
+    --button-outline-color--disabled: var(--button-warning-outline-color--disabled);
+  }
+  [data-slot='button'][data-tone='error'] {
+    --button-background-color: var(--button-error-background-color);
+    --button-background-color--hover: var(--button-error-background-color--hover);
+    --button-background-color--focus: var(--button-error-background-color--focus);
+    --button-background-color--active: var(--button-error-background-color--active);
+    --button-background-color--pressed: var(--button-error-background-color--pressed);
+    --button-background-color--disabled: var(--button-error-background-color--disabled);
+    --button-color: var(--button-error-color);
+    --button-text-color: var(--button-error-text-color);
+    --button-text-color--hover: var(--button-error-text-color--hover);
+    --button-text-color--focus: var(--button-error-text-color--focus);
+    --button-text-color--active: var(--button-error-text-color--active);
+    --button-text-color--pressed: var(--button-error-text-color--pressed);
+    --button-text-color--disabled: var(--button-error-text-color--disabled);
+    --button-border-color: var(--button-error-border-color);
+    --button-border-color--hover: var(--button-error-border-color--hover);
+    --button-border-color--focus: var(--button-error-border-color--focus);
+    --button-border-color--active: var(--button-error-border-color--active);
+    --button-border-color--pressed: var(--button-error-border-color--pressed);
+    --button-border-color--disabled: var(--button-error-border-color--disabled);
+    --button-outline-color: var(--button-error-outline-color);
+    --button-outline-color--hover: var(--button-error-outline-color--hover);
+    --button-outline-color--focus: var(--button-error-outline-color--focus);
+    --button-outline-color--active: var(--button-error-outline-color--active);
+    --button-outline-color--pressed: var(--button-error-outline-color--pressed);
+    --button-outline-color--disabled: var(--button-error-outline-color--disabled);
+  }
+}

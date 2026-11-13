@@ -145,6 +145,28 @@
     --color-neutral-10: color-mix(in oklab, var(--palette-black) 10%, transparent);
   }
 
+  :root {
+    --button-main-color: var(--color-main);
+    --button-accent-color: var(--color-accent);
+    --button-success-color: var(--color-success);
+    --button-warning-color: var(--color-warning);
+    --button-error-color: var(--color-error);
+
+    --bar-color: var(--color-neutral);
+    --bar-background-color: var(--color-neutral-10);
+    --field-color: var(--color-neutral);
+    --field-background-color: var(--color-surface);
+    --button-group-background-color: var(--color-neutral-10);
+    --card-color: var(--color-neutral);
+    --card-background-color: var(--color-surface);
+    --card-border-color: var(--color-neutral-20);
+  }
+
+  [data-slot='button'][data-tone='accent'] {
+    --button-accent-background-color: var(--color-accent);
+    --button-accent-text-color: var(--color-neutral);
+  }
+
   body {
     background-color: var(--color-background);
     color: var(--color-neutral);

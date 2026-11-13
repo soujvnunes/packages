@@ -33,6 +33,9 @@
   "files": [
     "dist"
   ],
+  "sideEffects": [
+    "*.css"
+  ],
   "scripts": {
     "build": "tsup",
     "typecheck": "tsc --noEmit",

@@ -1,0 +1,855 @@
+import { createRef } from 'react'
+import { cleanup, render, screen } from '@testing-library/react'
+import { readFileSync } from 'node:fs'
+import { afterEach, describe, expect, it } from 'vitest'
+import { Badge } from './Badge'
+import { BUTTON_KINDS, BUTTON_SIZES, BUTTON_TONES, Button } from './Button'
+import { Icon, type IconNode } from './Icon'
+const STYLESHEET = readFileSync(`${import.meta.dirname}/styles/button.css`, 'utf8')
+const PLUS = <svg viewBox="0 0 24 24" />
+const PLUS_NODE: IconNode = [['path', { d: 'M5 12h14M12 5v14', key: 'plus' }]]
+const THEME: React.CSSProperties & Record<`--${string}`, string> = {
+  '--button-main-background-color': 'rgb(1, 2, 3)',
+}
+const selectorWith = (declaration: string) => {
+  const selectors = STYLESHEET.split('}')
+    .filter((chunk) => chunk.replace(/\s/g, '').includes(declaration))
+    .map((rule) => rule.split('{').at(-2)?.trim())
+    .filter(Boolean)
+  if (selectors.length === 0) throw new Error(`No rule of the stylesheet holds ${declaration}.`)
+  return selectors.join(', ')
+}
+const selectorReading = (variable: string) => selectorWith(`var(${variable},`)
+const RULES = STYLESHEET.replace(/\s+/g, ' ')
+  .replace(/\s*([(,:;{}])\s*/g, '$1')
+  .replace(/\s*\)/g, ')')
+  .split('}')
+  .flatMap((chunk) => {
+    const parts = chunk.split('{')
+    const selector = parts.at(-2)
+    const body = parts.at(-1)
+    if (selector === undefined || body === undefined) return []
+    const declarations = body
+      .split(';')
+      .filter(Boolean)
+      .map((declaration) => {
+        const colon = declaration.indexOf(':')
+        return [declaration.slice(0, colon), declaration.slice(colon + 1)] as const
+      })
+    return [{ selector, declarations: Object.fromEntries(declarations) }]
+  })
+const STATE_STEPS = { hover: 80, active: 60, pressed: 60, disabled: 40 } as const
+const STATES = Object.keys(STATE_STEPS) as readonly (keyof typeof STATE_STEPS)[]
+const PAINT_PROPERTIES = {
+  'background-color': 'background-color',
+  'text-color': 'color',
+  'border-color': 'border-color',
+} as const
+const PAINTS = Object.keys(PAINT_PROPERTIES) as readonly (keyof typeof PAINT_PROPERTIES)[]
+const DEFAULT_STEPS = { 'background-color': 20, 'border-color': 60 } as const
+const REST = 'rgb(1,2,3)'
+const MAPPED = 'rgb(4,5,6)'
+type Paint = (typeof PAINTS)[number]
+type Variables = Readonly<Record<string, string>>
+const closingParenthesis = (value: string, from: number) => {
+  let depth = 0
+  for (let index = from; index < value.length; index += 1) {
+    if (value[index] === '(') depth += 1
+    if (value[index] === ')') {
+      if (depth === 0) return index
+      depth -= 1
+    }
+  }
+  throw new Error(`No closing parenthesis after ${value.slice(from)}.`)
+}
+const substitute = (value: string, variables: Variables): string | null => {
+  const start = value.indexOf('var(')
+  if (start === -1) return value
+  const end = closingParenthesis(value, start + 'var('.length)
+  const inner = value.slice(start + 'var('.length, end)
+  const comma = inner.indexOf(',')
+  const name = comma === -1 ? inner : inner.slice(0, comma)
+  const fallback = comma === -1 ? null : inner.slice(comma + 1)
+  const replacement = variables[name] ?? (fallback === null ? null : substitute(fallback, variables))
+  if (replacement === null) return null
+  return substitute(`${value.slice(0, start)}${replacement}${value.slice(end + 1)}`, variables)
+}
+const paintDeclaration = (paint: Paint, state: keyof typeof STATE_STEPS | 'focus' | 'rest') => {
+  const property = PAINT_PROPERTIES[paint]
+  const head = state === 'rest' ? `var(--button-${paint},` : `var(--button-${paint}--${state},`
+  const declared = RULES.map((rule) => rule.declarations[property]).find((value) =>
+    value?.startsWith(head),
+  )
+  if (declared === undefined)
+    throw new Error(`No rule of the stylesheet sets ${property} from ${head}.`)
+  return declared
+}
+const tonedVariables = (tone: (typeof BUTTON_TONES)[number], product: Variables) => {
+  const rule = RULES.find(({ selector }) => selector === `[data-slot='button'][data-tone='${tone}']`)
+  if (!rule) throw new Error(`No rule of the stylesheet maps the ${tone} tone.`)
+  const own = Object.entries(rule.declarations).map(
+    ([name, value]) => [name, substitute(value, product)] as const,
+  )
+  return Object.fromEntries([
+    ...Object.entries(product).filter(([name]) => !Object.hasOwn(rule.declarations, name)),
+    ...own.filter((entry): entry is readonly [string, string] => entry[1] !== null),
+  ])
+}
+const withoutWhere = (selector: string): string => {
+  const start = selector.indexOf(':where(')
+  if (start === -1) return selector
+  const end = closingParenthesis(selector, start + ':where('.length)
+  return withoutWhere(`${selector.slice(0, start)}${selector.slice(end + 1)}`)
+}
+const stateRule = (state: keyof typeof STATE_STEPS | 'focus') => {
+  const index = RULES.findIndex(({ declarations }) =>
+    declarations['background-color']?.startsWith(`var(--button-background-color--${state},`),
+  )
+  const rule = RULES[index]
+  if (!rule) throw new Error(`No rule of the stylesheet paints the ${state} state.`)
+  return { index, selector: rule.selector }
+}
+const scaled = (state: keyof typeof STATE_STEPS, rest = REST) =>
+  `color-mix(in oklab,${rest} ${STATE_STEPS[state]}%,transparent)`
+const restFrom = (paint: Paint, color: string) =>
+  paint === 'text-color' ? color : `color-mix(in oklab,${color} ${DEFAULT_STEPS[paint]}%,transparent)`
+const TEXT_HEIGHT = { sm: 24, md: 40, lg: 64 } as const
+const TEXT_PADDING = { sm: 12, md: 16, lg: 24 } as const
+const TEXT_RADIUS = { sm: 12, md: 24, lg: 40 } as const
+const TEXT_INNER_RADIUS = { sm: 0, md: 8, lg: 16 } as const
+const CARD_BOX = {
+  sm: { px: 8, py: 4, radius: 12 },
+  md: { px: 12, py: 8, radius: 16 },
+  lg: { px: 16, py: 12, radius: 24 },
+} as const
+afterEach(cleanup)
+describe('Button', () => {
+  it('renders a button named by its label, of the text kind and md size by default', () => {
+    render(<Button>Place a bid</Button>)
+    const button = screen.getByRole('button', { name: 'Place a bid' })
+    expect(button.getAttribute('data-slot')).toBe('button')
+    expect(button.getAttribute('data-kind')).toBe('text')
+    expect(button.getAttribute('data-size')).toBe('md')
+  })
+  it('defaults its type to button, so a button inside a form does not submit it', () => {
+    render(<Button>Cancel</Button>)
+    expect(screen.getByRole('button').getAttribute('type')).toBe('button')
+  })
+  it('keeps the type it is given', () => {
+    render(<Button type="submit">Send</Button>)
+    expect(screen.getByRole('button').getAttribute('type')).toBe('submit')
+  })
+  it.each(BUTTON_KINDS)(
+    'carries the %s kind as its data-kind attribute, for the stylesheet to read',
+    (kind) => {
+      render(<Button kind={kind}>Label</Button>)
+      expect(screen.getByRole('button').getAttribute('data-kind')).toBe(kind)
+    },
+  )
+  it.each(BUTTON_SIZES)(
+    'carries the %s size as its data-size attribute, for the stylesheet to read',
+    (size) => {
+      render(<Button size={size}>Label</Button>)
+      expect(screen.getByRole('button').getAttribute('data-size')).toBe(size)
+    },
+  )
+  it.each(BUTTON_TONES)(
+    'passes the %s tone through as data-tone, where the stylesheet swaps its colours',
+    (tone) => {
+      render(<Button data-tone={tone}>Label</Button>)
+      expect(screen.getByRole('button').getAttribute('data-tone')).toBe(tone)
+    },
+  )
+  it('takes its size height as a minimum, so a wrapped label grows the button, and fixes it only on the icon kind', () => {
+    render(
+      <>
+        <Button>Label</Button>
+        <Button kind="icon" aria-label="Add">
+          {PLUS}
+        </Button>
+      </>,
+    )
+    const text = screen.getByRole('button', { name: 'Label' })
+    const icon = screen.getByRole('button', { name: 'Add' })
+    expect(text.matches(selectorWith('{min-height:var(--button-md-height,'))).toBe(true)
+    expect(text.matches(selectorWith('{height:var(--button-md-height,'))).toBe(false)
+    expect(icon.matches(selectorWith('{height:var(--button-md-height,'))).toBe(true)
+  })
+  it.each(BUTTON_SIZES)(
+    'drops the %s height minimum on the card kind, which takes its height from its padding and content',
+    (size) => {
+      render(
+        <>
+          <Button size={size}>Label</Button>
+          <Button kind="card" size={size}>
+            Lot 12
+          </Button>
+        </>,
+      )
+      const flat = STYLESHEET.replace(/\s/g, '')
+      const autoHeight = selectorWith('min-height:auto;')
+      expect(screen.getByRole('button', { name: 'Lot 12' }).matches(autoHeight)).toBe(true)
+      expect(screen.getByRole('button', { name: 'Label' }).matches(autoHeight)).toBe(false)
+      expect(flat.indexOf('min-height:auto;')).toBeGreaterThan(
+        flat.indexOf(`min-height:var(--button-${size}-height,`),
+      )
+    },
+  )
+  it.each(BUTTON_SIZES)(
+    'pads the %s text kind inline two steps below its height, the same number as its content',
+    (size) => {
+      render(<Button size={size}>Label</Button>)
+      const px = `var(--button-${size}-px,calc(var(--spacing)*${TEXT_PADDING[size]}))`
+      expect(screen.getByRole('button').matches(selectorWith(`padding-inline:${px};`))).toBe(true)
+      expect(STYLESHEET.replace(/\s/g, '')).toContain(
+        `font-size:var(--button-${size}-content-size,calc(var(--spacing)*${TEXT_PADDING[size]}));`,
+      )
+    },
+  )
+  it.each(BUTTON_SIZES)(
+    'pads the %s text kind block by half its height less one line and the border, so one line keeps the height and a wrapped label keeps a gap',
+    (size) => {
+      render(<Button size={size}>Label</Button>)
+      const height = `var(--button-${size}-height,calc(var(--spacing)*${TEXT_HEIGHT[size]}))`
+      const border = 'var(--button-border-width,calc(var(--spacing)*1))'
+      expect(
+        screen
+          .getByRole('button')
+          .matches(
+            selectorWith(
+              `padding-block:var(--button-${size}-py,max(0px,(${height}-1lh)/2-${border}));`,
+            ),
+          ),
+      ).toBe(true)
+    },
+  )
+  it('sets a line height above 1, so the lines of a wrapped label do not touch, and gives the icon kind no padding', () => {
+    render(
+      <>
+        <Button>Label</Button>
+        <Button kind="icon" aria-label="Add">
+          {PLUS}
+        </Button>
+      </>,
+    )
+    const lineHeight = selectorWith('line-height:var(--button-line-height,1.25);')
+    expect(screen.getByRole('button', { name: 'Label' }).matches(lineHeight)).toBe(true)
+    expect(screen.getByRole('button', { name: 'Add' }).matches(selectorWith('padding:0;'))).toBe(true)
+  })
+  it.each(BUTTON_SIZES)(
+    'defaults the %s text kind to its radius step, reads the inner radius of a field or a card before it, and publishes its radius less its padding',
+    (size) => {
+      render(<Button size={size}>Label</Button>)
+      const button = screen.getByRole('button')
+      const px = `var(--button-${size}-px,calc(var(--spacing)*${TEXT_PADDING[size]}))`
+      const radius = `var(--ui-inner-radius-64,var(--ui-inner-radius-card,var(--button-${size}-radius,var(--radius-${TEXT_RADIUS[size]}))))`
+      expect(button.matches(selectorWith(`border-radius:${radius};`))).toBe(true)
+      expect(button.matches(selectorWith(`--ui-inner-radius-40:max(0px,${radius}-${px});`))).toBe(true)
+      expect(TEXT_RADIUS[size] - TEXT_PADDING[size]).toBe(TEXT_INNER_RADIUS[size])
+    },
+  )
+  it.each(BUTTON_SIZES)(
+    'publishes the whole radius from the %s icon kind, which has no inline padding to subtract',
+    (size) => {
+      render(
+        <Button kind="icon" size={size} aria-label="Alerts">
+          {PLUS}
+        </Button>,
+      )
+      expect(
+        screen
+          .getByRole('button', { name: 'Alerts' })
+          .matches(
+            selectorWith(
+              `--ui-inner-radius-40:var(--ui-inner-radius-64,var(--ui-inner-radius-card,var(--button-${size}-radius,var(--radius-${TEXT_RADIUS[size]}))));`,
+            ),
+          ),
+      ).toBe(true)
+    },
+  )
+  it.each(BUTTON_SIZES)(
+    'sizes the %s card kind box from the ladder, and reads the container inner radius before its own',
+    (size) => {
+      render(
+        <Button kind="card" size={size}>
+          Lot 12
+        </Button>,
+      )
+      const button = screen.getByRole('button')
+      const { px, py, radius } = CARD_BOX[size]
+      const inlinePadding = `var(--button-card-${size}-px,calc(var(--spacing)*${px}))`
+      const cardRadius = `var(--ui-inner-radius-64,var(--ui-inner-radius-card,var(--button-card-${size}-radius,var(--radius-${radius}))))`
+      expect(
+        button.matches(
+          selectorWith(`padding-block:var(--button-card-${size}-py,calc(var(--spacing)*${py}));`),
+        ),
+      ).toBe(true)
+      expect(button.matches(selectorWith(`padding-inline:${inlinePadding};`))).toBe(true)
+      expect(button.matches(selectorWith(`border-radius:${cardRadius};`))).toBe(true)
+      expect(
+        button.matches(selectorWith(`--ui-inner-radius-40:max(0px,${cardRadius}-${inlinePadding});`)),
+      ).toBe(true)
+    },
+  )
+  it('renders the start and end items in their own slots, hidden from assistive technology', () => {
+    render(
+      <Button startItem={PLUS} endItem="12">
+        Add
+      </Button>,
+    )
+    const button = screen.getByRole('button', { name: 'Add' })
+    const [start, end] = button.children
+    expect(start?.getAttribute('data-slot')).toBe('button-start-item')
+    expect(start?.getAttribute('aria-hidden')).toBe('true')
+    expect(button.childNodes[1]?.textContent).toBe('Add')
+    expect(end?.getAttribute('data-slot')).toBe('button-end-item')
+    expect(end?.getAttribute('aria-hidden')).toBe('true')
+  })
+  it.each(BUTTON_SIZES)(
+    'hands the %s content size to an Icon left at its default size, so the icon stays two steps below the height',
+    (size) => {
+      render(
+        <Button size={size} startItem={<Icon iconNode={PLUS_NODE} />}>
+          Place a bid
+        </Button>,
+      )
+      const button = screen.getByRole('button', { name: 'Place a bid' })
+      expect(button.querySelector('[data-slot="icon"]')?.getAttribute('data-size')).toBe('md')
+      expect(button.matches(selectorWith(`--icon-md-size:var(--button-${size}-content-size,`))).toBe(
+        true,
+      )
+    },
+  )
+  it('renders no item slot it was not given', () => {
+    const { container } = render(<Button>Add</Button>)
+    expect(container.querySelector('[data-slot$="-item"]')).toBeNull()
+  })
+  it.each([false, true, ''])(
+    'renders no item slot and no card items row for an item of %j, which React renders as nothing',
+    (item) => {
+      const { container } = render(
+        <Button kind="card" startItem={item} endItem={item}>
+          Lot 12
+        </Button>,
+      )
+      expect(container.querySelector('[data-slot$="-item"]')).toBeNull()
+      expect(container.querySelector('[data-slot="button-items"]')).toBeNull()
+    },
+  )
+  it('puts the card kind items in one row above the label', () => {
+    render(
+      <Button kind="card" startItem={PLUS} endItem="New">
+        Lot 12
+      </Button>,
+    )
+    const button = screen.getByRole('button', { name: 'Lot 12' })
+    const row = button.firstElementChild
+    expect(row?.getAttribute('data-slot')).toBe('button-items')
+    expect([...(row?.children ?? [])].map((item) => item.getAttribute('data-slot'))).toEqual([
+      'button-start-item',
+      'button-end-item',
+    ])
+    expect(button.lastChild?.textContent).toBe('Lot 12')
+  })
+  it('moves a card end item to the far edge of its row, also when it stands alone', () => {
+    render(
+      <Button kind="card" endItem="New">
+        Lot 12
+      </Button>,
+    )
+    const end = screen
+      .getByRole('button', { name: 'Lot 12' })
+      .querySelector('[data-slot="button-end-item"]')
+    expect(end?.parentElement?.getAttribute('data-slot')).toBe('button-items')
+    expect(end?.matches(selectorWith('margin-inline-start:auto;'))).toBe(true)
+  })
+  it('spreads the items apart unless disableContentBetween is set', () => {
+    render(
+      <>
+        <Button endItem="1">Spread</Button>
+        <Button endItem="2" disableContentBetween>
+          Packed
+        </Button>
+      </>,
+    )
+    expect(screen.getByRole('button', { name: 'Spread' }).getAttribute('data-content-between')).toBe(
+      'true',
+    )
+    expect(screen.getByRole('button', { name: 'Packed' }).getAttribute('data-content-between')).toBe(
+      'false',
+    )
+  })
+  it('pushes the label away from the start item only when an end item follows it', () => {
+    render(
+      <>
+        <Button kind="fullWidth" startItem={PLUS} endItem="12">
+          Both
+        </Button>
+        <Button kind="fullWidth" startItem={PLUS}>
+          Start only
+        </Button>
+      </>,
+    )
+    const pushed = selectorWith('margin-inline-end:auto;')
+    const startOf = (name: string) =>
+      screen.getByRole('button', { name }).querySelector('[data-slot="button-start-item"]')
+    expect(startOf('Both')?.matches(pushed)).toBe(true)
+    expect(startOf('Start only')?.matches(pushed)).toBe(false)
+  })
+  it('pulls a Badge at the start or the end of the md label toward the edge by half the padding, and leaves one between children in place', () => {
+    render(
+      <>
+        <Button>
+          <Badge>New</Badge>
+          Lot 12
+        </Button>
+        <Button kind="fullWidth">
+          Lot 13
+          <Badge>Sold</Badge>
+        </Button>
+        <Button>
+          Lot <Badge>14</Badge> open
+        </Button>
+      </>,
+    )
+    const pull = 'calc(var(--button-md-px,calc(var(--spacing)*16))/-2);'
+    const startPull = selectorWith(`margin-inline-start:${pull}`)
+    const endPull = selectorWith(`margin-inline-end:${pull}`)
+    const first = screen.getByText('New')
+    const last = screen.getByText('Sold')
+    const between = screen.getByText('14')
+    expect(first.matches(startPull)).toBe(true)
+    expect(first.matches(endPull)).toBe(false)
+    expect(last.matches(endPull)).toBe(true)
+    expect(last.matches(startPull)).toBe(false)
+    expect(between.matches(startPull)).toBe(false)
+    expect(between.matches(endPull)).toBe(false)
+  })
+  it('pulls a server-rendered badge span and a wrapped Badge at the start of the md label, and no other element', () => {
+    const LotBadge = () => <Badge data-variant="new">Wrapped</Badge>
+    render(
+      <>
+        <Button>
+          <span data-slot="badge">Rendered</span>
+          Lot 12
+        </Button>
+        <Button>
+          <LotBadge />
+          Lot 13
+        </Button>
+        <Button>
+          <strong>Lot</strong> 14
+        </Button>
+      </>,
+    )
+    const startPull = selectorWith(
+      'margin-inline-start:calc(var(--button-md-px,calc(var(--spacing)*16))/-2);',
+    )
+    expect(screen.getByText('Rendered').matches(startPull)).toBe(true)
+    expect(screen.getByText('Wrapped').matches(startPull)).toBe(true)
+    expect(screen.getByText('Lot').matches(startPull)).toBe(false)
+  })
+  it('pulls a Badge after a component that renders text toward the end only, since a selector skips the text it renders', () => {
+    const Label = () => <>Lot 12</>
+    render(
+      <Button>
+        <Label />
+        <Badge>New</Badge>
+      </Button>,
+    )
+    const pull = 'calc(var(--button-md-px,calc(var(--spacing)*16))/-2);'
+    const badge = screen.getByText('New')
+    expect(badge.matches(selectorWith(`margin-inline-end:${pull}`))).toBe(true)
+    expect(badge.matches(selectorWith(`margin-inline-start:${pull}`))).toBe(false)
+  })
+  it('pulls no Badge from a lone component that renders text before it, since a selector skips that text', () => {
+    const LotTitle = () => (
+      <>
+        Lot 12 <Badge>New</Badge>
+      </>
+    )
+    render(
+      <Button>
+        <LotTitle />
+      </Button>,
+    )
+    expect(
+      screen.getByText('New').matches(selectorWith('margin-inline-start:calc(var(--button-md-px,')),
+    ).toBe(false)
+  })
+  it('pulls no Badge that a start item precedes, nor one inside the card or icon kind, and no item of the icon kind, which has no inline padding to pull into', () => {
+    render(
+      <>
+        <Button startItem={PLUS}>
+          <Badge>After item</Badge>
+          Lot 12
+        </Button>
+        <Button kind="card">
+          <Badge>Card</Badge>
+          Lot 13
+        </Button>
+        <Button kind="icon" aria-label="Lot 14">
+          <Badge>Icon</Badge>
+        </Button>
+        {BUTTON_SIZES.map((size) => (
+          <Button
+            key={size}
+            kind="icon"
+            size={size}
+            aria-label={`Add ${size}`}
+            startItem="+"
+            endItem="1">
+            {PLUS}
+          </Button>
+        ))}
+      </>,
+    )
+    const startPull = selectorWith('margin-inline-start:calc(var(--button-md-px,')
+    const endPull = selectorWith('margin-inline-end:calc(var(--button-md-px,')
+    for (const text of ['After item', 'Card', 'Icon']) {
+      expect(screen.getByText(text).matches(startPull)).toBe(false)
+      expect(screen.getByText(text).matches(endPull)).toBe(false)
+    }
+    const pushedToTheEnd = selectorWith('margin-inline-start:auto;')
+    const spreadApart = selectorWith('margin-inline-end:auto;')
+    for (const size of BUTTON_SIZES) {
+      const button = screen.getByRole('button', { name: `Add ${size}` })
+      const sizeStartPull = selectorWith(`margin-inline-start:calc(var(--button-${size}-px,`)
+      const sizeEndPull = selectorWith(`margin-inline-end:calc(var(--button-${size}-px,`)
+      for (const slot of ['button-start-item', 'button-end-item']) {
+        const item = button.querySelector(`[data-slot="${slot}"]`)
+        expect(item?.matches(sizeStartPull)).toBe(false)
+        expect(item?.matches(sizeEndPull)).toBe(false)
+        expect(item?.matches(pushedToTheEnd)).toBe(false)
+      }
+      expect(button.querySelector('[data-slot="button-start-item"]')?.matches(spreadApart)).toBe(false)
+    }
+  })
+  it('pulls a Badge at the start of the child it renders with asChild', () => {
+    render(
+      <Button asChild>
+        <a href="/lots/12">
+          <Badge>New</Badge>
+          Lot 12
+        </a>
+      </Button>,
+    )
+    expect(
+      screen.getByText('New').matches(selectorWith('margin-inline-start:calc(var(--button-md-px,')),
+    ).toBe(true)
+  })
+  it('takes back the height a Badge stands above the line in a md Button, in the label and in an item, so the button stays 40 high', () => {
+    render(
+      <Button startItem={<Badge>New</Badge>}>
+        Lot 12 <Badge>Sold</Badge>
+      </Button>,
+    )
+    const takeBack = selectorWith('margin-block:min(0px,')
+    expect(screen.getByText('Sold').matches(takeBack)).toBe(true)
+    expect(screen.getByText('New').matches(takeBack)).toBe(true)
+  })
+  it('passes className and the remaining button props through to the root', () => {
+    render(
+      <Button className="col-span-4" name="intent" value="bid" aria-describedby="hint">
+        Bid
+      </Button>,
+    )
+    const button = screen.getByRole('button')
+    expect(button.getAttribute('class')).toBe('col-span-4')
+    expect(button.getAttribute('name')).toBe('intent')
+    expect(button.getAttribute('value')).toBe('bid')
+    expect(button.getAttribute('aria-describedby')).toBe('hint')
+  })
+  it('hands its ref to the button root', () => {
+    const ref = createRef<HTMLButtonElement>()
+    render(<Button ref={ref}>Bid</Button>)
+    expect(ref.current).toBe(screen.getByRole('button'))
+  })
+  it('carries the disabled state on the root, where the disabled colours apply', () => {
+    render(
+      <>
+        <Button disabled>Native</Button>
+        <Button aria-disabled>Announced</Button>
+      </>,
+    )
+    const native = screen.getByRole('button', { name: 'Native' })
+    const announced = screen.getByRole('button', { name: 'Announced' })
+    expect(native.hasAttribute('disabled')).toBe(true)
+    expect(native.matches(selectorReading('--button-background-color--disabled'))).toBe(true)
+    expect(announced.matches(selectorReading('--button-background-color--disabled'))).toBe(true)
+  })
+  it('carries the pressed state on the root, where the pressed colours apply', () => {
+    render(<Button aria-pressed>Bold</Button>)
+    const button = screen.getByRole('button', { name: 'Bold', pressed: true })
+    expect(button.matches(selectorReading('--button-background-color--pressed'))).toBe(true)
+  })
+  it('falls the pressed and disabled outlines back to the focus colour, so a focused pressed button keeps its ring', () => {
+    render(
+      <>
+        <Button aria-pressed>Bold</Button>
+        <Button aria-disabled>Announced</Button>
+      </>,
+    )
+    const pressed = screen.getByRole('button', { name: 'Bold', pressed: true })
+    const disabled = screen.getByRole('button', { name: 'Announced' })
+    expect(
+      pressed.matches(
+        selectorWith(
+          'outline-color:var(--button-outline-color--pressed,var(--button-outline-color--focus,',
+        ),
+      ),
+    ).toBe(true)
+    expect(
+      disabled.matches(
+        selectorWith(
+          'outline-color:var(--button-outline-color--disabled,var(--button-outline-color--focus,',
+        ),
+      ),
+    ).toBe(true)
+  })
+  it.each(STATES.flatMap((state) => PAINTS.map((paint) => [state, paint] as const)))(
+    'derives the %s %s of a button with no tone from its rest value at the step of that state',
+    (state, paint) => {
+      expect(substitute(paintDeclaration(paint, state), { [`--button-${paint}`]: REST })).toBe(
+        scaled(state),
+      )
+    },
+  )
+  it.each(
+    BUTTON_TONES.flatMap((tone) =>
+      STATES.flatMap((state) => PAINTS.map((paint) => [tone, state, paint] as const)),
+    ),
+  )(
+    'derives the %s tone %s %s from that tone rest value, over a state the theme maps for no tone',
+    (tone, state, paint) => {
+      const variables = tonedVariables(tone, {
+        [`--button-${tone}-${paint}`]: REST,
+        [`--button-${paint}`]: MAPPED,
+        [`--button-${paint}--${state}`]: MAPPED,
+      })
+      expect(substitute(paintDeclaration(paint, state), variables)).toBe(scaled(state))
+    },
+  )
+  it.each(STATES)(
+    'lets a %s colour the theme maps win over the derived one, with a tone and without',
+    (state) => {
+      for (const paint of PAINTS) {
+        const declaration = paintDeclaration(paint, state)
+        const plain = { [`--button-${paint}`]: REST, [`--button-${paint}--${state}`]: MAPPED }
+        const toned = tonedVariables('main', {
+          [`--button-main-${paint}`]: REST,
+          [`--button-main-${paint}--${state}`]: MAPPED,
+        })
+        expect(substitute(declaration, plain)).toBe(MAPPED)
+        expect(substitute(declaration, toned)).toBe(MAPPED)
+      }
+    },
+  )
+  it('orders the state rules focus, pressed, hover, active, disabled at one specificity, so hover and a press still answer on a focused or a pressed button', () => {
+    const order = (['focus', 'pressed', 'hover', 'active', 'disabled'] as const).map(stateRule)
+    expect(order.map(({ index }) => index)).toEqual(
+      order.map(({ index }) => index).sort((first, second) => first - second),
+    )
+    for (const { selector } of order) {
+      expect(withoutWhere(selector)).toBe("[data-slot='button']")
+    }
+  })
+  it('matches the hover and active rules on a pressed button, and keeps the focus ring colour while hovered', () => {
+    render(<Button aria-pressed>Bold</Button>)
+    const pressed = screen.getByRole('button', { name: 'Bold', pressed: true })
+    expect(pressed.matches(stateRule('pressed').selector)).toBe(true)
+    expect(pressed.matches(stateRule('hover').selector.replace(':hover', ''))).toBe(true)
+    expect(pressed.matches(stateRule('active').selector.replace(':active', ''))).toBe(true)
+    expect(STYLESHEET.replace(/\s/g, '')).toContain(
+      'outline-color:var(--button-outline-color--hover,var(--button-outline-color--focus,',
+    )
+  })
+  it('keeps the rest colours on focus, which draws the outline instead', () => {
+    for (const paint of PAINTS) {
+      expect(substitute(paintDeclaration(paint, 'focus'), { [`--button-${paint}`]: REST })).toBe(REST)
+    }
+  })
+  it('paints the text from --button-color, the background at its 20 step and the border at its 60 step', () => {
+    for (const paint of PAINTS) {
+      expect(substitute(paintDeclaration(paint, 'rest'), { '--button-color': REST })).toBe(
+        restFrom(paint, REST),
+      )
+    }
+  })
+  it('lets a background, text or border colour the theme maps win over the default --button-color feeds, with a tone and without', () => {
+    for (const paint of PAINTS) {
+      const plain = { '--button-color': REST, [`--button-${paint}`]: MAPPED }
+      const toned = tonedVariables('main', {
+        '--button-main-color': REST,
+        [`--button-main-${paint}`]: MAPPED,
+      })
+      expect(substitute(paintDeclaration(paint, 'rest'), plain)).toBe(MAPPED)
+      expect(substitute(paintDeclaration(paint, 'rest'), toned)).toBe(MAPPED)
+    }
+  })
+  it.each(BUTTON_TONES)(
+    'feeds the text, background and border of the %s tone from its one colour, over a colour the theme maps for no tone',
+    (tone) => {
+      const variables = tonedVariables(tone, {
+        [`--button-${tone}-color`]: REST,
+        '--button-color': MAPPED,
+      })
+      for (const paint of PAINTS) {
+        expect(substitute(paintDeclaration(paint, 'rest'), variables)).toBe(restFrom(paint, REST))
+      }
+    },
+  )
+  it.each(BUTTON_TONES)(
+    'derives every state of the %s tone from the rest values its one colour feeds',
+    (tone) => {
+      const variables = tonedVariables(tone, { [`--button-${tone}-color`]: REST })
+      for (const state of STATES) {
+        for (const paint of PAINTS) {
+          expect(substitute(paintDeclaration(paint, state), variables)).toBe(
+            scaled(state, restFrom(paint, REST)),
+          )
+        }
+      }
+    },
+  )
+  it('leaves an unmapped background and border transparent in every state, and an unmapped text colour inherited', () => {
+    for (const state of [...STATES, 'rest'] as const) {
+      for (const paint of ['background-color', 'border-color'] as const) {
+        const rest = restFrom(paint, 'transparent')
+        expect(substitute(paintDeclaration(paint, state), {})).toBe(
+          state === 'rest' ? rest : scaled(state, rest),
+        )
+      }
+      expect(substitute(paintDeclaration('text-color', state), {})).toBeNull()
+    }
+  })
+  it('gives the one colour no state, plain or per tone, since each state of the text reads --button-text-color', () => {
+    for (const prefix of ['', ...BUTTON_TONES.map((tone) => `${tone}-`)]) {
+      expect(STYLESHEET).not.toContain(`--button-${prefix}color--`)
+    }
+  })
+  it('applies the hover colours only where the pointer can hover, so a tap leaves no stuck hover', () => {
+    expect(STYLESHEET.replace(/\s/g, '')).toContain(
+      "@media(hover:hover){[data-slot='button']:where(:not([data-responsive='false'],:disabled,[aria-disabled='true']):hover)",
+    )
+  })
+  it('carries data-state when stateful, active while pressed and inactive otherwise', () => {
+    render(
+      <>
+        <Button stateful aria-pressed>
+          On
+        </Button>
+        <Button stateful aria-pressed={false}>
+          Off
+        </Button>
+        <Button>Plain</Button>
+      </>,
+    )
+    expect(screen.getByRole('button', { name: 'On' }).getAttribute('data-state')).toBe('active')
+    expect(screen.getByRole('button', { name: 'Off' }).getAttribute('data-state')).toBe('inactive')
+    expect(screen.getByRole('button', { name: 'Plain' }).hasAttribute('data-state')).toBe(false)
+  })
+  it('turns off the pressed look when it is not responsive', () => {
+    render(
+      <Button responsive={false} aria-pressed>
+        Static
+      </Button>,
+    )
+    const button = screen.getByRole('button', { name: 'Static' })
+    expect(button.getAttribute('data-responsive')).toBe('false')
+    expect(button.matches(selectorReading('--button-background-color--pressed'))).toBe(false)
+  })
+  it('leaves the tab order when it is not responsive, since it draws no focus outline', () => {
+    render(
+      <>
+        <Button responsive={false}>Static</Button>
+        <Button>Live</Button>
+      </>,
+    )
+    expect(screen.getByRole('button', { name: 'Static' }).tabIndex).toBe(-1)
+    expect(screen.getByRole('button', { name: 'Live' }).hasAttribute('tabindex')).toBe(false)
+  })
+  it('renders the child element with asChild, carrying the attributes and the items', () => {
+    render(
+      <Button asChild size="lg" startItem={PLUS} className="button">
+        <a href="/lots/12" className="lot">
+          Lot 12
+        </a>
+      </Button>,
+    )
+    const link = screen.getByRole('link', { name: 'Lot 12' })
+    expect(link.getAttribute('data-slot')).toBe('button')
+    expect(link.getAttribute('data-size')).toBe('lg')
+    expect(link.hasAttribute('type')).toBe(false)
+    expect(link.getAttribute('class')?.split(' ').sort()).toEqual(['button', 'lot'])
+    expect(link.firstElementChild?.getAttribute('data-slot')).toBe('button-start-item')
+  })
+  it('keeps the role and selection of a tab it wraps with asChild, and shows the selected tab as pressed', () => {
+    render(
+      <div role="tablist" aria-label="Lot">
+        <Button asChild>
+          <button type="button" role="tab" aria-selected>
+            Bids
+          </button>
+        </Button>
+        <Button asChild>
+          <button type="button" role="tab" aria-selected={false}>
+            History
+          </button>
+        </Button>
+      </div>,
+    )
+    const selected = screen.getByRole('tab', { name: 'Bids', selected: true })
+    const other = screen.getByRole('tab', { name: 'History', selected: false })
+    expect(selected.getAttribute('data-slot')).toBe('button')
+    expect(selected.matches(selectorReading('--button-background-color--pressed'))).toBe(true)
+    expect(other.matches(selectorReading('--button-background-color--pressed'))).toBe(false)
+  })
+  it('reads the selection of the tab it wraps with asChild when stateful, so a selected tab is active', () => {
+    render(
+      <div role="tablist" aria-label="Lot">
+        <Button asChild stateful>
+          <button type="button" role="tab" aria-selected>
+            Bids
+          </button>
+        </Button>
+        <Button asChild stateful>
+          <button type="button" role="tab" aria-selected={false}>
+            History
+          </button>
+        </Button>
+      </div>,
+    )
+    expect(screen.getByRole('tab', { name: 'Bids', selected: true }).getAttribute('data-state')).toBe(
+      'active',
+    )
+    expect(
+      screen.getByRole('tab', { name: 'History', selected: false }).getAttribute('data-state'),
+    ).toBe('inactive')
+  })
+  it('leaves data-state to a wrapped tab that sets its own selection, so a selected tab stays active', () => {
+    const Trigger = (props: React.ComponentProps<'button'>) => (
+      <button type="button" role="tab" aria-selected data-state="active" {...props} />
+    )
+    render(
+      <div role="tablist" aria-label="Lot">
+        <Button asChild stateful>
+          <Trigger>Bids</Trigger>
+        </Button>
+      </div>,
+    )
+    expect(screen.getByRole('tab', { name: 'Bids', selected: true }).getAttribute('data-state')).toBe(
+      'active',
+    )
+  })
+  it('reads a variable a wrapper sets, the way a theme maps the button', () => {
+    render(
+      <div style={THEME}>
+        <Button data-tone="main">Bid</Button>
+      </div>,
+    )
+    expect(
+      getComputedStyle(screen.getByRole('button')).getPropertyValue('--button-main-background-color'),
+    ).toBe('rgb(1, 2, 3)')
+  })
+})
