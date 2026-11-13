@@ -179,8 +179,10 @@
   [data-slot='button-items'] {
     display: flex;
     align-items: center;
-    justify-content: space-between;
     gap: inherit;
+  }
+  [data-slot='button-items'] > [data-slot='button-end-item'] {
+    margin-inline-start: auto;
   }
   [data-slot='button'][data-responsive='false'] {
     cursor: default;

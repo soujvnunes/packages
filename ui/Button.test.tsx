@@ -9,10 +9,12 @@ const THEME: React.CSSProperties & Record<`--${string}`, string> = {
   '--button-main-background-color': 'rgb(1, 2, 3)',
 }
 const selectorWith = (declaration: string) => {
-  const rule = STYLESHEET.split('}').find((chunk) => chunk.replace(/\s/g, '').includes(declaration))
-  const selector = rule?.split('{').at(-2)?.trim()
-  if (!selector) throw new Error(`No rule of the stylesheet holds ${declaration}.`)
-  return selector
+  const selectors = STYLESHEET.split('}')
+    .filter((chunk) => chunk.replace(/\s/g, '').includes(declaration))
+    .map((rule) => rule.split('{').at(-2)?.trim())
+    .filter(Boolean)
+  if (selectors.length === 0) throw new Error(`No rule of the stylesheet holds ${declaration}.`)
+  return selectors.join(', ')
 }
 const selectorReading = (variable: string) => selectorWith(`var(${variable},`)
 afterEach(cleanup)
@@ -85,6 +87,18 @@ describe('Button', () => {
       'button-end-item',
     ])
     expect(button.lastChild?.textContent).toBe('Lot 12')
+  })
+  it('moves a card end item to the far edge of its row, also when it stands alone', () => {
+    render(
+      <Button kind="card" endItem="New">
+        Lot 12
+      </Button>,
+    )
+    const end = screen
+      .getByRole('button', { name: 'Lot 12' })
+      .querySelector('[data-slot="button-end-item"]')
+    expect(end?.parentElement?.getAttribute('data-slot')).toBe('button-items')
+    expect(end?.matches(selectorWith('margin-inline-start:auto;'))).toBe(true)
   })
   it('spreads the items apart unless disableContentBetween is set', () => {
     render(
