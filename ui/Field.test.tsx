@@ -71,6 +71,7 @@ describe('Field', () => {
     ['no error', undefined],
     ['a false error', false],
     ['an empty error', ''],
+    ['a true error', true],
   ])('leaves the control valid and the root unmarked with %s', (_, error) => {
     const { container } = render(
       <Field label="Max bid" hint={HINT} error={error}>
@@ -80,6 +81,7 @@ describe('Field', () => {
     const control = screen.getByRole('textbox', { name: 'Max bid', description: HINT })
     expect(control.hasAttribute('aria-invalid')).toBe(false)
     expect(rootOf(container).hasAttribute('data-invalid')).toBe(false)
+    expect(container.querySelector('[data-slot="field-error"]')).toBeNull()
   })
   it('describes the control by nothing when it has neither a hint nor an error', () => {
     render(<Field label="Max bid">{(control) => <Input {...control} />}</Field>)
@@ -147,6 +149,14 @@ describe('Field', () => {
   })
   it('renders no item slot it was not given', () => {
     const { container } = render(<Field label="Max bid">{(control) => <Input {...control} />}</Field>)
+    expect(container.querySelector('[data-slot$="-item"]')).toBeNull()
+  })
+  it('renders no item slot for a boolean item, which renders nothing, as the controls read it', () => {
+    const { container } = render(
+      <Field label="Max bid" startItem endItem={false}>
+        {(control) => <Input {...control} />}
+      </Field>,
+    )
     expect(container.querySelector('[data-slot$="-item"]')).toBeNull()
   })
   it('passes className and the remaining div props through to the root', () => {
