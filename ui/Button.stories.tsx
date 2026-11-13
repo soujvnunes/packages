@@ -5,35 +5,22 @@ import { Icon } from './Icon'
 import './styles/badge.css'
 import './styles/button.css'
 const BUTTON_THEME: React.CSSProperties & Record<`--${string}`, string> = {
+  '--button-color': 'var(--color-neutral)',
+  '--button-border-color': 'var(--color-neutral-60)',
   '--button-background-color': 'var(--color-neutral-10)',
   '--button-background-color--hover': 'var(--color-neutral-20)',
   '--button-background-color--active': 'var(--color-neutral-40)',
   '--button-background-color--pressed': 'var(--color-main-20)',
-  '--button-background-color--disabled': 'var(--color-neutral-40)',
-  '--button-color': 'var(--color-neutral)',
-  '--button-color--disabled': 'var(--color-neutral-60)',
-  '--button-border-color': 'var(--color-neutral-60)',
+  '--button-text-color--disabled': 'var(--color-neutral-60)',
   '--button-border-color--pressed': 'var(--color-main-80)',
-  '--button-outline-color--focus': 'var(--color-main)',
-  '--button-main-background-color': 'var(--color-main)',
-  '--button-main-background-color--hover': 'var(--color-main-80)',
-  '--button-main-background-color--active': 'var(--color-main-60)',
-  '--button-main-background-color--disabled': 'var(--color-main-40)',
-  '--button-main-outline-color--focus': 'var(--color-main)',
-  '--button-accent-background-color': 'var(--color-accent)',
-  '--button-accent-background-color--hover': 'var(--color-accent-80)',
-  '--button-accent-outline-color--focus': 'var(--color-main)',
-  '--button-success-background-color': 'var(--color-success)',
-  '--button-success-background-color--hover': 'var(--color-success-80)',
-  '--button-success-outline-color--focus': 'var(--color-main)',
-  '--button-warning-background-color': 'var(--color-warning)',
-  '--button-warning-background-color--hover': 'var(--color-warning-80)',
-  '--button-warning-outline-color--focus': 'var(--color-main)',
-  '--button-error-background-color': 'var(--color-error)',
-  '--button-error-background-color--hover': 'var(--color-error-80)',
-  '--button-error-outline-color--focus': 'var(--color-main)',
-  '--badge-background-color': 'var(--color-surface)',
+  '--button-outline-color--focus': 'var(--color-neutral)',
+  '--button-main-outline-color--focus': 'var(--color-neutral)',
+  '--button-accent-outline-color--focus': 'var(--color-neutral)',
+  '--button-success-outline-color--focus': 'var(--color-neutral)',
+  '--button-warning-outline-color--focus': 'var(--color-neutral)',
+  '--button-error-outline-color--focus': 'var(--color-neutral)',
   '--badge-color': 'var(--color-neutral)',
+  '--badge-background-color': 'var(--color-surface)',
 }
 const PLUS = <Icon iconNode={[['path', { d: 'M12 5v14M5 12h14', key: 'plus' }]]} />
 const ARROW = <Icon iconNode={[['path', { d: 'M5 12h14M13 6l6 6-6 6', key: 'arrow' }]]} />
@@ -70,6 +57,17 @@ export const KindsBySize: Story = {
           </Button>
         )),
       )}
+    </div>
+  ),
+}
+export const LongLabel: Story = {
+  render: (args) => (
+    <div className="grid grid-cols-1 justify-items-start gap-16">
+      {BUTTON_SIZES.map((size) => (
+        <Button key={size} {...args} size={size} startItem={PLUS}>
+          Place a bid on lot 12 before the auction closes tonight
+        </Button>
+      ))}
     </div>
   ),
 }

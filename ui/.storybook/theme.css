@@ -145,17 +145,17 @@
     --color-neutral-10: color-mix(in oklab, var(--palette-black) 10%, transparent);
   }
 
-  [data-slot='button'][data-tone] {
-    --button-main-color: var(--color-neutral);
-    --button-accent-color: var(--color-neutral);
-    --button-success-color: var(--color-neutral);
-    --button-warning-color: var(--color-neutral);
-    --button-error-color: var(--color-neutral);
-    --button-main-color--disabled: var(--color-neutral-60);
-    --button-accent-color--disabled: var(--color-neutral-60);
-    --button-success-color--disabled: var(--color-neutral-60);
-    --button-warning-color--disabled: var(--color-neutral-60);
-    --button-error-color--disabled: var(--color-neutral-60);
+  :root {
+    --button-main-color: var(--color-main);
+    --button-accent-color: var(--color-accent);
+    --button-success-color: var(--color-success);
+    --button-warning-color: var(--color-warning);
+    --button-error-color: var(--color-error);
+  }
+
+  [data-slot='button'][data-tone='accent'] {
+    --button-accent-background-color: var(--color-accent);
+    --button-accent-text-color: var(--color-neutral);
   }
 
   body {

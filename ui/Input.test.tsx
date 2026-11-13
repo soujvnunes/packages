@@ -15,9 +15,47 @@ const selectorWith = (declaration: string) => {
   if (!selector) throw new Error(`No rule of the stylesheet holds ${declaration}.`)
   return selector
 }
-const INPUT_PADDING = { sm: 12, md: 16, lg: 24 } as const
-const INPUT_RADIUS = { sm: 12, md: 24, lg: 40 } as const
-const INPUT_INNER_RADIUS = { sm: 0, md: 8, lg: 16 } as const
+const INPUT_PADDING = { md: 16, lg: 24 } as const
+const INPUT_RADIUS = { md: 24, lg: 40 } as const
+const INPUT_INNER_RADIUS = { md: 8, lg: 16 } as const
+const DECLARATIONS = readFileSync(`${import.meta.dirname}/styles/input.css`, 'utf8')
+  .replace(/\s+/g, ' ')
+  .replace(/\s*([(,:;{}])\s*/g, '$1')
+  .replace(/\s*\)/g, ')')
+const STATE_STEPS = { hover: 80, disabled: 40 } as const
+const PAINT_PROPERTIES = {
+  'background-color': 'background-color',
+  'text-color': 'color',
+  'border-color': 'border-color',
+} as const
+const REST_VALUES = {
+  'background-color':
+    'var(--input-background-color,color-mix(in oklab,var(--input-color,transparent) 20%,transparent))',
+  'text-color': 'var(--input-text-color,var(--input-color))',
+  'border-color':
+    'var(--input-border-color,color-mix(in oklab,var(--input-color,transparent) 60%,transparent))',
+} as const
+const PAINTS = Object.keys(PAINT_PROPERTIES) as readonly (keyof typeof PAINT_PROPERTIES)[]
+const STATE_PAINTS = { hover: ['border-color'], disabled: PAINTS } as const
+const STATES = Object.keys(STATE_PAINTS) as readonly (keyof typeof STATE_PAINTS)[]
+const hoverDeclarations = () => {
+  const start = DECLARATIONS.indexOf(':not([data-disabled]):hover){')
+  if (start === -1) throw new Error('No hover rule of the stylesheet.')
+  const body = DECLARATIONS.slice(DECLARATIONS.indexOf('{', start) + 1)
+  return body.slice(0, body.indexOf('}'))
+}
+const STATE_SELECTORS = {
+  focus: "[data-slot='input']:where(:has([data-slot='input-control']:focus-visible))",
+  hover: "[data-slot='input']:where(:not([data-disabled]):hover)",
+  invalid: "[data-slot='input']:where([data-invalid])",
+  invalidHover: "[data-slot='input']:where([data-invalid]:not([data-disabled]):hover)",
+  disabled: "[data-slot='input']:where([data-disabled])",
+} as const
+const ruleIndex = (selector: string) => {
+  const index = DECLARATIONS.indexOf(`${selector}{`)
+  if (index === -1) throw new Error(`No rule of the stylesheet selects ${selector}.`)
+  return index
+}
 const THEME: React.CSSProperties & Record<`--${string}`, string> = {
   '--input-border-color--invalid': 'rgb(1, 2, 3)',
 }
@@ -49,6 +87,11 @@ describe('Input', () => {
       expect(rootOf(screen.getByRole('textbox')).getAttribute('data-size')).toBe(size)
     },
   )
+  it('starts at md and has no sm size, since a field 24 high with 12 text cannot be typed in or touched', () => {
+    expect(INPUT_SIZES).toEqual(['md', 'lg'])
+    expect(STYLESHEET).not.toContain('--input-sm-')
+    expect(STYLESHEET).not.toContain("[data-size='sm']")
+  })
   it.each(INPUT_KINDS)(
     'carries the %s kind as its data-kind attribute, for the stylesheet to read',
     (kind) => {
@@ -112,6 +155,19 @@ describe('Input', () => {
       expect(INPUT_RADIUS[size] - INPUT_PADDING[size]).toBe(INPUT_INNER_RADIUS[size])
     },
   )
+  it('takes its width from the column it sits in, never from the size attribute of the input', () => {
+    render(<Input aria-label="Plate" />)
+    const input = screen.getByRole('textbox')
+    expect(input.matches(selectorWith('{flex:1;width:0;min-width:0;'))).toBe(true)
+    expect(
+      rootOf(input).matches(selectorWith('{box-sizing:border-box;display:inline-flex;min-width:0;')),
+    ).toBe(true)
+  })
+  it('defaults the placeholder to the text colour at the 60 step, so it reads apart from a typed value, and lets the theme map it', () => {
+    expect(DECLARATIONS).toContain(
+      "[data-slot='input-control']::placeholder{color:var(--input-placeholder-color,color-mix(in oklab,currentColor 60%,transparent));",
+    )
+  })
   it('marks the root invalid when the input is, and only then', () => {
     render(
       <>
@@ -139,6 +195,53 @@ describe('Input', () => {
     expect(STYLESHEET).toContain(
       'outline-color:var(--input-outline-color--disabled,var(--input-outline-color--focus,',
     )
+  })
+  it('orders the state rules focus, hover, invalid, invalid hover, disabled at one specificity, so hover still answers on a focused or an invalid field', () => {
+    const order = Object.values(STATE_SELECTORS).map(ruleIndex)
+    expect(order).toEqual([...order].sort((first, second) => first - second))
+  })
+  it('hovers an invalid field from its invalid border at the hover step, so the error colour stays while it answers', () => {
+    render(<Input aria-label="Plate" aria-invalid />)
+    const root = rootOf(screen.getByRole('textbox'))
+    expect(root.matches(STATE_SELECTORS.hover.replace(':hover', ''))).toBe(true)
+    expect(root.matches(STATE_SELECTORS.invalidHover.replace(':hover', ''))).toBe(true)
+    expect(DECLARATIONS).toContain(
+      `${STATE_SELECTORS.invalidHover}{border-color:color-mix(in oklab,var(--input-border-color--invalid,${REST_VALUES['border-color']}) 80%,transparent);}`,
+    )
+  })
+  it('moves only the border on hover, so the typed text, the fill and the focus ring keep their value', () => {
+    const hover = hoverDeclarations()
+    expect(hover.startsWith('border-color:var(--input-border-color--hover,')).toBe(true)
+    expect(hover).not.toContain(';color:')
+    expect(hover).not.toContain('background-color:')
+    expect(hover).not.toContain('outline-color:')
+  })
+  it.each(STATES.flatMap((state) => STATE_PAINTS[state].map((paint) => [state, paint] as const)))(
+    'reads the %s %s the theme maps first, and otherwise its rest value at the step of that state',
+    (state, paint) => {
+      expect(DECLARATIONS).toContain(
+        `${PAINT_PROPERTIES[paint]}:var(--input-${paint}--${state},color-mix(in oklab,${REST_VALUES[paint]} ${STATE_STEPS[state]}%,transparent));`,
+      )
+    },
+  )
+  it.each(PAINTS)(
+    'paints the %s from the one colour --input-color unless the theme maps it, the text as is, the background at 20 and the border at 60',
+    (paint) => {
+      expect(DECLARATIONS).toContain(`;${PAINT_PROPERTIES[paint]}:${REST_VALUES[paint]};`)
+    },
+  )
+  it.each(['focus', 'invalid'] as const)(
+    'keeps the rest colours on %s unless the theme maps that state, so an invalid border reads the rest border until a product maps its error colour',
+    (state) => {
+      for (const paint of PAINTS) {
+        expect(DECLARATIONS).toContain(
+          `${PAINT_PROPERTIES[paint]}:var(--input-${paint}--${state},${REST_VALUES[paint]});`,
+        )
+      }
+    },
+  )
+  it('gives the one colour no state, since each state of the text reads --input-text-color', () => {
+    expect(STYLESHEET).not.toContain('--input-color--')
   })
   it('applies the hover colours only where the pointer can hover, so a tap leaves no stuck hover', () => {
     expect(STYLESHEET).toContain(

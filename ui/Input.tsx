@@ -1,7 +1,7 @@
 import { forwardRef } from 'react'
 import { createSlot, createSlottable } from '@radix-ui/react-slot'
 export const INPUT_KINDS = ['text', 'fullWidth'] as const
-export const INPUT_SIZES = ['sm', 'md', 'lg'] as const
+export const INPUT_SIZES = ['md', 'lg'] as const
 type InputKind = (typeof INPUT_KINDS)[number]
 type InputSize = (typeof INPUT_SIZES)[number]
 type InputProps = Omit<React.ComponentPropsWithoutRef<'input'>, 'size' | 'className' | 'children'> & {

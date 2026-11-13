@@ -3,16 +3,16 @@ import { Icon } from './Icon'
 import { INPUT_KINDS, INPUT_SIZES, Input } from './Input'
 import './styles/input.css'
 const INPUT_THEME: React.CSSProperties & Record<`--${string}`, string> = {
-  '--input-background-color': 'var(--color-surface)',
   '--input-color': 'var(--color-neutral)',
-  '--input-color--disabled': 'var(--color-neutral-60)',
+  '--input-background-color': 'var(--color-surface)',
+  '--input-text-color--disabled': 'var(--color-neutral-60)',
   '--input-placeholder-color': 'var(--color-neutral-60)',
   '--input-border-color': 'var(--color-neutral-60)',
   '--input-border-color--hover': 'var(--color-neutral-80)',
-  '--input-border-color--focus': 'var(--color-main-80)',
+  '--input-border-color--focus': 'var(--color-neutral-80)',
   '--input-border-color--invalid': 'var(--color-error-80)',
   '--input-border-color--disabled': 'var(--color-neutral-40)',
-  '--input-outline-color--focus': 'var(--color-main-40)',
+  '--input-outline-color--focus': 'var(--color-neutral)',
 }
 const SEARCH = (
   <Icon
@@ -29,7 +29,7 @@ const meta = {
   args: { 'aria-label': 'Plate', placeholder: 'ABC1D23' },
   decorators: [
     (Story) => (
-      <div style={INPUT_THEME}>
+      <div style={INPUT_THEME} className="grid grid-cols-1 gap-16 lg:grid-cols-2">
         <Story />
       </div>
     ),
@@ -40,7 +40,7 @@ type Story = StoryObj<typeof meta>
 export const Default: Story = {}
 export const KindsBySize: Story = {
   render: (args) => (
-    <div className="grid justify-items-start gap-16">
+    <>
       {INPUT_KINDS.flatMap((kind) =>
         INPUT_SIZES.map((size) => (
           <Input
@@ -55,15 +55,15 @@ export const KindsBySize: Story = {
           />
         )),
       )}
-    </div>
+    </>
   ),
 }
 export const States: Story = {
   render: (args) => (
-    <div className="flex flex-wrap gap-16">
+    <>
       <Input {...args} aria-label="Enabled" placeholder="Enabled" />
       <Input {...args} aria-label="Invalid" placeholder="Invalid" aria-invalid />
       <Input {...args} aria-label="Disabled" placeholder="Disabled" disabled />
-    </div>
+    </>
   ),
 }

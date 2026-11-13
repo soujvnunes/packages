@@ -20,6 +20,100 @@ const selectorWith = (declaration: string) => {
   return selectors.join(', ')
 }
 const selectorReading = (variable: string) => selectorWith(`var(${variable},`)
+const RULES = STYLESHEET.replace(/\s+/g, ' ')
+  .replace(/\s*([(,:;{}])\s*/g, '$1')
+  .replace(/\s*\)/g, ')')
+  .split('}')
+  .flatMap((chunk) => {
+    const parts = chunk.split('{')
+    const selector = parts.at(-2)
+    const body = parts.at(-1)
+    if (selector === undefined || body === undefined) return []
+    const declarations = body
+      .split(';')
+      .filter(Boolean)
+      .map((declaration) => {
+        const colon = declaration.indexOf(':')
+        return [declaration.slice(0, colon), declaration.slice(colon + 1)] as const
+      })
+    return [{ selector, declarations: Object.fromEntries(declarations) }]
+  })
+const STATE_STEPS = { hover: 80, active: 60, pressed: 60, disabled: 40 } as const
+const STATES = Object.keys(STATE_STEPS) as readonly (keyof typeof STATE_STEPS)[]
+const PAINT_PROPERTIES = {
+  'background-color': 'background-color',
+  'text-color': 'color',
+  'border-color': 'border-color',
+} as const
+const PAINTS = Object.keys(PAINT_PROPERTIES) as readonly (keyof typeof PAINT_PROPERTIES)[]
+const DEFAULT_STEPS = { 'background-color': 20, 'border-color': 60 } as const
+const REST = 'rgb(1,2,3)'
+const MAPPED = 'rgb(4,5,6)'
+type Paint = (typeof PAINTS)[number]
+type Variables = Readonly<Record<string, string>>
+const closingParenthesis = (value: string, from: number) => {
+  let depth = 0
+  for (let index = from; index < value.length; index += 1) {
+    if (value[index] === '(') depth += 1
+    if (value[index] === ')') {
+      if (depth === 0) return index
+      depth -= 1
+    }
+  }
+  throw new Error(`No closing parenthesis after ${value.slice(from)}.`)
+}
+const substitute = (value: string, variables: Variables): string | null => {
+  const start = value.indexOf('var(')
+  if (start === -1) return value
+  const end = closingParenthesis(value, start + 'var('.length)
+  const inner = value.slice(start + 'var('.length, end)
+  const comma = inner.indexOf(',')
+  const name = comma === -1 ? inner : inner.slice(0, comma)
+  const fallback = comma === -1 ? null : inner.slice(comma + 1)
+  const replacement = variables[name] ?? (fallback === null ? null : substitute(fallback, variables))
+  if (replacement === null) return null
+  return substitute(`${value.slice(0, start)}${replacement}${value.slice(end + 1)}`, variables)
+}
+const paintDeclaration = (paint: Paint, state: keyof typeof STATE_STEPS | 'focus' | 'rest') => {
+  const property = PAINT_PROPERTIES[paint]
+  const head = state === 'rest' ? `var(--button-${paint},` : `var(--button-${paint}--${state},`
+  const declared = RULES.map((rule) => rule.declarations[property]).find((value) =>
+    value?.startsWith(head),
+  )
+  if (declared === undefined)
+    throw new Error(`No rule of the stylesheet sets ${property} from ${head}.`)
+  return declared
+}
+const tonedVariables = (tone: (typeof BUTTON_TONES)[number], product: Variables) => {
+  const rule = RULES.find(({ selector }) => selector === `[data-slot='button'][data-tone='${tone}']`)
+  if (!rule) throw new Error(`No rule of the stylesheet maps the ${tone} tone.`)
+  const own = Object.entries(rule.declarations).map(
+    ([name, value]) => [name, substitute(value, product)] as const,
+  )
+  return Object.fromEntries([
+    ...Object.entries(product).filter(([name]) => !Object.hasOwn(rule.declarations, name)),
+    ...own.filter((entry): entry is readonly [string, string] => entry[1] !== null),
+  ])
+}
+const withoutWhere = (selector: string): string => {
+  const start = selector.indexOf(':where(')
+  if (start === -1) return selector
+  const end = closingParenthesis(selector, start + ':where('.length)
+  return withoutWhere(`${selector.slice(0, start)}${selector.slice(end + 1)}`)
+}
+const stateRule = (state: keyof typeof STATE_STEPS | 'focus') => {
+  const index = RULES.findIndex(({ declarations }) =>
+    declarations['background-color']?.startsWith(`var(--button-background-color--${state},`),
+  )
+  const rule = RULES[index]
+  if (!rule) throw new Error(`No rule of the stylesheet paints the ${state} state.`)
+  return { index, selector: rule.selector }
+}
+const scaled = (state: keyof typeof STATE_STEPS, rest = REST) =>
+  `color-mix(in oklab,${rest} ${STATE_STEPS[state]}%,transparent)`
+const restFrom = (paint: Paint, color: string) =>
+  paint === 'text-color' ? color : `color-mix(in oklab,${color} ${DEFAULT_STEPS[paint]}%,transparent)`
+const TEXT_HEIGHT = { sm: 24, md: 40, lg: 64 } as const
 const TEXT_PADDING = { sm: 12, md: 16, lg: 24 } as const
 const TEXT_RADIUS = { sm: 12, md: 24, lg: 40 } as const
 const TEXT_INNER_RADIUS = { sm: 0, md: 8, lg: 16 } as const
@@ -112,6 +206,36 @@ describe('Button', () => {
       )
     },
   )
+  it.each(BUTTON_SIZES)(
+    'pads the %s text kind block by half its height less one line and the border, so one line keeps the height and a wrapped label keeps a gap',
+    (size) => {
+      render(<Button size={size}>Label</Button>)
+      const height = `var(--button-${size}-height,calc(var(--spacing)*${TEXT_HEIGHT[size]}))`
+      const border = 'var(--button-border-width,calc(var(--spacing)*1))'
+      expect(
+        screen
+          .getByRole('button')
+          .matches(
+            selectorWith(
+              `padding-block:var(--button-${size}-py,max(0px,(${height}-1lh)/2-${border}));`,
+            ),
+          ),
+      ).toBe(true)
+    },
+  )
+  it('sets a line height above 1, so the lines of a wrapped label do not touch, and gives the icon kind no padding', () => {
+    render(
+      <>
+        <Button>Label</Button>
+        <Button kind="icon" aria-label="Add">
+          {PLUS}
+        </Button>
+      </>,
+    )
+    const lineHeight = selectorWith('line-height:var(--button-line-height,1.25);')
+    expect(screen.getByRole('button', { name: 'Label' }).matches(lineHeight)).toBe(true)
+    expect(screen.getByRole('button', { name: 'Add' }).matches(selectorWith('padding:0;'))).toBe(true)
+  })
   it.each(BUTTON_SIZES)(
     'defaults the %s text kind to its radius step, reads the inner radius of a field or a card before it, and publishes its radius less its padding',
     (size) => {
@@ -414,6 +538,16 @@ describe('Button', () => {
       screen.getByText('New').matches(selectorWith('margin-inline-start:calc(var(--button-md-px,')),
     ).toBe(true)
   })
+  it('takes back the height a Badge stands above the line in a md Button, in the label and in an item, so the button stays 40 high', () => {
+    render(
+      <Button startItem={<Badge>New</Badge>}>
+        Lot 12 <Badge>Sold</Badge>
+      </Button>,
+    )
+    const takeBack = selectorWith('margin-block:min(0px,')
+    expect(screen.getByText('Sold').matches(takeBack)).toBe(true)
+    expect(screen.getByText('New').matches(takeBack)).toBe(true)
+  })
   it('passes className and the remaining button props through to the root', () => {
     render(
       <Button className="col-span-4" name="intent" value="bid" aria-describedby="hint">
@@ -472,6 +606,127 @@ describe('Button', () => {
         ),
       ),
     ).toBe(true)
+  })
+  it.each(STATES.flatMap((state) => PAINTS.map((paint) => [state, paint] as const)))(
+    'derives the %s %s of a button with no tone from its rest value at the step of that state',
+    (state, paint) => {
+      expect(substitute(paintDeclaration(paint, state), { [`--button-${paint}`]: REST })).toBe(
+        scaled(state),
+      )
+    },
+  )
+  it.each(
+    BUTTON_TONES.flatMap((tone) =>
+      STATES.flatMap((state) => PAINTS.map((paint) => [tone, state, paint] as const)),
+    ),
+  )(
+    'derives the %s tone %s %s from that tone rest value, over a state the theme maps for no tone',
+    (tone, state, paint) => {
+      const variables = tonedVariables(tone, {
+        [`--button-${tone}-${paint}`]: REST,
+        [`--button-${paint}`]: MAPPED,
+        [`--button-${paint}--${state}`]: MAPPED,
+      })
+      expect(substitute(paintDeclaration(paint, state), variables)).toBe(scaled(state))
+    },
+  )
+  it.each(STATES)(
+    'lets a %s colour the theme maps win over the derived one, with a tone and without',
+    (state) => {
+      for (const paint of PAINTS) {
+        const declaration = paintDeclaration(paint, state)
+        const plain = { [`--button-${paint}`]: REST, [`--button-${paint}--${state}`]: MAPPED }
+        const toned = tonedVariables('main', {
+          [`--button-main-${paint}`]: REST,
+          [`--button-main-${paint}--${state}`]: MAPPED,
+        })
+        expect(substitute(declaration, plain)).toBe(MAPPED)
+        expect(substitute(declaration, toned)).toBe(MAPPED)
+      }
+    },
+  )
+  it('orders the state rules focus, pressed, hover, active, disabled at one specificity, so hover and a press still answer on a focused or a pressed button', () => {
+    const order = (['focus', 'pressed', 'hover', 'active', 'disabled'] as const).map(stateRule)
+    expect(order.map(({ index }) => index)).toEqual(
+      order.map(({ index }) => index).sort((first, second) => first - second),
+    )
+    for (const { selector } of order) {
+      expect(withoutWhere(selector)).toBe("[data-slot='button']")
+    }
+  })
+  it('matches the hover and active rules on a pressed button, and keeps the focus ring colour while hovered', () => {
+    render(<Button aria-pressed>Bold</Button>)
+    const pressed = screen.getByRole('button', { name: 'Bold', pressed: true })
+    expect(pressed.matches(stateRule('pressed').selector)).toBe(true)
+    expect(pressed.matches(stateRule('hover').selector.replace(':hover', ''))).toBe(true)
+    expect(pressed.matches(stateRule('active').selector.replace(':active', ''))).toBe(true)
+    expect(STYLESHEET.replace(/\s/g, '')).toContain(
+      'outline-color:var(--button-outline-color--hover,var(--button-outline-color--focus,',
+    )
+  })
+  it('keeps the rest colours on focus, which draws the outline instead', () => {
+    for (const paint of PAINTS) {
+      expect(substitute(paintDeclaration(paint, 'focus'), { [`--button-${paint}`]: REST })).toBe(REST)
+    }
+  })
+  it('paints the text from --button-color, the background at its 20 step and the border at its 60 step', () => {
+    for (const paint of PAINTS) {
+      expect(substitute(paintDeclaration(paint, 'rest'), { '--button-color': REST })).toBe(
+        restFrom(paint, REST),
+      )
+    }
+  })
+  it('lets a background, text or border colour the theme maps win over the default --button-color feeds, with a tone and without', () => {
+    for (const paint of PAINTS) {
+      const plain = { '--button-color': REST, [`--button-${paint}`]: MAPPED }
+      const toned = tonedVariables('main', {
+        '--button-main-color': REST,
+        [`--button-main-${paint}`]: MAPPED,
+      })
+      expect(substitute(paintDeclaration(paint, 'rest'), plain)).toBe(MAPPED)
+      expect(substitute(paintDeclaration(paint, 'rest'), toned)).toBe(MAPPED)
+    }
+  })
+  it.each(BUTTON_TONES)(
+    'feeds the text, background and border of the %s tone from its one colour, over a colour the theme maps for no tone',
+    (tone) => {
+      const variables = tonedVariables(tone, {
+        [`--button-${tone}-color`]: REST,
+        '--button-color': MAPPED,
+      })
+      for (const paint of PAINTS) {
+        expect(substitute(paintDeclaration(paint, 'rest'), variables)).toBe(restFrom(paint, REST))
+      }
+    },
+  )
+  it.each(BUTTON_TONES)(
+    'derives every state of the %s tone from the rest values its one colour feeds',
+    (tone) => {
+      const variables = tonedVariables(tone, { [`--button-${tone}-color`]: REST })
+      for (const state of STATES) {
+        for (const paint of PAINTS) {
+          expect(substitute(paintDeclaration(paint, state), variables)).toBe(
+            scaled(state, restFrom(paint, REST)),
+          )
+        }
+      }
+    },
+  )
+  it('leaves an unmapped background and border transparent in every state, and an unmapped text colour inherited', () => {
+    for (const state of [...STATES, 'rest'] as const) {
+      for (const paint of ['background-color', 'border-color'] as const) {
+        const rest = restFrom(paint, 'transparent')
+        expect(substitute(paintDeclaration(paint, state), {})).toBe(
+          state === 'rest' ? rest : scaled(state, rest),
+        )
+      }
+      expect(substitute(paintDeclaration('text-color', state), {})).toBeNull()
+    }
+  })
+  it('gives the one colour no state, plain or per tone, since each state of the text reads --button-text-color', () => {
+    for (const prefix of ['', ...BUTTON_TONES.map((tone) => `${tone}-`)]) {
+      expect(STYLESHEET).not.toContain(`--button-${prefix}color--`)
+    }
   })
   it('applies the hover colours only where the pointer can hover, so a tap leaves no stuck hover', () => {
     expect(STYLESHEET.replace(/\s/g, '')).toContain(

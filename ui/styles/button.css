@@ -6,9 +6,8 @@
     align-items: center;
     justify-content: center;
     margin: 0;
-    padding-block: 0;
     font: inherit;
-    line-height: 1;
+    line-height: var(--button-line-height, 1.25);
     text-decoration: none;
     cursor: pointer;
     appearance: none;
@@ -17,13 +16,27 @@
     outline-style: none;
     outline-width: var(--button-outline-width, calc(var(--spacing) * 2));
     outline-offset: var(--button-outline-offset, calc(var(--spacing) * 2));
-    background-color: var(--button-background-color, transparent);
-    color: var(--button-color);
-    border-color: var(--button-border-color, transparent);
+    background-color: var(
+      --button-background-color,
+      color-mix(in oklab, var(--button-color, transparent) 20%, transparent)
+    );
+    color: var(--button-text-color, var(--button-color));
+    border-color: var(
+      --button-border-color,
+      color-mix(in oklab, var(--button-color, transparent) 60%, transparent)
+    );
     outline-color: var(--button-outline-color, currentColor);
   }
   [data-slot='button'][data-size='sm'] {
     min-height: var(--button-sm-height, calc(var(--spacing) * 24));
+    padding-block: var(
+      --button-sm-py,
+      max(
+        0px,
+        (var(--button-sm-height, calc(var(--spacing) * 24)) - 1lh) / 2 -
+          var(--button-border-width, calc(var(--spacing) * 1))
+      )
+    );
     padding-inline: var(--button-sm-px, calc(var(--spacing) * 12));
     gap: var(--button-sm-gap, calc(var(--spacing) * 4));
     font-size: var(--button-sm-content-size, calc(var(--spacing) * 12));
@@ -47,6 +60,14 @@
   }
   [data-slot='button'][data-size='md'] {
     min-height: var(--button-md-height, calc(var(--spacing) * 40));
+    padding-block: var(
+      --button-md-py,
+      max(
+        0px,
+        (var(--button-md-height, calc(var(--spacing) * 40)) - 1lh) / 2 -
+          var(--button-border-width, calc(var(--spacing) * 1))
+      )
+    );
     padding-inline: var(--button-md-px, calc(var(--spacing) * 16));
     gap: var(--button-md-gap, calc(var(--spacing) * 8));
     font-size: var(--button-md-content-size, calc(var(--spacing) * 16));
@@ -70,6 +91,14 @@
   }
   [data-slot='button'][data-size='lg'] {
     min-height: var(--button-lg-height, calc(var(--spacing) * 64));
+    padding-block: var(
+      --button-lg-py,
+      max(
+        0px,
+        (var(--button-lg-height, calc(var(--spacing) * 64)) - 1lh) / 2 -
+          var(--button-border-width, calc(var(--spacing) * 1))
+      )
+    );
     padding-inline: var(--button-lg-px, calc(var(--spacing) * 24));
     gap: var(--button-lg-gap, calc(var(--spacing) * 12));
     font-size: var(--button-lg-content-size, calc(var(--spacing) * 24));
@@ -130,6 +159,16 @@
   [data-slot='button'][data-size='md'][data-element-edge~='end'] > [data-slot='badge']:last-child {
     margin-inline-end: calc(var(--button-md-px, calc(var(--spacing) * 16)) / -2);
   }
+  [data-slot='button'][data-size='md']:not([data-kind='card']) [data-slot='badge'] {
+    margin-block: min(
+      0px,
+      (
+          var(--button-md-content-size, calc(var(--spacing) * 16)) * var(--button-line-height, 1.25) -
+            var(--badge-height, calc(var(--spacing) * 24))
+        ) /
+        2
+    );
+  }
   [data-slot='button'][data-size='lg']:not([data-kind='icon']) > [data-slot='button-start-item'] {
     margin-inline-start: calc(var(--button-lg-px, calc(var(--spacing) * 24)) / -2);
   }
@@ -138,7 +177,7 @@
   }
   [data-slot='button'][data-kind='icon'] {
     aspect-ratio: 1;
-    padding-inline: 0;
+    padding: 0;
   }
   [data-slot='button'][data-kind='icon'][data-size='sm'] {
     height: var(--button-sm-height, calc(var(--spacing) * 24));
@@ -245,42 +284,21 @@
     cursor: default;
     user-select: none;
   }
-  @media (hover: hover) {
-    [data-slot='button']:where(
-      :not([data-responsive='false'], :disabled, [aria-disabled='true']):hover
-    ) {
-      background-color: var(
-        --button-background-color--hover,
-        var(--button-background-color, transparent)
-      );
-      color: var(--button-color--hover, var(--button-color));
-      border-color: var(--button-border-color--hover, var(--button-border-color, transparent));
-      outline-color: var(--button-outline-color--hover, var(--button-outline-color, currentColor));
-    }
-  }
   [data-slot='button']:where(:not([data-responsive='false']):focus-visible) {
     outline-style: solid;
     background-color: var(
       --button-background-color--focus,
-      var(--button-background-color, transparent)
+      var(
+        --button-background-color,
+        color-mix(in oklab, var(--button-color, transparent) 20%, transparent)
+      )
     );
-    color: var(--button-color--focus, var(--button-color));
-    border-color: var(--button-border-color--focus, var(--button-border-color, transparent));
+    color: var(--button-text-color--focus, var(--button-text-color, var(--button-color)));
+    border-color: var(
+      --button-border-color--focus,
+      var(--button-border-color, color-mix(in oklab, var(--button-color, transparent) 60%, transparent))
+    );
     outline-color: var(--button-outline-color--focus, var(--button-outline-color, currentColor));
-  }
-  [data-slot='button']:where(
-    :not([data-responsive='false'], :disabled, [aria-disabled='true']):active
-  ) {
-    background-color: var(
-      --button-background-color--active,
-      var(--button-background-color, transparent)
-    );
-    color: var(--button-color--active, var(--button-color));
-    border-color: var(--button-border-color--active, var(--button-border-color, transparent));
-    outline-color: var(
-      --button-outline-color--active,
-      var(--button-outline-color--focus, var(--button-outline-color, currentColor))
-    );
   }
   [data-slot='button']:where(:not([data-responsive='false'])):where(
       [aria-pressed='true'],
@@ -289,12 +307,108 @@
     ) {
     background-color: var(
       --button-background-color--pressed,
-      var(--button-background-color, transparent)
+      color-mix(
+        in oklab,
+        var(
+            --button-background-color,
+            color-mix(in oklab, var(--button-color, transparent) 20%, transparent)
+          )
+          60%,
+        transparent
+      )
     );
-    color: var(--button-color--pressed, var(--button-color));
-    border-color: var(--button-border-color--pressed, var(--button-border-color, transparent));
+    color: var(
+      --button-text-color--pressed,
+      color-mix(in oklab, var(--button-text-color, var(--button-color)) 60%, transparent)
+    );
+    border-color: var(
+      --button-border-color--pressed,
+      color-mix(
+        in oklab,
+        var(
+            --button-border-color,
+            color-mix(in oklab, var(--button-color, transparent) 60%, transparent)
+          )
+          60%,
+        transparent
+      )
+    );
     outline-color: var(
       --button-outline-color--pressed,
+      var(--button-outline-color--focus, var(--button-outline-color, currentColor))
+    );
+  }
+  @media (hover: hover) {
+    [data-slot='button']:where(
+      :not([data-responsive='false'], :disabled, [aria-disabled='true']):hover
+    ) {
+      background-color: var(
+        --button-background-color--hover,
+        color-mix(
+          in oklab,
+          var(
+              --button-background-color,
+              color-mix(in oklab, var(--button-color, transparent) 20%, transparent)
+            )
+            80%,
+          transparent
+        )
+      );
+      color: var(
+        --button-text-color--hover,
+        color-mix(in oklab, var(--button-text-color, var(--button-color)) 80%, transparent)
+      );
+      border-color: var(
+        --button-border-color--hover,
+        color-mix(
+          in oklab,
+          var(
+              --button-border-color,
+              color-mix(in oklab, var(--button-color, transparent) 60%, transparent)
+            )
+            80%,
+          transparent
+        )
+      );
+      outline-color: var(
+        --button-outline-color--hover,
+        var(--button-outline-color--focus, var(--button-outline-color, currentColor))
+      );
+    }
+  }
+  [data-slot='button']:where(
+    :not([data-responsive='false'], :disabled, [aria-disabled='true']):active
+  ) {
+    background-color: var(
+      --button-background-color--active,
+      color-mix(
+        in oklab,
+        var(
+            --button-background-color,
+            color-mix(in oklab, var(--button-color, transparent) 20%, transparent)
+          )
+          60%,
+        transparent
+      )
+    );
+    color: var(
+      --button-text-color--active,
+      color-mix(in oklab, var(--button-text-color, var(--button-color)) 60%, transparent)
+    );
+    border-color: var(
+      --button-border-color--active,
+      color-mix(
+        in oklab,
+        var(
+            --button-border-color,
+            color-mix(in oklab, var(--button-color, transparent) 60%, transparent)
+          )
+          60%,
+        transparent
+      )
+    );
+    outline-color: var(
+      --button-outline-color--active,
       var(--button-outline-color--focus, var(--button-outline-color, currentColor))
     );
   }
@@ -302,10 +416,32 @@
     cursor: default;
     background-color: var(
       --button-background-color--disabled,
-      var(--button-background-color, transparent)
+      color-mix(
+        in oklab,
+        var(
+            --button-background-color,
+            color-mix(in oklab, var(--button-color, transparent) 20%, transparent)
+          )
+          40%,
+        transparent
+      )
     );
-    color: var(--button-color--disabled, var(--button-color));
-    border-color: var(--button-border-color--disabled, var(--button-border-color, transparent));
+    color: var(
+      --button-text-color--disabled,
+      color-mix(in oklab, var(--button-text-color, var(--button-color)) 40%, transparent)
+    );
+    border-color: var(
+      --button-border-color--disabled,
+      color-mix(
+        in oklab,
+        var(
+            --button-border-color,
+            color-mix(in oklab, var(--button-color, transparent) 60%, transparent)
+          )
+          40%,
+        transparent
+      )
+    );
     outline-color: var(
       --button-outline-color--disabled,
       var(--button-outline-color--focus, var(--button-outline-color, currentColor))
@@ -319,11 +455,12 @@
     --button-background-color--pressed: var(--button-main-background-color--pressed);
     --button-background-color--disabled: var(--button-main-background-color--disabled);
     --button-color: var(--button-main-color);
-    --button-color--hover: var(--button-main-color--hover);
-    --button-color--focus: var(--button-main-color--focus);
-    --button-color--active: var(--button-main-color--active);
-    --button-color--pressed: var(--button-main-color--pressed);
-    --button-color--disabled: var(--button-main-color--disabled);
+    --button-text-color: var(--button-main-text-color);
+    --button-text-color--hover: var(--button-main-text-color--hover);
+    --button-text-color--focus: var(--button-main-text-color--focus);
+    --button-text-color--active: var(--button-main-text-color--active);
+    --button-text-color--pressed: var(--button-main-text-color--pressed);
+    --button-text-color--disabled: var(--button-main-text-color--disabled);
     --button-border-color: var(--button-main-border-color);
     --button-border-color--hover: var(--button-main-border-color--hover);
     --button-border-color--focus: var(--button-main-border-color--focus);
@@ -345,11 +482,12 @@
     --button-background-color--pressed: var(--button-accent-background-color--pressed);
     --button-background-color--disabled: var(--button-accent-background-color--disabled);
     --button-color: var(--button-accent-color);
-    --button-color--hover: var(--button-accent-color--hover);
-    --button-color--focus: var(--button-accent-color--focus);
-    --button-color--active: var(--button-accent-color--active);
-    --button-color--pressed: var(--button-accent-color--pressed);
-    --button-color--disabled: var(--button-accent-color--disabled);
+    --button-text-color: var(--button-accent-text-color);
+    --button-text-color--hover: var(--button-accent-text-color--hover);
+    --button-text-color--focus: var(--button-accent-text-color--focus);
+    --button-text-color--active: var(--button-accent-text-color--active);
+    --button-text-color--pressed: var(--button-accent-text-color--pressed);
+    --button-text-color--disabled: var(--button-accent-text-color--disabled);
     --button-border-color: var(--button-accent-border-color);
     --button-border-color--hover: var(--button-accent-border-color--hover);
     --button-border-color--focus: var(--button-accent-border-color--focus);
@@ -371,11 +509,12 @@
     --button-background-color--pressed: var(--button-success-background-color--pressed);
     --button-background-color--disabled: var(--button-success-background-color--disabled);
     --button-color: var(--button-success-color);
-    --button-color--hover: var(--button-success-color--hover);
-    --button-color--focus: var(--button-success-color--focus);
-    --button-color--active: var(--button-success-color--active);
-    --button-color--pressed: var(--button-success-color--pressed);
-    --button-color--disabled: var(--button-success-color--disabled);
+    --button-text-color: var(--button-success-text-color);
+    --button-text-color--hover: var(--button-success-text-color--hover);
+    --button-text-color--focus: var(--button-success-text-color--focus);
+    --button-text-color--active: var(--button-success-text-color--active);
+    --button-text-color--pressed: var(--button-success-text-color--pressed);
+    --button-text-color--disabled: var(--button-success-text-color--disabled);
     --button-border-color: var(--button-success-border-color);
     --button-border-color--hover: var(--button-success-border-color--hover);
     --button-border-color--focus: var(--button-success-border-color--focus);
@@ -397,11 +536,12 @@
     --button-background-color--pressed: var(--button-warning-background-color--pressed);
     --button-background-color--disabled: var(--button-warning-background-color--disabled);
     --button-color: var(--button-warning-color);
-    --button-color--hover: var(--button-warning-color--hover);
-    --button-color--focus: var(--button-warning-color--focus);
-    --button-color--active: var(--button-warning-color--active);
-    --button-color--pressed: var(--button-warning-color--pressed);
-    --button-color--disabled: var(--button-warning-color--disabled);
+    --button-text-color: var(--button-warning-text-color);
+    --button-text-color--hover: var(--button-warning-text-color--hover);
+    --button-text-color--focus: var(--button-warning-text-color--focus);
+    --button-text-color--active: var(--button-warning-text-color--active);
+    --button-text-color--pressed: var(--button-warning-text-color--pressed);
+    --button-text-color--disabled: var(--button-warning-text-color--disabled);
     --button-border-color: var(--button-warning-border-color);
     --button-border-color--hover: var(--button-warning-border-color--hover);
     --button-border-color--focus: var(--button-warning-border-color--focus);
@@ -423,11 +563,12 @@
     --button-background-color--pressed: var(--button-error-background-color--pressed);
     --button-background-color--disabled: var(--button-error-background-color--disabled);
     --button-color: var(--button-error-color);
-    --button-color--hover: var(--button-error-color--hover);
-    --button-color--focus: var(--button-error-color--focus);
-    --button-color--active: var(--button-error-color--active);
-    --button-color--pressed: var(--button-error-color--pressed);
-    --button-color--disabled: var(--button-error-color--disabled);
+    --button-text-color: var(--button-error-text-color);
+    --button-text-color--hover: var(--button-error-text-color--hover);
+    --button-text-color--focus: var(--button-error-text-color--focus);
+    --button-text-color--active: var(--button-error-text-color--active);
+    --button-text-color--pressed: var(--button-error-text-color--pressed);
+    --button-text-color--disabled: var(--button-error-text-color--disabled);
     --button-border-color: var(--button-error-border-color);
     --button-border-color--hover: var(--button-error-border-color--hover);
     --button-border-color--focus: var(--button-error-border-color--focus);
