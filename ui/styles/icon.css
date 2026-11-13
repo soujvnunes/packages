@@ -1,0 +1,22 @@
+@layer components {
+  [data-slot='icon'][data-size='xs'] {
+    width: var(--icon-xs-size, calc(var(--spacing) * 12));
+    height: var(--icon-xs-size, calc(var(--spacing) * 12));
+  }
+  [data-slot='icon'][data-size='sm'] {
+    width: var(--icon-sm-size, calc(var(--spacing) * 16));
+    height: var(--icon-sm-size, calc(var(--spacing) * 16));
+  }
+  [data-slot='icon'][data-size='md'] {
+    width: var(--icon-md-size, calc(var(--spacing) * 24));
+    height: var(--icon-md-size, calc(var(--spacing) * 24));
+  }
+  [data-slot='icon'][data-size='lg'] {
+    width: var(--icon-lg-size, calc(var(--spacing) * 40));
+    height: var(--icon-lg-size, calc(var(--spacing) * 40));
+  }
+  [data-slot='icon'][data-size='xl'] {
+    width: var(--icon-xl-size, calc(var(--spacing) * 64));
+    height: var(--icon-xl-size, calc(var(--spacing) * 64));
+  }
+}

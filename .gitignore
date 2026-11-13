@@ -4,3 +4,4 @@ dist/
 .DS_Store
 .turbo/
 *.tsbuildinfo
+storybook-static/
