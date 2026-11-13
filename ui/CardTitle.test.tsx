@@ -59,4 +59,9 @@ describe('CardTitle', () => {
     render(<CardTitle ref={ref}>Lot 12</CardTitle>)
     expect(ref.current).toBe(screen.getByRole('heading', { name: 'Lot 12' }))
   })
+  it('hands its ref to the element a function child returns', () => {
+    const ref = createRef<HTMLHeadingElement>()
+    render(<CardTitle ref={ref}>{(props) => <h3 {...props}>Lot 12</h3>}</CardTitle>)
+    expect(ref.current).toBe(screen.getByRole('heading', { level: 3, name: 'Lot 12' }))
+  })
 })

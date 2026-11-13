@@ -170,6 +170,20 @@ describe('Card', () => {
     )
     expect(ref.current).toBe(screen.getByRole('article'))
   })
+  it('hands its ref to the element a function child returns', () => {
+    const ref = createRef<HTMLElement>()
+    render(
+      <Card ref={ref}>
+        {(props) => (
+          <section {...props}>
+            <CardTitle>Lot 12</CardTitle>
+            <CardDescription>Open until 20h</CardDescription>
+          </section>
+        )}
+      </Card>,
+    )
+    expect(ref.current).toBe(screen.getByRole('region', { name: 'Lot 12' }))
+  })
   it('pads 12 on every side inside a radius of 24 by default, so a control at its corner sits as far from the side as from the top', () => {
     render(
       <Card>

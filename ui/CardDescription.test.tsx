@@ -61,4 +61,11 @@ describe('CardDescription', () => {
     render(<CardDescription ref={ref}>Open until 20h</CardDescription>)
     expect(ref.current).toBe(screen.getByText('Open until 20h'))
   })
+  it('hands its ref to the element a function child returns', () => {
+    const ref = createRef<HTMLParagraphElement>()
+    render(
+      <CardDescription ref={ref}>{(props) => <span {...props}>Open until 20h</span>}</CardDescription>,
+    )
+    expect(ref.current).toBe(screen.getByText('Open until 20h'))
+  })
 })
