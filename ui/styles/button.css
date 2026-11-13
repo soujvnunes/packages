@@ -6,9 +6,8 @@
     align-items: center;
     justify-content: center;
     margin: 0;
-    padding-block: 0;
     font: inherit;
-    line-height: 1;
+    line-height: var(--button-line-height, 1.25);
     text-decoration: none;
     cursor: pointer;
     appearance: none;
@@ -30,6 +29,14 @@
   }
   [data-slot='button'][data-size='sm'] {
     min-height: var(--button-sm-height, calc(var(--spacing) * 24));
+    padding-block: var(
+      --button-sm-py,
+      max(
+        0px,
+        (var(--button-sm-height, calc(var(--spacing) * 24)) - 1lh) / 2 -
+          var(--button-border-width, calc(var(--spacing) * 1))
+      )
+    );
     padding-inline: var(--button-sm-px, calc(var(--spacing) * 12));
     gap: var(--button-sm-gap, calc(var(--spacing) * 4));
     font-size: var(--button-sm-content-size, calc(var(--spacing) * 12));
@@ -49,6 +56,14 @@
   }
   [data-slot='button'][data-size='md'] {
     min-height: var(--button-md-height, calc(var(--spacing) * 40));
+    padding-block: var(
+      --button-md-py,
+      max(
+        0px,
+        (var(--button-md-height, calc(var(--spacing) * 40)) - 1lh) / 2 -
+          var(--button-border-width, calc(var(--spacing) * 1))
+      )
+    );
     padding-inline: var(--button-md-px, calc(var(--spacing) * 16));
     gap: var(--button-md-gap, calc(var(--spacing) * 8));
     font-size: var(--button-md-content-size, calc(var(--spacing) * 16));
@@ -68,6 +83,14 @@
   }
   [data-slot='button'][data-size='lg'] {
     min-height: var(--button-lg-height, calc(var(--spacing) * 64));
+    padding-block: var(
+      --button-lg-py,
+      max(
+        0px,
+        (var(--button-lg-height, calc(var(--spacing) * 64)) - 1lh) / 2 -
+          var(--button-border-width, calc(var(--spacing) * 1))
+      )
+    );
     padding-inline: var(--button-lg-px, calc(var(--spacing) * 24));
     gap: var(--button-lg-gap, calc(var(--spacing) * 12));
     font-size: var(--button-lg-content-size, calc(var(--spacing) * 24));
@@ -132,7 +155,7 @@
   }
   [data-slot='button'][data-kind='icon'] {
     aspect-ratio: 1;
-    padding-inline: 0;
+    padding: 0;
   }
   [data-slot='button'][data-kind='icon'][data-size='sm'] {
     height: var(--button-sm-height, calc(var(--spacing) * 24));

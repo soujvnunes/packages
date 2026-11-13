@@ -60,6 +60,17 @@ export const KindsBySize: Story = {
     </div>
   ),
 }
+export const LongLabel: Story = {
+  render: (args) => (
+    <div className="grid grid-cols-1 justify-items-start gap-16">
+      {BUTTON_SIZES.map((size) => (
+        <Button key={size} {...args} size={size} startItem={PLUS}>
+          Place a bid on lot 12 before the auction closes tonight
+        </Button>
+      ))}
+    </div>
+  ),
+}
 export const Tones: Story = {
   render: (args) => (
     <div className="flex flex-wrap gap-16">

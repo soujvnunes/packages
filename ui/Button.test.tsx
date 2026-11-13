@@ -113,6 +113,7 @@ const scaled = (state: keyof typeof STATE_STEPS, rest = REST) =>
   `color-mix(in oklab,${rest} ${STATE_STEPS[state]}%,transparent)`
 const restFrom = (paint: Paint, color: string) =>
   paint === 'text-color' ? color : `color-mix(in oklab,${color} ${DEFAULT_STEPS[paint]}%,transparent)`
+const TEXT_HEIGHT = { sm: 24, md: 40, lg: 64 } as const
 const TEXT_PADDING = { sm: 12, md: 16, lg: 24 } as const
 const TEXT_RADIUS = { sm: 12, md: 24, lg: 40 } as const
 const TEXT_INNER_RADIUS = { sm: 0, md: 8, lg: 16 } as const
@@ -205,6 +206,36 @@ describe('Button', () => {
       )
     },
   )
+  it.each(BUTTON_SIZES)(
+    'pads the %s text kind block by half its height less one line and the border, so one line keeps the height and a wrapped label keeps a gap',
+    (size) => {
+      render(<Button size={size}>Label</Button>)
+      const height = `var(--button-${size}-height,calc(var(--spacing)*${TEXT_HEIGHT[size]}))`
+      const border = 'var(--button-border-width,calc(var(--spacing)*1))'
+      expect(
+        screen
+          .getByRole('button')
+          .matches(
+            selectorWith(
+              `padding-block:var(--button-${size}-py,max(0px,(${height}-1lh)/2-${border}));`,
+            ),
+          ),
+      ).toBe(true)
+    },
+  )
+  it('sets a line height above 1, so the lines of a wrapped label do not touch, and gives the icon kind no padding', () => {
+    render(
+      <>
+        <Button>Label</Button>
+        <Button kind="icon" aria-label="Add">
+          {PLUS}
+        </Button>
+      </>,
+    )
+    const lineHeight = selectorWith('line-height:var(--button-line-height,1.25);')
+    expect(screen.getByRole('button', { name: 'Label' }).matches(lineHeight)).toBe(true)
+    expect(screen.getByRole('button', { name: 'Add' }).matches(selectorWith('padding:0;'))).toBe(true)
+  })
   it.each(BUTTON_SIZES)(
     'defaults the %s text kind to its radius step, reads the inner radius of a field or a card before it, and publishes its radius less its padding',
     (size) => {
