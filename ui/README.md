@@ -103,7 +103,7 @@ export const PlaceBid = () => (
 | `kind` | `text`, `icon`, `fullWidth`, `card` | `text` |
 | `size` | `sm`, `md`, `lg` | `md` |
 | `data-tone` | `main`, `accent`, `success`, `warning`, `error` | none |
-| `startItem`, `endItem` | any node, rendered in an `aria-hidden` span | none |
+| `startItem`, `endItem` | any node, rendered in an `aria-hidden` span; a node React renders as nothing (`false`, `true`, `null`, `undefined` or `''`) adds no span, so `startItem={isNew && <Badge />}` is safe | none |
 | `disableContentBetween` | keeps the start item beside the label and moves the end item alone to the far edge | `false` |
 | `stateful` | sets `data-state` to `active` while `aria-pressed` or `aria-selected` is true, `inactive` otherwise; with `asChild`, only when the child's props declare one of the two, so a child that sets its own selection keeps its own `data-state` | `false` |
 | `responsive` | `false` drops the hover, focus, active and pressed styles, makes the text unselectable and sets `tabIndex` to -1, so the element leaves the tab order; a `tabIndex` prop overrides it | `true` |
@@ -113,7 +113,7 @@ export const PlaceBid = () => (
 
 | Variable | Default |
 | --- | --- |
-| `--button-<size>-height` | 24, 40, 64, a minimum that a wrapped label grows past, and the fixed height of the icon kind |
+| `--button-<size>-height` | 24, 40, 64, a minimum that a wrapped label grows past, and the fixed height of the icon kind; the card kind reads none and takes its height from its padding and content |
 | `--button-<size>-px` | 12, 16, 24, two steps below the height and equal to the content size; the items pull toward the edge by half of it |
 | `--button-<size>-content-size` | 12, 16, 24, the font size and the `svg` size |
 | `--button-<size>-gap` | 4, 8, 12 |
@@ -146,7 +146,7 @@ export const PlateField = () => (
 )
 ```
 
-A `label` root with the button's `text` or `fullWidth` proportions, wrapping one `input`. `kind` (`text` or `fullWidth`), `size`, `startItem`, `endItem` and `asChild` go to the root, `className` takes `{ root, input }`, and every other prop, the ref included, goes to the `input`. The root carries `data-slot="input"`, `data-kind` and `data-size`, `data-invalid` when `aria-invalid` is set and `data-disabled` when the input is disabled; the input carries `data-slot="input-control"`.
+A `label` root with the button's `text` or `fullWidth` proportions, wrapping one `input`. `kind` (`text` or `fullWidth`), `size`, `startItem`, `endItem` and `asChild` go to the root, `className` takes `{ root, input }`, and every other prop, the ref included, goes to the `input`. The root carries `data-slot="input"`, `data-kind` and `data-size`, `data-invalid` when `aria-invalid` is set and `data-disabled` when the input is disabled; the input carries `data-slot="input-control"`. The items render in `aria-hidden` `input-start-item` and `input-end-item` slots inside the label, so they are decoration: a control that acts on the field, such as a clear or a show-password button, goes beside the `Input`, never in `startItem` or `endItem`, where it would be a tab stop with no name.
 
 | Variable                                                                  | Default               |
 | ------------------------------------------------------------------------- | --------------------- |

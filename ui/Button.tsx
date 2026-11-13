@@ -21,8 +21,10 @@ const ButtonSlot = createSlot<HTMLButtonElement, React.ComponentPropsWithoutRef<
 const ButtonSlottable = createSlottable('Button')
 const isOn = (value: React.AriaAttributes['aria-pressed' | 'aria-selected']) =>
   value === true || value === 'true'
+const rendersNothing = (item: React.ReactNode) =>
+  item === undefined || item === null || typeof item === 'boolean' || item === ''
 const itemOf = (slot: string, item: React.ReactNode) =>
-  item === undefined || item === null ? null : (
+  rendersNothing(item) ? null : (
     <span data-slot={slot} aria-hidden>
       {item}
     </span>

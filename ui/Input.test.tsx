@@ -81,6 +81,13 @@ describe('Input', () => {
     expect(end?.getAttribute('data-slot')).toBe('input-end-item')
     expect(end?.getAttribute('aria-hidden')).toBe('true')
   })
+  it.each([false, true, ''])(
+    'renders no item slot for an item of %j, which React renders as nothing',
+    (item) => {
+      const { container } = render(<Input aria-label="Search" startItem={item} endItem={item} />)
+      expect(container.querySelector('[data-slot$="-item"]')).toBeNull()
+    },
+  )
   it.each(INPUT_SIZES)(
     'hands the %s content size to an Icon left at its default size, so the icon stays two steps below the height',
     (size) => {

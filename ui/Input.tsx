@@ -17,8 +17,10 @@ const InputSlot = createSlot<HTMLLabelElement, React.ComponentPropsWithoutRef<'l
 const InputSlottable = createSlottable('Input')
 const isInvalid = (value: React.AriaAttributes['aria-invalid']) =>
   value !== undefined && value !== false && value !== 'false'
+const rendersNothing = (item: React.ReactNode) =>
+  item === undefined || item === null || typeof item === 'boolean' || item === ''
 const itemOf = (slot: string, item: React.ReactNode) =>
-  item === undefined || item === null ? null : (
+  rendersNothing(item) ? null : (
     <span data-slot={slot} aria-hidden>
       {item}
     </span>

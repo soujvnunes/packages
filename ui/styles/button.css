@@ -120,6 +120,7 @@
   }
   [data-slot='button'][data-kind='card'] {
     display: flex;
+    min-height: auto;
     flex-direction: column;
     align-items: stretch;
     justify-content: flex-start;

@@ -5,13 +5,13 @@ import './styles/input.css'
 const INPUT_THEME: React.CSSProperties & Record<`--${string}`, string> = {
   '--input-background-color': 'var(--color-surface)',
   '--input-color': 'var(--color-neutral)',
-  '--input-color--disabled': 'var(--color-neutral-40)',
+  '--input-color--disabled': 'var(--color-neutral-60)',
   '--input-placeholder-color': 'var(--color-neutral-60)',
-  '--input-border-color': 'var(--color-neutral-20)',
-  '--input-border-color--hover': 'var(--color-neutral-40)',
-  '--input-border-color--focus': 'var(--color-main)',
-  '--input-border-color--invalid': 'var(--color-error)',
-  '--input-border-color--disabled': 'var(--color-neutral-10)',
+  '--input-border-color': 'var(--color-neutral-60)',
+  '--input-border-color--hover': 'var(--color-neutral-80)',
+  '--input-border-color--focus': 'var(--color-main-80)',
+  '--input-border-color--invalid': 'var(--color-error-80)',
+  '--input-border-color--disabled': 'var(--color-neutral-40)',
   '--input-outline-color--focus': 'var(--color-main-40)',
 }
 const SEARCH = (
