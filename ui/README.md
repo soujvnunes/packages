@@ -60,4 +60,4 @@ pnpm storybook          # from ui/
 pnpm build-storybook    # the static build, in ui/storybook-static
 ```
 
-It serves on port 6006 and answers component docs to agents at `http://localhost:6006/mcp`. Its theme, in `.storybook/theme.css`, is a reference theme with placeholder values, in a light and a dark mode that follow the system setting; it is not published.
+It serves on port 6006, or on the port `PORT` names, and opens no browser tab: open `http://localhost:6006` by hand. It answers component docs to agents at `http://localhost:6006/mcp`. Its theme, in `.storybook/theme.css`, is a reference theme with placeholder values, in a light and a dark mode that follow the system setting; it is not published.
