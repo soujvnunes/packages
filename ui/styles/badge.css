@@ -36,4 +36,170 @@
     width: var(--badge-content-size, calc(var(--spacing) * 12));
     height: var(--badge-content-size, calc(var(--spacing) * 12));
   }
+  [data-slot='badge']:where(a[href], button, [role='button'], [role='link'], [tabindex]) {
+    cursor: pointer;
+    outline-style: none;
+    outline-width: var(--badge-outline-width, calc(var(--spacing) * 2));
+    outline-offset: var(--badge-outline-offset, calc(var(--spacing) * 2));
+    outline-color: var(--badge-outline-color, currentColor);
+  }
+  [data-slot='badge']:where(a[href], button, [role='button'], [role='link'], [tabindex]):where(
+      :focus-visible
+    ) {
+    outline-style: solid;
+    background-color: var(
+      --badge-background-color--focus,
+      var(
+        --badge-background-color,
+        color-mix(in oklab, var(--badge-color, transparent) 20%, transparent)
+      )
+    );
+    color: var(--badge-text-color--focus, var(--badge-text-color, var(--badge-color)));
+    border-color: var(
+      --badge-border-color--focus,
+      var(--badge-border-color, color-mix(in oklab, var(--badge-color, transparent) 60%, transparent))
+    );
+    outline-color: var(--badge-outline-color--focus, var(--badge-outline-color, currentColor));
+  }
+  [data-slot='badge']:where(a[href], button, [role='button'], [role='link'], [tabindex]):where(
+      [aria-pressed='true'],
+      [aria-selected='true'],
+      [data-state='active']
+    ) {
+    background-color: var(
+      --badge-background-color--pressed,
+      color-mix(
+        in oklab,
+        var(
+            --badge-background-color,
+            color-mix(in oklab, var(--badge-color, transparent) 20%, transparent)
+          )
+          60%,
+        transparent
+      )
+    );
+    color: var(
+      --badge-text-color--pressed,
+      color-mix(in oklab, var(--badge-text-color, var(--badge-color)) 60%, transparent)
+    );
+    border-color: var(
+      --badge-border-color--pressed,
+      color-mix(
+        in oklab,
+        var(--badge-border-color, color-mix(in oklab, var(--badge-color, transparent) 60%, transparent))
+          60%,
+        transparent
+      )
+    );
+    outline-color: var(
+      --badge-outline-color--pressed,
+      var(--badge-outline-color--focus, var(--badge-outline-color, currentColor))
+    );
+  }
+  @media (hover: hover) {
+    [data-slot='badge']:where(a[href], button, [role='button'], [role='link'], [tabindex]):where(
+        :not(:disabled, [aria-disabled='true']):hover
+      ) {
+      background-color: var(
+        --badge-background-color--hover,
+        color-mix(
+          in oklab,
+          var(
+              --badge-background-color,
+              color-mix(in oklab, var(--badge-color, transparent) 20%, transparent)
+            )
+            80%,
+          transparent
+        )
+      );
+      color: var(
+        --badge-text-color--hover,
+        color-mix(in oklab, var(--badge-text-color, var(--badge-color)) 80%, transparent)
+      );
+      border-color: var(
+        --badge-border-color--hover,
+        color-mix(
+          in oklab,
+          var(
+              --badge-border-color,
+              color-mix(in oklab, var(--badge-color, transparent) 60%, transparent)
+            )
+            80%,
+          transparent
+        )
+      );
+      outline-color: var(
+        --badge-outline-color--hover,
+        var(--badge-outline-color--focus, var(--badge-outline-color, currentColor))
+      );
+    }
+  }
+  [data-slot='badge']:where(a[href], button, [role='button'], [role='link'], [tabindex]):where(
+      :not(:disabled, [aria-disabled='true']):active
+    ) {
+    background-color: var(
+      --badge-background-color--active,
+      color-mix(
+        in oklab,
+        var(
+            --badge-background-color,
+            color-mix(in oklab, var(--badge-color, transparent) 20%, transparent)
+          )
+          60%,
+        transparent
+      )
+    );
+    color: var(
+      --badge-text-color--active,
+      color-mix(in oklab, var(--badge-text-color, var(--badge-color)) 60%, transparent)
+    );
+    border-color: var(
+      --badge-border-color--active,
+      color-mix(
+        in oklab,
+        var(--badge-border-color, color-mix(in oklab, var(--badge-color, transparent) 60%, transparent))
+          60%,
+        transparent
+      )
+    );
+    outline-color: var(
+      --badge-outline-color--active,
+      var(--badge-outline-color--focus, var(--badge-outline-color, currentColor))
+    );
+  }
+  [data-slot='badge']:where(a[href], button, [role='button'], [role='link'], [tabindex]):where(
+      :disabled,
+      [aria-disabled='true']
+    ) {
+    cursor: default;
+    background-color: var(
+      --badge-background-color--disabled,
+      color-mix(
+        in oklab,
+        var(
+            --badge-background-color,
+            color-mix(in oklab, var(--badge-color, transparent) 20%, transparent)
+          )
+          40%,
+        transparent
+      )
+    );
+    color: var(
+      --badge-text-color--disabled,
+      color-mix(in oklab, var(--badge-text-color, var(--badge-color)) 40%, transparent)
+    );
+    border-color: var(
+      --badge-border-color--disabled,
+      color-mix(
+        in oklab,
+        var(--badge-border-color, color-mix(in oklab, var(--badge-color, transparent) 60%, transparent))
+          40%,
+        transparent
+      )
+    );
+    outline-color: var(
+      --badge-outline-color--disabled,
+      var(--badge-outline-color--focus, var(--badge-outline-color, currentColor))
+    );
+  }
 }

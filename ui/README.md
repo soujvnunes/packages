@@ -192,6 +192,10 @@ A `span` root with `data-slot="badge"`, 24 high with 12 inline padding and 12 co
 | `--badge-text-color` | `--badge-color` |
 | `--badge-background-color` | `--badge-color` at the 20 step |
 | `--badge-border-color` | `--badge-color` at the 60 step |
+| `--badge-outline-width`, `--badge-outline-offset` | 2, 2 |
+| `--badge-outline-color` | none, so the ring follows the text colour |
+
+A badge that renders an interactive element through `asChild` (a link with an `href`, a `button`, an element with a `button` or `link` role or a `tabindex`) takes the button's states: `hover`, `focus` (drawn on `:focus-visible` as an outline in place of the browser's own), `active`, `pressed` and `disabled`, each read from `--badge-<property>--<state>` and otherwise derived from the rest colour at the button's steps, in the button's order. A `span` badge has none of them.
 
 ## Storybook
 

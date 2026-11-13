@@ -15,6 +15,33 @@ const selectorWith = (declaration: string) => {
   if (!selector) throw new Error(`No rule of the stylesheet holds ${declaration}.`)
   return selector
 }
+const DECLARATIONS = readFileSync(`${import.meta.dirname}/styles/badge.css`, 'utf8')
+  .replace(/\s+/g, ' ')
+  .replace(/\s*([(,:;{}])\s*/g, '$1')
+  .replace(/\s*\)/g, ')')
+const INTERACTIVE = "[data-slot='badge']:where(a[href],button,[role='button'],[role='link'],[tabindex])"
+const STATE_STEPS = { pressed: 60, hover: 80, active: 60, disabled: 40 } as const
+const STATES = Object.keys(STATE_STEPS) as readonly (keyof typeof STATE_STEPS)[]
+const PAINT_PROPERTIES = {
+  'background-color': 'background-color',
+  'text-color': 'color',
+  'border-color': 'border-color',
+} as const
+const PAINTS = Object.keys(PAINT_PROPERTIES) as readonly (keyof typeof PAINT_PROPERTIES)[]
+const REST_VALUES = {
+  'background-color':
+    'var(--badge-background-color,color-mix(in oklab,var(--badge-color,transparent) 20%,transparent))',
+  'text-color': 'var(--badge-text-color,var(--badge-color))',
+  'border-color':
+    'var(--badge-border-color,color-mix(in oklab,var(--badge-color,transparent) 60%,transparent))',
+} as const
+const stateSelector = (state: keyof typeof STATE_STEPS | 'focus') => {
+  const index = DECLARATIONS.indexOf(`background-color:var(--badge-background-color--${state},`)
+  if (index === -1) throw new Error(`No rule of the stylesheet paints the ${state} state.`)
+  const open = DECLARATIONS.lastIndexOf('{', index)
+  const start = DECLARATIONS.lastIndexOf('}', open) + 1
+  return { index, selector: DECLARATIONS.slice(start, open).replace('@media(hover:hover){', '') }
+}
 const THEME: React.CSSProperties & Record<`--${string}`, string> = {
   '--badge-background-color': 'rgb(1, 2, 3)',
 }
@@ -116,6 +143,52 @@ describe('Badge', () => {
     expect(link.getAttribute('class')?.split(' ').sort()).toEqual(['badge', 'lot'])
     expect(link.firstElementChild?.getAttribute('data-slot')).toBe('badge-start-item')
   })
+  it('gives a Badge rendered as a link the focus ring of a Button, in place of the browser outline, and leaves a plain badge without one', () => {
+    const { container } = render(
+      <>
+        <Badge asChild>
+          <a href="/lots/12">Lot 12</a>
+        </Badge>
+        <Badge>New</Badge>
+      </>,
+    )
+    const link = screen.getByRole('link', { name: 'Lot 12' })
+    const plain = container.querySelector('span[data-slot="badge"]')
+    expect(link.matches(INTERACTIVE)).toBe(true)
+    expect(plain?.matches(INTERACTIVE)).toBe(false)
+    expect(DECLARATIONS).toContain(
+      `${INTERACTIVE}{cursor:pointer;outline-style:none;outline-width:var(--badge-outline-width,calc(var(--spacing) * 2));outline-offset:var(--badge-outline-offset,calc(var(--spacing) * 2));outline-color:var(--badge-outline-color,currentColor);}`,
+    )
+    expect(stateSelector('focus').selector).toBe(`${INTERACTIVE}:where(:focus-visible)`)
+    expect(DECLARATIONS).toContain(
+      'outline-color:var(--badge-outline-color--focus,var(--badge-outline-color,currentColor));',
+    )
+  })
+  it('matches the hover, active and pressed rules on a link badge, and orders them as the Button does', () => {
+    render(
+      <Badge asChild>
+        <a href="/lots/12" aria-selected="true">
+          Lot 12
+        </a>
+      </Badge>,
+    )
+    const link = screen.getByRole('link', { name: 'Lot 12' })
+    const order = (['focus', ...STATES] as const).map(stateSelector)
+    expect(order.map(({ index }) => index)).toEqual(
+      order.map(({ index }) => index).sort((first, second) => first - second),
+    )
+    expect(link.matches(stateSelector('pressed').selector)).toBe(true)
+    expect(link.matches(stateSelector('hover').selector.replace(':hover', ''))).toBe(true)
+    expect(link.matches(stateSelector('active').selector.replace(':active', ''))).toBe(true)
+  })
+  it.each(STATES.flatMap((state) => PAINTS.map((paint) => [state, paint] as const)))(
+    'derives the %s %s of a link badge from its rest value at the step of that state, unless the theme maps it',
+    (state, paint) => {
+      expect(DECLARATIONS).toContain(
+        `${PAINT_PROPERTIES[paint]}:var(--badge-${paint}--${state},color-mix(in oklab,${REST_VALUES[paint]} ${STATE_STEPS[state]}%,transparent));`,
+      )
+    },
+  )
   it('reads a variable a wrapper sets, the way a theme maps the badge', () => {
     const { container } = render(
       <div style={THEME}>
