@@ -15,9 +15,9 @@ const selectorWith = (declaration: string) => {
   if (!selector) throw new Error(`No rule of the stylesheet holds ${declaration}.`)
   return selector
 }
-const INPUT_PADDING = { sm: 12, md: 16, lg: 24 } as const
-const INPUT_RADIUS = { sm: 12, md: 24, lg: 40 } as const
-const INPUT_INNER_RADIUS = { sm: 0, md: 8, lg: 16 } as const
+const INPUT_PADDING = { md: 16, lg: 24 } as const
+const INPUT_RADIUS = { md: 24, lg: 40 } as const
+const INPUT_INNER_RADIUS = { md: 8, lg: 16 } as const
 const DECLARATIONS = readFileSync(`${import.meta.dirname}/styles/input.css`, 'utf8')
   .replace(/\s+/g, ' ')
   .replace(/\s*([(,:;{}])\s*/g, '$1')
@@ -61,6 +61,11 @@ describe('Input', () => {
       expect(rootOf(screen.getByRole('textbox')).getAttribute('data-size')).toBe(size)
     },
   )
+  it('starts at md and has no sm size, since a field 24 high with 12 text cannot be typed in or touched', () => {
+    expect(INPUT_SIZES).toEqual(['md', 'lg'])
+    expect(STYLESHEET).not.toContain('--input-sm-')
+    expect(STYLESHEET).not.toContain("[data-size='sm']")
+  })
   it.each(INPUT_KINDS)(
     'carries the %s kind as its data-kind attribute, for the stylesheet to read',
     (kind) => {

@@ -77,11 +77,12 @@ Every component takes `asChild` and then renders its child with the same attribu
 
 ## Nested radius
 
-Every radius is a step of the ladder: 12, 24 and 40 for a `sm`, `md` and `lg` `Button` or `Input`, 12 for a `Badge`. Alone at its own height each control still draws as a pill, since the browser holds a radius to half the height. A container publishes its inner radius, its own radius minus its inline padding and never below zero, and every child reads the inner radius of what holds it before its own default, whatever that default is.
+Every radius is a step of the ladder: 12, 24 and 40 for a `sm`, `md` and `lg` `Button`, 24 and 40 for a `md` and `lg` `Input`, 12 for a `Badge`. Alone at its own height each control still draws as a pill, since the browser holds a radius to half the height. A container publishes its inner radius, its own radius minus its inline padding and never below zero, and every child reads the inner radius of what holds it before its own default, whatever that default is.
 
 | Component | Reads, in order | Publishes |
 | --- | --- | --- |
-| `Button` (`text`, `fullWidth`), `Input` | `--ui-inner-radius-64`, `--ui-inner-radius-card`, its own radius | `--ui-inner-radius-40`: 0, 8, 16 by default |
+| `Button` (`text`, `fullWidth`) | `--ui-inner-radius-64`, `--ui-inner-radius-card`, its own radius | `--ui-inner-radius-40`: 0, 8, 16 by default |
+| `Input` | `--ui-inner-radius-64`, `--ui-inner-radius-card`, its own radius | `--ui-inner-radius-40`: 8, 16 by default |
 | `Button` (`icon`) | `--ui-inner-radius-64`, `--ui-inner-radius-card`, its own radius | `--ui-inner-radius-40`: 12, 24, 40 by default |
 | `Button` (`card`) | `--ui-inner-radius-64`, `--ui-inner-radius-card`, its own radius | `--ui-inner-radius-40`: 4, 4, 8 by default |
 | `Badge` | `--ui-inner-radius-40`, `--ui-inner-radius-64`, `--ui-inner-radius-card`, its own radius | nothing |
@@ -148,17 +149,19 @@ export const PlateField = () => (
 )
 ```
 
-A `label` root with the button's `text` or `fullWidth` proportions, wrapping one `input`. `kind` (`text` or `fullWidth`), `size`, `startItem`, `endItem` and `asChild` go to the root, `className` takes `{ root, input }`, and every other prop, the ref included, goes to the `input`. The root carries `data-slot="input"`, `data-kind` and `data-size`, `data-invalid` when `aria-invalid` is set and `data-disabled` when the input is disabled; the input carries `data-slot="input-control"`. The items render in `aria-hidden` `input-start-item` and `input-end-item` slots inside the label, so they are decoration: a control that acts on the field, such as a clear or a show-password button, goes beside the `Input`, never in `startItem` or `endItem`, where it would be a tab stop with no name.
+A `label` root with the button's `text` or `fullWidth` proportions, wrapping one `input`. `kind` (`text` or `fullWidth`), `size` (`md` or `lg`, `md` by default), `startItem`, `endItem` and `asChild` go to the root, `className` takes `{ root, input }`, and every other prop, the ref included, goes to the `input`. The root carries `data-slot="input"`, `data-kind` and `data-size`, `data-invalid` when `aria-invalid` is set and `data-disabled` when the input is disabled; the input carries `data-slot="input-control"`. The items render in `aria-hidden` `input-start-item` and `input-end-item` slots inside the label, so they are decoration: a control that acts on the field, such as a clear or a show-password button, goes beside the `Input`, never in `startItem` or `endItem`, where it would be a tab stop with no name.
 
-| Variable                                                                  | Default               |
-| ------------------------------------------------------------------------- | --------------------- |
-| `--input-<size>-height`, `-px`, `-content-size`, `-gap`, `-radius`        | as the button's sizes |
-| `--input-border-width`, `--input-outline-width`, `--input-outline-offset` | 1, 2, 2               |
-| `--input-background-color[--<state>]`                                     | none                  |
-| `--input-color[--<state>]`                                                | none                  |
-| `--input-border-color[--<state>]`                                         | none                  |
-| `--input-outline-color[--<state>]`                                        | none                  |
-| `--input-placeholder-color`                                               | the text colour       |
+The `Input` starts at `md`: a field 24 high with 12 text cannot be typed in or touched in real use, so it has no `sm` size, and passing one is a type error.
+
+| Variable | Default |
+| --- | --- |
+| `--input-<size>-height`, `-px`, `-content-size`, `-gap`, `-radius` | as the button's `md` and `lg` sizes: 40 and 64 high, 16 and 24 padding and content, 8 and 12 gap, `--radius-24` and `--radius-40` |
+| `--input-border-width`, `--input-outline-width`, `--input-outline-offset` | 1, 2, 2 |
+| `--input-background-color[--<state>]` | none |
+| `--input-color[--<state>]` | none |
+| `--input-border-color[--<state>]` | none |
+| `--input-outline-color[--<state>]` | none |
+| `--input-placeholder-color` | the text colour |
 
 The states are `hover`, `focus` (while the input has visible focus), `invalid` and `disabled`. The `hover` and `disabled` colours derive from the rest colour at the steps of the variable grammar unless the product maps them, `focus` keeps the rest colour, and an unmapped `invalid` colour reads the rest colour. An outline colour left unmapped for `invalid` or `disabled` falls back to the `focus` one, so a focused invalid field draws its ring in the focus colour.
 
