@@ -52,6 +52,7 @@
   --color-surface: var(--ambient-surface);
   --color-neutral: color-mix(in oklab, var(--ambient-ink) var(--ambient-strength), transparent);
   --color-neutral-80: color-mix(in oklab, var(--ambient-ink) 80%, transparent);
+  --color-neutral-60: color-mix(in oklab, var(--ambient-ink) 60%, transparent);
   --color-neutral-40: color-mix(in oklab, var(--ambient-ink) 40%, transparent);
   background: var(--color-background);
   color: var(--color-neutral);
@@ -165,7 +166,7 @@
 .foundations-chip {
   background: var(--step-100);
   --ink: var(--color-neutral);
-  --ink-disabled: var(--color-neutral-40);
+  --ink-disabled: var(--color-neutral-60);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -178,12 +179,12 @@
 
 .foundations-chip[data-tone='inverse'] {
   --ink: var(--color-surface);
-  --ink-disabled: color-mix(in oklab, var(--color-surface) 40%, transparent);
+  --ink-disabled: color-mix(in oklab, var(--color-surface) 60%, transparent);
 }
 
 .foundations-chip[data-tone='colour'] {
   --ink: color-mix(in oklab, var(--palette-black) 80%, transparent);
-  --ink-disabled: color-mix(in oklab, var(--palette-black) 40%, transparent);
+  --ink-disabled: color-mix(in oklab, var(--palette-black) 60%, transparent);
 }
 
 .foundations-dot {
