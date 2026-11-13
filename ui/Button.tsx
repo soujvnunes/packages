@@ -1,6 +1,5 @@
 import { Children, forwardRef, isValidElement } from 'react'
 import { createSlot, createSlottable } from '@radix-ui/react-slot'
-import { Badge } from './Badge.js'
 export const BUTTON_KINDS = ['text', 'icon', 'fullWidth', 'card'] as const
 export const BUTTON_SIZES = ['sm', 'md', 'lg'] as const
 export const BUTTON_TONES = ['main', 'accent', 'success', 'warning', 'error'] as const
@@ -30,10 +29,13 @@ const itemOf = (slot: string, item: React.ReactNode) =>
       {item}
     </span>
   )
-const isBadge = (node: React.ReactNode) => isValidElement(node) && node.type === Badge
-const badgeEdgesOf = (nodes: React.ReactNode, pullStart: boolean, pullEnd: boolean) => {
+const isElement = (node: React.ReactNode) => isValidElement(node)
+const elementEdgesOf = (nodes: React.ReactNode, pullStart: boolean, pullEnd: boolean) => {
   const content = Children.toArray(nodes).filter((node) => !rendersNothing(node))
-  return [pullStart && isBadge(content.at(0)) && 'start', pullEnd && isBadge(content.at(-1)) && 'end']
+  return [
+    pullStart && isElement(content.at(0)) && 'start',
+    pullEnd && isElement(content.at(-1)) && 'end',
+  ]
     .filter(Boolean)
     .join(' ')
 }
@@ -73,9 +75,9 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       asChild && isValidElement<{ children?: React.ReactNode }>(children)
         ? children.props.children
         : children
-    const badgeEdges =
+    const elementEdges =
       kind === 'text' || kind === 'fullWidth'
-        ? badgeEdgesOf(content, leading === null, trailing === null)
+        ? elementEdgesOf(content, leading === null, trailing === null)
         : ''
     const rootProps = {
       'data-slot': 'button',
@@ -83,7 +85,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       'data-size': size,
       'data-responsive': responsive,
       'data-content-between': !disableContentBetween,
-      ...(badgeEdges && { 'data-badge-edge': badgeEdges }),
+      ...(elementEdges && { 'data-element-edge': elementEdges }),
       ...(stateful &&
         (!asChild || declaresState) && {
           'data-state':

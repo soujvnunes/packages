@@ -288,6 +288,33 @@ describe('Button', () => {
       expect(between.matches(endPull)).toBe(false)
     },
   )
+  it.each(BUTTON_SIZES)(
+    'pulls a server-rendered badge span and a wrapped Badge at the start of the %s label, and no other element',
+    (size) => {
+      const LotBadge = () => <Badge data-variant="new">Wrapped</Badge>
+      render(
+        <>
+          <Button size={size}>
+            <span data-slot="badge">Rendered</span>
+            Lot 12
+          </Button>
+          <Button size={size}>
+            <LotBadge />
+            Lot 13
+          </Button>
+          <Button size={size}>
+            <strong>Lot</strong> 14
+          </Button>
+        </>,
+      )
+      const startPull = selectorWith(
+        `margin-inline-start:calc(var(--button-${size}-px,calc(var(--spacing)*${TEXT_PADDING[size]}))/-2);`,
+      )
+      expect(screen.getByText('Rendered').matches(startPull)).toBe(true)
+      expect(screen.getByText('Wrapped').matches(startPull)).toBe(true)
+      expect(screen.getByText('Lot').matches(startPull)).toBe(false)
+    },
+  )
   it('pulls no Badge that a start item precedes, nor one inside the card or icon kind', () => {
     render(
       <>
