@@ -66,18 +66,21 @@ Every component but the three of the Card takes `asChild` and then renders its c
 
 ## Nested radius
 
-Radius is a number at every level. A container publishes its inner radius, its own radius minus its inline padding and never below zero, and a control nested in it reads that before its own default, whatever its own default is, so the two curves stay parallel.
+Every radius is a step of the ladder: 12, 24 and 40 for a `sm`, `md` and `lg` `Button` or `Input`, 12 for a `Badge`. Alone at its own height each control still draws as a pill, since the browser holds a radius to half the height. A container publishes its inner radius, its own radius minus its inline padding and never below zero, and every child reads the inner radius of what holds it before its own default, whatever that default is, so the two curves stay parallel.
 
 | Component | Reads, in order | Publishes |
 | --- | --- | --- |
-| `Button` (`text`, `icon`, `fullWidth`), `Input` | its own radius, a pill by default | `--ui-inner-radius-40`, a pill while the radius is one |
+| `Button` (`text`, `fullWidth`), `Input` | `--ui-inner-radius-64`, `--ui-inner-radius-card`, its own radius | `--ui-inner-radius-40`: 0, 8, 16 by default |
+| `Button` (`icon`) | `--ui-inner-radius-64`, `--ui-inner-radius-card`, its own radius | `--ui-inner-radius-40`: 12, 24, 40 by default |
 | `Button` (`card`) | `--ui-inner-radius-64`, `--ui-inner-radius-card`, its own radius | `--ui-inner-radius-40`: 4, 4, 8 by default |
-| `Badge` | `--ui-inner-radius-40` once `--badge-radius` is mapped, then `--badge-radius`; a pill while it is unmapped | nothing |
+| `Badge` | `--ui-inner-radius-40`, `--ui-inner-radius-64`, `--ui-inner-radius-card`, its own radius | nothing |
 | `Field`, `ButtonGroup` | `--ui-inner-radius-card`, then its own radius, `--radius-40` by default | `--ui-inner-radius-64`: 16 by default, and clears `--ui-inner-radius-card` for what it holds |
 | `Bar` | `--ui-inner-radius-card` once `--bar-radius` is mapped, then `--bar-radius`; no radius while it is unmapped | `--ui-inner-radius-64` once `--bar-radius` is mapped, and clears `--ui-inner-radius-card` for what it holds |
 | `Card` | its own radius | `--ui-inner-radius-card`, and clears `--ui-inner-radius-64` for what it holds |
 
-The badge computes an internal `--ui-badge-radius` that multiplies `--badge-radius` by zero before it adds the inner radius, so with `--badge-radius` unset the property is invalid and the border radius falls back to the pill. The `Bar` computes its container radius the same way, which stays invalid while `--bar-radius` is unset: the bar then draws no radius and publishes no inner radius, so what it holds keeps its own default. A bar whose radius the product maps publishes that radius minus its 24 of inline padding.
+So a `Badge` in a medium `Button` draws at 8, 24 minus 16.
+
+The `Bar` computes an internal container radius that multiplies `--bar-radius` by zero before it adds the card's inner radius or `--bar-radius`, so the property stays invalid while `--bar-radius` is unset: the bar then draws no radius and publishes no inner radius, so what it holds keeps its own default. A bar whose radius the product maps publishes that radius minus its 24 of inline padding.
 
 A container subtracts its inline padding, so the default card of radius 24 with 16 of inline padding gives what it holds 8, and a field or a button group of radius 40 with 24 gives 16. Three cases follow:
 
@@ -118,7 +121,7 @@ export const PlaceBid = () => (
 | `--button-<size>-px` | 12, 16, 24, two steps below the height and equal to the content size; the items, and on the `md` size a `Badge` at either end of the label, pull toward the edge by half of it; the icon kind has no inline padding, so its items take no pull and the end item is not pushed to the far edge, and the row stays centred in the square |
 | `--button-<size>-content-size` | 12, 16, 24, the font size and the `svg` size |
 | `--button-<size>-gap` | 4, 8, 12 |
-| `--button-<size>-radius` | `9999px`, a pill at every size |
+| `--button-<size>-radius` | `--radius-12`, `--radius-24`, `--radius-40`, a pill at its own height |
 | `--button-card-<size>-px`, `--button-card-<size>-py` | 8 by 4, 12 by 8, 16 by 12 |
 | `--button-card-<size>-radius` | `--radius-12`, `--radius-16`, `--radius-24` |
 | `--button-border-width`, `--button-outline-width`, `--button-outline-offset` | 1, 2, 2 |
@@ -169,7 +172,7 @@ import { Badge } from '@soujvnunes/ui'
 export const LiveBadge = () => <Badge startItem={<DotIcon />}>Live</Badge>
 ```
 
-A `span` root with `data-slot="badge"`, 24 high with 12 inline padding and 12 content, a pill by default. `startItem` sits in an `aria-hidden` `badge-start-item` slot, pulled toward the edge by half the padding, and `asChild` renders the child instead. A badge sits inside a medium `Button` only, since in a small or a large one the optical correction does not hold, and the stylesheet pulls it on the `md` size alone. As the first or the last child of a `text` or `fullWidth` `md` `Button`, with no item on that side, it takes the pull of the button's items, half of `--button-md-px` (8), and a badge between two children takes none. A badge inside a pill `Button` or an `Input` is a pill, and a badge inside a card-kind `Button` reads the inner radius that kind publishes once the product maps a numeric `--badge-radius`. `data-corner` (`top-start`, `top-end`, `bottom-start` or `bottom-end`, listed in `BADGE_CORNERS`) lifts it onto that corner of its parent, which it positions, and that corner alone shares the parent's radius. The parent publishes the radius it draws in `--ui-corner-radius`: a `Button` its own radius held to half its height, so a pill gives the curve it shows, a card-kind `Button` its numeric radius, and a `Bar`, a `Field`, a `ButtonGroup` or a `Card` its container radius. Any other parent shares its corner by declaring that property. The badge holds the shared corner to its own height, squares the corner beside it on the same block side and rounds its two free corners by half its height, so no side holds more radius than its length. Past that, a browser scales every corner of the box down by one factor, which would draw the shared corner nearly square:
+A `span` root with `data-slot="badge"`, 24 high with 12 inline padding and 12 content, and `--radius-12`, a pill at that height. `startItem` sits in an `aria-hidden` `badge-start-item` slot, pulled toward the edge by half the padding, and `asChild` renders the child instead. A badge sits inside a medium `Button` only, since in a small or a large one the optical correction does not hold, and the stylesheet pulls it on the `md` size alone. As the first or the last child of a `text` or `fullWidth` `md` `Button`, with no item on that side, it takes the pull of the button's items, half of `--button-md-px` (8), and a badge between two children takes none. A badge inside a `Button` or an `Input` takes the inner radius it publishes, 8 in a medium `Button`. `data-corner` (`top-start`, `top-end`, `bottom-start` or `bottom-end`, listed in `BADGE_CORNERS`) lifts it onto that corner of its parent, which it positions, and that corner alone shares the parent's radius. The parent publishes the radius it draws in `--ui-corner-radius`: a `Button` that radius held to half its height, the curve it shows, a card-kind `Button` that radius as it is, and a `Bar`, a `Field`, a `ButtonGroup` or a `Card` its container radius. Any other parent shares its corner by declaring that property. The badge holds the shared corner to its own height, squares the corner beside it on the same block side and rounds its two free corners by half its height, so no side holds more radius than its length. Past that, a browser scales every corner of the box down by one factor, which would draw the shared corner nearly square:
 
 ```tsx
 <Button kind="card" startItem="Lot 12">
@@ -181,7 +184,7 @@ A `span` root with `data-slot="badge"`, 24 high with 12 inline padding and 12 co
 | Variable                                                              | Default       |
 | --------------------------------------------------------------------- | ------------- |
 | `--badge-height`, `--badge-px`, `--badge-content-size`, `--badge-gap` | 24, 12, 12, 4 |
-| `--badge-radius`                                                      | none, a pill  |
+| `--badge-radius`                                                      | `--radius-12` |
 | `--badge-border-width`                                                | 1             |
 | `--badge-background-color`, `--badge-color`, `--badge-border-color`   | none          |
 

@@ -245,7 +245,13 @@ describe('A badge on the corner of a bar or a button', () => {
       </Button>,
     )
     const button = screen.getByRole('button')
-    expect(button.matches(selectorWith('--ui-corner-radius:min(var(--button-md-radius,'))).toBe(true)
+    expect(
+      button.matches(
+        selectorWith(
+          '--ui-corner-radius:min(var(--ui-inner-radius-64,var(--ui-inner-radius-card,var(--button-md-radius,var(--radius-24)))),',
+        ),
+      ),
+    ).toBe(true)
     expect(button.matches(selectorWith(',var(--button-md-height,calc(var(--spacing)*40))/2);'))).toBe(
       true,
     )
