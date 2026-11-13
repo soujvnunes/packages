@@ -16,6 +16,8 @@ const selectorWith = (declaration: string) => {
   return selector
 }
 const INPUT_PADDING = { sm: 12, md: 16, lg: 24 } as const
+const INPUT_RADIUS = { sm: 12, md: 24, lg: 40 } as const
+const INPUT_INNER_RADIUS = { sm: 0, md: 8, lg: 16 } as const
 const THEME: React.CSSProperties & Record<`--${string}`, string> = {
   '--input-border-color--invalid': 'rgb(1, 2, 3)',
 }
@@ -98,24 +100,18 @@ describe('Input', () => {
     },
   )
   it.each(INPUT_SIZES)(
-    'pads the %s root inline two steps below its height and draws it as a pill, as the button does',
+    'pads the %s root inline two steps below its height, reads the inner radius of a field or a card before its radius step, and publishes its radius less its padding',
     (size) => {
       render(<Input aria-label="Plate" size={size} />)
       const root = rootOf(screen.getByRole('textbox'))
       const px = `var(--input-${size}-px,calc(var(--spacing)*${INPUT_PADDING[size]}))`
+      const radius = `var(--ui-inner-radius-64,var(--ui-inner-radius-card,var(--input-${size}-radius,var(--radius-${INPUT_RADIUS[size]}))))`
       expect(root.matches(selectorWith(`padding-inline:${px};`))).toBe(true)
-      expect(root.matches(selectorWith(`border-radius:var(--input-${size}-radius,9999px);`))).toBe(true)
-      expect(
-        root.matches(
-          selectorWith(`--ui-inner-radius-40:max(0px,var(--input-${size}-radius,9999px)-${px});`),
-        ),
-      ).toBe(true)
+      expect(root.matches(selectorWith(`border-radius:${radius};`))).toBe(true)
+      expect(root.matches(selectorWith(`--ui-inner-radius-40:max(0px,${radius}-${px});`))).toBe(true)
+      expect(INPUT_RADIUS[size] - INPUT_PADDING[size]).toBe(INPUT_INNER_RADIUS[size])
     },
   )
-  it('reads no container radius, so a pill input stays a pill inside a bar or a card', () => {
-    expect(STYLESHEET).not.toContain('--ui-inner-radius-64')
-    expect(STYLESHEET).not.toContain('--ui-inner-radius-card')
-  })
   it('marks the root invalid when the input is, and only then', () => {
     render(
       <>

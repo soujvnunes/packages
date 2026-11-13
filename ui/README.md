@@ -66,15 +66,15 @@ Every component takes `asChild` and then renders its child with the same attribu
 
 ## Nested radius
 
-A control is a pill by default (`9999px`), and a pill reads no container radius, since a full radius stays parallel to any padding. A container publishes its inner radius, its own radius minus its inline padding and never below zero, and only a child with a numeric radius reads it before its own default: the card kind of the `Button`, and a `Badge` whose `--badge-radius` the product maps.
+Every radius is a step of the ladder: 12, 24 and 40 for a `sm`, `md` and `lg` `Button` or `Input`, 12 for a `Badge`. Alone at its own height each control still draws as a pill, since the browser holds a radius to half the height. A container publishes its inner radius, its own radius minus its inline padding and never below zero, and every child reads the inner radius of what holds it before its own default, whatever that default is.
 
 | Component | Reads, in order | Publishes |
 | --- | --- | --- |
-| `Button` (`text`, `icon`, `fullWidth`), `Input` | its own radius, a pill by default | `--ui-inner-radius-40`, a pill while the radius is one |
+| `Button` (`text`, `icon`, `fullWidth`), `Input` | `--ui-inner-radius-64`, `--ui-inner-radius-card`, its own radius | `--ui-inner-radius-40`: 0, 8, 16 by default |
 | `Button` (`card`) | `--ui-inner-radius-64`, `--ui-inner-radius-card`, its own radius | `--ui-inner-radius-40`: 4, 4, 8 by default |
-| `Badge` | `--ui-inner-radius-40` once `--badge-radius` is mapped, then `--badge-radius`; a pill while it is unmapped | nothing |
+| `Badge` | `--ui-inner-radius-40`, `--ui-inner-radius-64`, `--ui-inner-radius-card`, its own radius | nothing |
 
-The badge computes an internal `--ui-badge-radius` that multiplies `--badge-radius` by zero before it adds the inner radius, so with `--badge-radius` unset the property is invalid and the border radius falls back to the pill.
+So a `Badge` in a medium `Button` draws at 8, 24 minus 16.
 
 ## Button
 
@@ -107,7 +107,7 @@ export const PlaceBid = () => (
 | `--button-<size>-px` | 12, 16, 24, two steps below the height and equal to the content size; the items, and on the `md` size a `Badge` at either end of the label, pull toward the edge by half of it; the icon kind has no inline padding, so its items take no pull and the end item is not pushed to the far edge, and the row stays centred in the square |
 | `--button-<size>-content-size` | 12, 16, 24, the font size and the `svg` size |
 | `--button-<size>-gap` | 4, 8, 12 |
-| `--button-<size>-radius` | `9999px`, a pill at every size |
+| `--button-<size>-radius` | `--radius-12`, `--radius-24`, `--radius-40`, a pill at its own height |
 | `--button-card-<size>-px`, `--button-card-<size>-py` | 8 by 4, 12 by 8, 16 by 12 |
 | `--button-card-<size>-radius` | `--radius-12`, `--radius-16`, `--radius-24` |
 | `--button-border-width`, `--button-outline-width`, `--button-outline-offset` | 1, 2, 2 |
@@ -158,12 +158,12 @@ import { Badge } from '@soujvnunes/ui'
 export const LiveBadge = () => <Badge startItem={<DotIcon />}>Live</Badge>
 ```
 
-A `span` root with `data-slot="badge"`, 24 high with 12 inline padding and 12 content, a pill by default. `startItem` sits in an `aria-hidden` `badge-start-item` slot, pulled toward the edge by half the padding, and `asChild` renders the child instead. A badge sits inside a medium `Button` only, since in a small or a large one the optical correction does not hold, and the stylesheet pulls it on the `md` size alone. As the first or the last child of a `text` or `fullWidth` `md` `Button`, with no item on that side, it takes the pull of the button's items, half of `--button-md-px` (8), and a badge between two children takes none. A badge inside a pill `Button` or an `Input` is a pill, and a badge inside a card-kind `Button` reads the inner radius that kind publishes once the product maps a numeric `--badge-radius`.
+A `span` root with `data-slot="badge"`, 24 high with 12 inline padding and 12 content, and `--radius-12`, a pill at that height. `startItem` sits in an `aria-hidden` `badge-start-item` slot, pulled toward the edge by half the padding, and `asChild` renders the child instead. A badge sits inside a medium `Button` only, since in a small or a large one the optical correction does not hold, and the stylesheet pulls it on the `md` size alone. As the first or the last child of a `text` or `fullWidth` `md` `Button`, with no item on that side, it takes the pull of the button's items, half of `--button-md-px` (8), and a badge between two children takes none. A badge inside a `Button` or an `Input` takes the inner radius it publishes, 8 in a medium `Button`.
 
 | Variable                                                              | Default       |
 | --------------------------------------------------------------------- | ------------- |
 | `--badge-height`, `--badge-px`, `--badge-content-size`, `--badge-gap` | 24, 12, 12, 4 |
-| `--badge-radius`                                                      | none, a pill  |
+| `--badge-radius`                                                      | `--radius-12` |
 | `--badge-border-width`                                                | 1             |
 | `--badge-background-color`, `--badge-color`, `--badge-border-color`   | none          |
 

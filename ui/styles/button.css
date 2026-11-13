@@ -28,10 +28,17 @@
     gap: var(--button-sm-gap, calc(var(--spacing) * 4));
     font-size: var(--button-sm-content-size, calc(var(--spacing) * 12));
     --icon-md-size: var(--button-sm-content-size, calc(var(--spacing) * 12));
-    border-radius: var(--button-sm-radius, 9999px);
+    border-radius: var(
+      --ui-inner-radius-64,
+      var(--ui-inner-radius-card, var(--button-sm-radius, var(--radius-12)))
+    );
     --ui-inner-radius-40: max(
       0px,
-      var(--button-sm-radius, 9999px) - var(--button-sm-px, calc(var(--spacing) * 12))
+      var(
+          --ui-inner-radius-64,
+          var(--ui-inner-radius-card, var(--button-sm-radius, var(--radius-12)))
+        ) -
+        var(--button-sm-px, calc(var(--spacing) * 12))
     );
   }
   [data-slot='button'][data-size='md'] {
@@ -40,10 +47,17 @@
     gap: var(--button-md-gap, calc(var(--spacing) * 8));
     font-size: var(--button-md-content-size, calc(var(--spacing) * 16));
     --icon-md-size: var(--button-md-content-size, calc(var(--spacing) * 16));
-    border-radius: var(--button-md-radius, 9999px);
+    border-radius: var(
+      --ui-inner-radius-64,
+      var(--ui-inner-radius-card, var(--button-md-radius, var(--radius-24)))
+    );
     --ui-inner-radius-40: max(
       0px,
-      var(--button-md-radius, 9999px) - var(--button-md-px, calc(var(--spacing) * 16))
+      var(
+          --ui-inner-radius-64,
+          var(--ui-inner-radius-card, var(--button-md-radius, var(--radius-24)))
+        ) -
+        var(--button-md-px, calc(var(--spacing) * 16))
     );
   }
   [data-slot='button'][data-size='lg'] {
@@ -52,10 +66,17 @@
     gap: var(--button-lg-gap, calc(var(--spacing) * 12));
     font-size: var(--button-lg-content-size, calc(var(--spacing) * 24));
     --icon-md-size: var(--button-lg-content-size, calc(var(--spacing) * 24));
-    border-radius: var(--button-lg-radius, 9999px);
+    border-radius: var(
+      --ui-inner-radius-64,
+      var(--ui-inner-radius-card, var(--button-lg-radius, var(--radius-40)))
+    );
     --ui-inner-radius-40: max(
       0px,
-      var(--button-lg-radius, 9999px) - var(--button-lg-px, calc(var(--spacing) * 24))
+      var(
+          --ui-inner-radius-64,
+          var(--ui-inner-radius-card, var(--button-lg-radius, var(--radius-40)))
+        ) -
+        var(--button-lg-px, calc(var(--spacing) * 24))
     );
   }
   :where([data-slot='button'][data-size='sm']) svg {

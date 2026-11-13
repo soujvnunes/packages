@@ -56,14 +56,13 @@ describe('Badge', () => {
       ),
     ).toBe(true)
   })
-  it('is a pill by default, and reads the inner radius of its container only through a mapped --badge-radius', () => {
+  it('takes the inner radius of a Button or an Input around it, then of a field or a card, before its own --radius-12', () => {
     const { container } = render(<Badge>New</Badge>)
     const root = rootOf(container)
-    expect(root.matches(selectorWith('border-radius:var(--ui-badge-radius,9999px);'))).toBe(true)
     expect(
       root.matches(
         selectorWith(
-          '--ui-badge-radius:calc(0*var(--badge-radius)+var(--ui-inner-radius-40,var(--badge-radius)));',
+          'border-radius:var(--ui-inner-radius-40,var(--ui-inner-radius-64,var(--ui-inner-radius-card,var(--badge-radius,var(--radius-12)))));',
         ),
       ),
     ).toBe(true)

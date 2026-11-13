@@ -24,10 +24,14 @@
     gap: var(--input-sm-gap, calc(var(--spacing) * 4));
     font-size: var(--input-sm-content-size, calc(var(--spacing) * 12));
     --icon-md-size: var(--input-sm-content-size, calc(var(--spacing) * 12));
-    border-radius: var(--input-sm-radius, 9999px);
+    border-radius: var(
+      --ui-inner-radius-64,
+      var(--ui-inner-radius-card, var(--input-sm-radius, var(--radius-12)))
+    );
     --ui-inner-radius-40: max(
       0px,
-      var(--input-sm-radius, 9999px) - var(--input-sm-px, calc(var(--spacing) * 12))
+      var(--ui-inner-radius-64, var(--ui-inner-radius-card, var(--input-sm-radius, var(--radius-12)))) -
+        var(--input-sm-px, calc(var(--spacing) * 12))
     );
   }
   [data-slot='input'][data-size='md'] {
@@ -36,10 +40,14 @@
     gap: var(--input-md-gap, calc(var(--spacing) * 8));
     font-size: var(--input-md-content-size, calc(var(--spacing) * 16));
     --icon-md-size: var(--input-md-content-size, calc(var(--spacing) * 16));
-    border-radius: var(--input-md-radius, 9999px);
+    border-radius: var(
+      --ui-inner-radius-64,
+      var(--ui-inner-radius-card, var(--input-md-radius, var(--radius-24)))
+    );
     --ui-inner-radius-40: max(
       0px,
-      var(--input-md-radius, 9999px) - var(--input-md-px, calc(var(--spacing) * 16))
+      var(--ui-inner-radius-64, var(--ui-inner-radius-card, var(--input-md-radius, var(--radius-24)))) -
+        var(--input-md-px, calc(var(--spacing) * 16))
     );
   }
   [data-slot='input'][data-size='lg'] {
@@ -48,10 +56,14 @@
     gap: var(--input-lg-gap, calc(var(--spacing) * 12));
     font-size: var(--input-lg-content-size, calc(var(--spacing) * 24));
     --icon-md-size: var(--input-lg-content-size, calc(var(--spacing) * 24));
-    border-radius: var(--input-lg-radius, 9999px);
+    border-radius: var(
+      --ui-inner-radius-64,
+      var(--ui-inner-radius-card, var(--input-lg-radius, var(--radius-40)))
+    );
     --ui-inner-radius-40: max(
       0px,
-      var(--input-lg-radius, 9999px) - var(--input-lg-px, calc(var(--spacing) * 24))
+      var(--ui-inner-radius-64, var(--ui-inner-radius-card, var(--input-lg-radius, var(--radius-40)))) -
+        var(--input-lg-px, calc(var(--spacing) * 24))
     );
   }
   [data-slot='input-control'] {

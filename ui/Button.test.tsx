@@ -21,6 +21,8 @@ const selectorWith = (declaration: string) => {
 }
 const selectorReading = (variable: string) => selectorWith(`var(${variable},`)
 const TEXT_PADDING = { sm: 12, md: 16, lg: 24 } as const
+const TEXT_RADIUS = { sm: 12, md: 24, lg: 40 } as const
+const TEXT_INNER_RADIUS = { sm: 0, md: 8, lg: 16 } as const
 const CARD_BOX = {
   sm: { px: 8, py: 4, radius: 12 },
   md: { px: 12, py: 8, radius: 16 },
@@ -111,20 +113,15 @@ describe('Button', () => {
     },
   )
   it.each(BUTTON_SIZES)(
-    'draws the %s text kind as a pill that reads no container radius, and publishes a pill inner radius for a Badge',
+    'defaults the %s text kind to its radius step, reads the inner radius of a field or a card before it, and publishes its radius less its padding',
     (size) => {
       render(<Button size={size}>Label</Button>)
       const button = screen.getByRole('button')
       const px = `var(--button-${size}-px,calc(var(--spacing)*${TEXT_PADDING[size]}))`
-      expect(button.matches(selectorWith(`border-radius:var(--button-${size}-radius,9999px);`))).toBe(
-        true,
-      )
-      expect(
-        button.matches(
-          selectorWith(`--ui-inner-radius-40:max(0px,var(--button-${size}-radius,9999px)-${px});`),
-        ),
-      ).toBe(true)
-      expect(button.matches(selectorReading('--ui-inner-radius-64'))).toBe(false)
+      const radius = `var(--ui-inner-radius-64,var(--ui-inner-radius-card,var(--button-${size}-radius,var(--radius-${TEXT_RADIUS[size]}))))`
+      expect(button.matches(selectorWith(`border-radius:${radius};`))).toBe(true)
+      expect(button.matches(selectorWith(`--ui-inner-radius-40:max(0px,${radius}-${px});`))).toBe(true)
+      expect(TEXT_RADIUS[size] - TEXT_PADDING[size]).toBe(TEXT_INNER_RADIUS[size])
     },
   )
   it.each(BUTTON_SIZES)(

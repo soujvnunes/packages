@@ -12,8 +12,10 @@
     white-space: nowrap;
     border-style: solid;
     border-width: var(--badge-border-width, calc(var(--spacing) * 1));
-    --ui-badge-radius: calc(0 * var(--badge-radius) + var(--ui-inner-radius-40, var(--badge-radius)));
-    border-radius: var(--ui-badge-radius, 9999px);
+    border-radius: var(
+      --ui-inner-radius-40,
+      var(--ui-inner-radius-64, var(--ui-inner-radius-card, var(--badge-radius, var(--radius-12))))
+    );
     background-color: var(--badge-background-color, transparent);
     color: var(--badge-color);
     border-color: var(--badge-border-color, transparent);
