@@ -24,7 +24,7 @@ The matrix has one row per ambient surface (light, dim, dark and high contrast) 
 
 <ColourMatrix />
 
-On a chip of `main`, `accent`, `success`, `warning` or `error`, text takes `neutral`, and the theme sets `neutral` to a dark ink there in every mode. On a `neutral` chip the dots take the `surface` colour, since `neutral` text on `neutral` would vanish.
+On a chip of `main`, `accent`, `success`, `warning` or `error`, text takes `neutral`. The element that paints the coloured ground carries `data-tone` with the role's name, and the theme re-declares `neutral` and its steps on that attribute as a dark ink, so the text inside reads `text-neutral` in every mode. On a `neutral` chip the dots take the `surface` colour, since `neutral` text on `neutral` would vanish.
 
 ## Role tokens
 

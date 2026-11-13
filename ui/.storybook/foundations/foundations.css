@@ -182,11 +182,6 @@
   --ink-disabled: color-mix(in oklab, var(--color-surface) 60%, transparent);
 }
 
-.foundations-chip[data-tone='colour'] {
-  --ink: color-mix(in oklab, var(--palette-black) 80%, transparent);
-  --ink-disabled: color-mix(in oklab, var(--palette-black) 60%, transparent);
-}
-
 .foundations-dot {
   inline-size: calc(var(--spacing) * 12);
   block-size: calc(var(--spacing) * 12);
@@ -367,7 +362,7 @@
   padding: calc(var(--spacing) * 24);
   border-radius: var(--radius-8);
   background: var(--color-main);
-  color: color-mix(in oklab, var(--palette-black) 80%, transparent);
+  color: var(--color-neutral);
 }
 
 .foundations-grid {

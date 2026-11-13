@@ -130,6 +130,19 @@
     }
   }
 
+  [data-tone='main'],
+  [data-tone='accent'],
+  [data-tone='success'],
+  [data-tone='warning'],
+  [data-tone='error'] {
+    --color-neutral: color-mix(in oklab, var(--palette-black) 80%, transparent);
+    --color-neutral-80: color-mix(in oklab, var(--palette-black) 80%, transparent);
+    --color-neutral-60: color-mix(in oklab, var(--palette-black) 60%, transparent);
+    --color-neutral-40: color-mix(in oklab, var(--palette-black) 40%, transparent);
+    --color-neutral-20: color-mix(in oklab, var(--palette-black) 20%, transparent);
+    --color-neutral-10: color-mix(in oklab, var(--palette-black) 10%, transparent);
+  }
+
   body {
     background-color: var(--color-background);
     color: var(--color-neutral);
