@@ -392,4 +392,20 @@
     --button-outline-color--pressed: var(--button-error-outline-color--pressed);
     --button-outline-color--disabled: var(--button-error-outline-color--disabled);
   }
+  [data-slot='button-group'][data-orientation='horizontal'] > [data-slot='button']:not(:first-child) {
+    border-start-start-radius: 0;
+    border-end-start-radius: 0;
+  }
+  [data-slot='button-group'][data-orientation='horizontal'] > [data-slot='button']:not(:last-child) {
+    border-start-end-radius: 0;
+    border-end-end-radius: 0;
+  }
+  [data-slot='button-group'][data-orientation='vertical'] > [data-slot='button']:not(:first-child) {
+    border-start-start-radius: 0;
+    border-start-end-radius: 0;
+  }
+  [data-slot='button-group'][data-orientation='vertical'] > [data-slot='button']:not(:last-child) {
+    border-end-start-radius: 0;
+    border-end-end-radius: 0;
+  }
 }

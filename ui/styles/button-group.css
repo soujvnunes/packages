@@ -1,0 +1,13 @@
+@layer components {
+  [data-slot='button-group'] {
+    box-sizing: border-box;
+    display: inline-flex;
+    flex-direction: row;
+    align-items: stretch;
+    --ui-container-radius: var(--button-group-radius, var(--radius-12));
+    --ui-container-padding: 0px;
+  }
+  [data-slot='button-group'][data-orientation='vertical'] {
+    flex-direction: column;
+  }
+}

@@ -1,6 +1,7 @@
 @layer components {
   [data-slot='bar'],
-  [data-slot='field'] {
+  [data-slot='field'],
+  [data-slot='button-group'] {
     border-radius: var(--ui-inner-radius-card, var(--ui-container-radius));
     --ui-inner-radius-64: max(
       0px,
