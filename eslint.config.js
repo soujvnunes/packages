@@ -11,5 +11,6 @@ export default createBaseConfig({
       ],
       rules: { 'max-lines': 'off' },
     },
+    { files: ['ui/*.config.ts'], rules: { 'import-x/no-default-export': 'off' } },
   ],
 })
