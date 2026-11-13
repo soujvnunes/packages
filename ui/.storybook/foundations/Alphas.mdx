@@ -1,18 +1,10 @@
 import { Meta } from '@storybook/addon-docs/blocks'
 import './foundations.css'
+import { ROLE_TONES } from './roles'
 
 <Meta title="Foundations/Alphas" />
 
-export const ROLES = [
-  'background',
-  'surface',
-  'neutral',
-  'main',
-  'accent',
-  'success',
-  'warning',
-  'error',
-]
+export const ROLES = Object.keys(ROLE_TONES)
 
 export const STEPS = [100, 80, 60, 40, 20, 10]
 

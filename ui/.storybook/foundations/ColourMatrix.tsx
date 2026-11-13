@@ -1,14 +1,5 @@
 import './foundations.css'
-const ROLE_TONES = {
-  background: 'ground',
-  surface: 'ground',
-  neutral: 'inverse',
-  main: 'colour',
-  accent: 'colour',
-  success: 'colour',
-  warning: 'colour',
-  error: 'colour',
-} as const
+import { ROLE_TONES } from './roles'
 const ROLE_KEYS = Object.keys(ROLE_TONES) as readonly (keyof typeof ROLE_TONES)[]
 const AMBIENTS = { light: 'Light', dim: 'Dim', dark: 'Dark', contrast: 'High contrast' } as const
 const TEXT_STATES = { disabled: 'disabled', default: 'default', focused: 'focused' } as const
