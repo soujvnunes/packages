@@ -30,14 +30,15 @@ const itemOf = (slot: string, item: React.ReactNode) =>
       {item}
     </span>
   )
-const marksEdge = (node: React.ReactNode, elementCount: number) =>
-  isValidElement(node) && (typeof node.type === 'string' || node.type === Badge || elementCount === 1)
+const marksEdge = (node: React.ReactNode, elementCount: number, contentLength: number) =>
+  isValidElement(node) &&
+  (typeof node.type === 'string' || node.type === Badge || (elementCount === 1 && contentLength > 1))
 const elementEdgesOf = (nodes: React.ReactNode, pullStart: boolean, pullEnd: boolean) => {
   const content = Children.toArray(nodes).filter((node) => !rendersNothing(node))
   const elementCount = content.filter((node) => isValidElement(node)).length
   return [
-    pullStart && marksEdge(content.at(0), elementCount) && 'start',
-    pullEnd && marksEdge(content.at(-1), elementCount) && 'end',
+    pullStart && marksEdge(content.at(0), elementCount, content.length) && 'start',
+    pullEnd && marksEdge(content.at(-1), elementCount, content.length) && 'end',
   ]
     .filter(Boolean)
     .join(' ')

@@ -322,6 +322,21 @@ describe('Button', () => {
     expect(badge.matches(selectorWith(`margin-inline-end:${pull}`))).toBe(true)
     expect(badge.matches(selectorWith(`margin-inline-start:${pull}`))).toBe(false)
   })
+  it('pulls no Badge from a lone component that renders text before it, since a selector skips that text', () => {
+    const LotTitle = () => (
+      <>
+        Lot 12 <Badge>New</Badge>
+      </>
+    )
+    render(
+      <Button>
+        <LotTitle />
+      </Button>,
+    )
+    expect(
+      screen.getByText('New').matches(selectorWith('margin-inline-start:calc(var(--button-md-px,')),
+    ).toBe(false)
+  })
   it('pulls no Badge that a start item precedes, nor one inside the card or icon kind', () => {
     render(
       <>
