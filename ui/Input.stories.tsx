@@ -5,7 +5,7 @@ const INPUT_THEME: React.CSSProperties & Record<`--${string}`, string> = {
   '--input-background-color': 'var(--color-surface)',
   '--input-color': 'var(--color-neutral)',
   '--input-color--disabled': 'var(--color-neutral-40)',
-  '--input-placeholder-color': 'var(--color-neutral-40)',
+  '--input-placeholder-color': 'var(--color-neutral-60)',
   '--input-border-color': 'var(--color-neutral-20)',
   '--input-border-color--hover': 'var(--color-neutral-40)',
   '--input-border-color--focus': 'var(--color-main)',
