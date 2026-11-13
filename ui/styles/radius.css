@@ -4,7 +4,7 @@
   [data-slot='button-group'] {
     --ui-inner-radius-64: max(0px, var(--ui-container-radius) - var(--ui-container-padding));
   }
-  :is([data-slot='bar'], [data-slot='field'], [data-slot='button-group']) > * {
+  [data-slot='bar'] > * {
     --ui-inner-radius-card: initial;
   }
   [data-slot='bar'],

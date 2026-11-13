@@ -88,13 +88,13 @@ Every radius is a step of the ladder: 12, 24 and 40 for a `sm`, `md` and `lg` `B
 | `Button` (`icon`) | `--ui-inner-radius-64`, `--ui-inner-radius-card`, its own radius | `--ui-inner-radius-40`: 12, 24, 40 by default |
 | `Button` (`card`) | `--ui-inner-radius-64`, `--ui-inner-radius-card`, its own radius | `--ui-inner-radius-40`: 4, 4, 8 by default |
 | `Badge` | `--ui-inner-radius-40`, `--ui-inner-radius-64`, `--ui-inner-radius-card`, its own radius | nothing |
-| `Field`, `ButtonGroup` | `--ui-inner-radius-card`, then its own radius, `--radius-40` by default | `--ui-inner-radius-64`: 16 by default, and clears `--ui-inner-radius-card` for what it holds |
+| `Field`, `ButtonGroup` | `--ui-inner-radius-card`, then its own radius, `--radius-40` by default | `--ui-inner-radius-64`: 16 by default |
 | `Bar` | `--ui-inner-radius-card` once `--bar-radius` is mapped, then `--bar-radius`; no radius while it is unmapped | `--ui-inner-radius-64` once `--bar-radius` is mapped, and clears `--ui-inner-radius-card` for what it holds |
 | `Card` | its own radius | `--ui-inner-radius-card`, and clears `--ui-inner-radius-64` for what it holds |
 
 So a `Badge` in a medium `Button` draws at 8, 24 minus 16.
 
-The `Bar` computes an internal container radius that multiplies `--bar-radius` by zero before it adds the card's inner radius or `--bar-radius`, so the property stays invalid while `--bar-radius` is unset: the bar then draws no radius and publishes no inner radius, so what it holds keeps its own default. A bar whose radius the product maps publishes that radius minus its 24 of inline padding.
+The `Bar` computes an internal container radius that multiplies `--bar-radius` by zero before it adds the card's inner radius or `--bar-radius`, so the property stays invalid while `--bar-radius` is unset: the bar then draws no radius and publishes no inner radius, and it clears the card's inner radius for what it holds, so a control in a bar inside a card keeps its own default. A `Field` and a `ButtonGroup` always publish one, and every control reads `--ui-inner-radius-64` before `--ui-inner-radius-card`, so they clear nothing. A bar whose radius the product maps publishes that radius minus its 24 of inline padding.
 
 A container subtracts its inline padding, so the default card of radius 24 with 12 of padding on every side gives what it holds 12, and a field or a button group of radius 40 with 24 gives 16. Three cases follow:
 
