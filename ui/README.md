@@ -85,7 +85,7 @@ export const PlaceBid = () => (
 | `startItem`, `endItem` | any node, rendered in an `aria-hidden` span | none |
 | `disableContentBetween` | keeps the start item beside the label and moves the end item alone to the far edge | `false` |
 | `stateful` | sets `data-state` to `active` while `aria-pressed` or `aria-selected` is true, `inactive` otherwise | `false` |
-| `responsive` | `false` drops the hover, focus, active and pressed styles and makes the text unselectable; the element stays a `button`, so wrap a `span` with `asChild` when it must not take focus | `true` |
+| `responsive` | `false` drops the hover, focus, active and pressed styles, makes the text unselectable and sets `tabIndex` to -1, so the element leaves the tab order; a `tabIndex` prop overrides it | `true` |
 | `asChild` | renders its one child with the button's attributes | `false` |
 
 `type` defaults to `button`. The root carries `data-slot="button"`, `data-kind`, `data-size`, `data-responsive` and `data-content-between`; the items sit in `button-start-item` and `button-end-item` slots, and the card kind puts both in a `button-items` row above the label. An `svg` inside takes the content size unless it sets its own.

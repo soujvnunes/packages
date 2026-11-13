@@ -209,6 +209,16 @@ describe('Button', () => {
     expect(button.getAttribute('data-responsive')).toBe('false')
     expect(button.matches(selectorReading('--button-background-color--pressed'))).toBe(false)
   })
+  it('leaves the tab order when it is not responsive, since it draws no focus outline', () => {
+    render(
+      <>
+        <Button responsive={false}>Static</Button>
+        <Button>Live</Button>
+      </>,
+    )
+    expect(screen.getByRole('button', { name: 'Static' }).tabIndex).toBe(-1)
+    expect(screen.getByRole('button', { name: 'Live' }).hasAttribute('tabindex')).toBe(false)
+  })
   it('renders the child element with asChild, carrying the attributes and the items', () => {
     render(
       <Button asChild size="lg" startItem={PLUS} className="button">

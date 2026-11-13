@@ -72,7 +72,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     const trailing = kind === 'card' ? null : end
     if (asChild) {
       return (
-        <ButtonSlot ref={ref} {...rest} {...rootProps}>
+        <ButtonSlot ref={ref} {...(!responsive && { tabIndex: -1 })} {...rest} {...rootProps}>
           {leading}
           <ButtonSlottable>{children}</ButtonSlottable>
           {trailing}
@@ -80,7 +80,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       )
     }
     return (
-      <button ref={ref} type={type} {...rest} {...rootProps}>
+      <button ref={ref} type={type} {...(!responsive && { tabIndex: -1 })} {...rest} {...rootProps}>
         {leading}
         {children}
         {trailing}
