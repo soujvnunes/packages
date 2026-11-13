@@ -72,6 +72,13 @@ describe('Badge', () => {
     const { container } = render(<Badge>New</Badge>)
     expect(container.querySelector('[data-slot="badge-start-item"]')).toBeNull()
   })
+  it.each([false, true, ''])(
+    'renders no start item slot for an item of %j, which React renders as nothing',
+    (item) => {
+      const { container } = render(<Badge startItem={item}>New</Badge>)
+      expect(container.querySelector('[data-slot="badge-start-item"]')).toBeNull()
+    },
+  )
   it('passes className and the remaining span props through to the root', () => {
     const { container } = render(
       <Badge className="text-caption" data-tone="success" title="Accepted on Monday">

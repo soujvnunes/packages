@@ -163,6 +163,18 @@ describe('Button', () => {
     const { container } = render(<Button>Add</Button>)
     expect(container.querySelector('[data-slot$="-item"]')).toBeNull()
   })
+  it.each([false, true, ''])(
+    'renders no item slot and no card items row for an item of %j, which React renders as nothing',
+    (item) => {
+      const { container } = render(
+        <Button kind="card" startItem={item} endItem={item}>
+          Lot 12
+        </Button>,
+      )
+      expect(container.querySelector('[data-slot$="-item"]')).toBeNull()
+      expect(container.querySelector('[data-slot="button-items"]')).toBeNull()
+    },
+  )
   it('puts the card kind items in one row above the label', () => {
     render(
       <Button kind="card" startItem={PLUS} endItem="New">

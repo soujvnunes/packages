@@ -93,7 +93,7 @@ export const PlaceBid = () => (
 | `kind` | `text`, `icon`, `fullWidth`, `card` | `text` |
 | `size` | `sm`, `md`, `lg` | `md` |
 | `data-tone` | `main`, `accent`, `success`, `warning`, `error` | none |
-| `startItem`, `endItem` | any node, rendered in an `aria-hidden` span | none |
+| `startItem`, `endItem` | any node, rendered in an `aria-hidden` span; a node React renders as nothing (`false`, `true`, `null`, `undefined` or `''`) adds no span, so `startItem={isNew && <Badge />}` is safe | none |
 | `disableContentBetween` | keeps the start item beside the label and moves the end item alone to the far edge | `false` |
 | `stateful` | sets `data-state` to `active` while `aria-pressed` or `aria-selected` is true, `inactive` otherwise; with `asChild`, only when the child's props declare one of the two, so a child that sets its own selection keeps its own `data-state` | `false` |
 | `responsive` | `false` drops the hover, focus, active and pressed styles, makes the text unselectable and sets `tabIndex` to -1, so the element leaves the tab order; a `tabIndex` prop overrides it | `true` |
