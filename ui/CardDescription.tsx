@@ -1,21 +1,26 @@
 'use client'
 import { forwardRef, useContext } from 'react'
-import { createSlot } from '@radix-ui/react-slot'
 import { CardContext } from './CardContext.js'
-type CardDescriptionProps = React.ComponentPropsWithoutRef<'div'> & { asChild?: boolean }
-const CardDescriptionSlot = createSlot<HTMLDivElement, React.ComponentPropsWithoutRef<'div'>>(
-  'CardDescription',
-)
-export const CardDescription = forwardRef<HTMLDivElement, CardDescriptionProps>(
-  ({ asChild = false, ...rest }, ref) => {
+type CardDescriptionOwnProps = Omit<React.ComponentPropsWithoutRef<'p'>, 'children'>
+type CardDescriptionRenderProps = CardDescriptionOwnProps & { 'data-slot': 'card-description' }
+type CardDescriptionProps = CardDescriptionOwnProps & {
+  children: React.ReactNode | ((props: CardDescriptionRenderProps) => React.ReactNode)
+}
+export const CardDescription = forwardRef<HTMLParagraphElement, CardDescriptionProps>(
+  ({ children, ...rest }, ref) => {
     const { descriptionId } = useContext(CardContext)
-    const rootProps = {
+    const props: CardDescriptionRenderProps = {
+      ...rest,
       ...(descriptionId !== '' && { id: descriptionId }),
       'data-slot': 'card-description',
     }
-    if (asChild) {
-      return <CardDescriptionSlot ref={ref} {...rest} {...rootProps} />
+    if (typeof children === 'function') {
+      return children(props)
     }
-    return <div ref={ref} {...rest} {...rootProps} />
+    return (
+      <p ref={ref} {...props}>
+        {children}
+      </p>
+    )
   },
 )

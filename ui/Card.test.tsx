@@ -41,8 +41,12 @@ describe('Card', () => {
     render(
       <Card>
         <header>
-          <CardTitle asChild>
-            <h3>Volkswagen Fusca 1973</h3>
+          <CardTitle>
+            {(props) => (
+              <h3 id={undefined} {...props}>
+                Volkswagen Fusca 1973
+              </h3>
+            )}
           </CardTitle>
         </header>
         <section>
@@ -50,7 +54,11 @@ describe('Card', () => {
             <dt>Status</dt>
             <dd>
               <CardDescription>
-                <strong>Open</strong> until 20h
+                {(props) => (
+                  <span id={undefined} {...props}>
+                    <strong>Open</strong> until 20h
+                  </span>
+                )}
               </CardDescription>
             </dd>
           </dl>
@@ -113,18 +121,20 @@ describe('Card', () => {
     render(<Card>Lot 12</Card>)
     expect(consoleError).not.toHaveBeenCalled()
   })
-  it('renders the child element with asChild, carrying the card slot and the label it points at', () => {
+  it('hands the card slot and the label it points at to the element a function child returns', () => {
     render(
-      <Card asChild className="card">
-        <section className="lot">
-          <CardTitle>Lot 12</CardTitle>
-          <CardDescription>Open until 20h</CardDescription>
-        </section>
+      <Card className="card">
+        {(props) => (
+          <section {...props}>
+            <CardTitle>Lot 12</CardTitle>
+            <CardDescription>Open until 20h</CardDescription>
+          </section>
+        )}
       </Card>,
     )
     const region = screen.getByRole('region', { name: 'Lot 12', description: 'Open until 20h' })
     expect(region.getAttribute('data-slot')).toBe('card')
-    expect(region.getAttribute('class')?.split(' ').sort()).toEqual(['card', 'lot'])
+    expect(region.getAttribute('class')).toBe('card')
     expect(screen.queryByRole('article')).toBeNull()
   })
   it('passes className and the remaining article props through to the root', () => {

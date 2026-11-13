@@ -17,32 +17,36 @@ describe('CardDescription', () => {
     expect(description.getAttribute('data-slot')).toBe('card-description')
     expect(description.id).toBe(screen.getByRole('article').getAttribute('aria-describedby'))
   })
-  it('renders a div with no typography of its own', () => {
+  it('renders a p with no typography of its own', () => {
     render(<CardDescription>Open until 20h</CardDescription>)
     const description = screen.getByText('Open until 20h')
-    expect(description.tagName).toBe('DIV')
+    expect(description.tagName).toBe('P')
     expect(description.hasAttribute('class')).toBe(false)
   })
   it('sets no id outside a Card, where there is nothing to describe', () => {
     render(<CardDescription>Open until 20h</CardDescription>)
     expect(screen.getByText('Open until 20h').hasAttribute('id')).toBe(false)
   })
-  it('renders the child element with asChild, carrying the id and the slot', () => {
+  it('hands the id and the slot to the element a function child returns, whose own undefined id comes first', () => {
     render(
       <Card>
         <CardTitle>Lot 12</CardTitle>
-        <CardDescription asChild className="description">
-          <p className="text-body">Open until 20h</p>
+        <CardDescription className="description">
+          {(props) => (
+            <div id={undefined} {...props}>
+              Open until 20h
+            </div>
+          )}
         </CardDescription>
       </Card>,
     )
-    const paragraph = screen.getByText('Open until 20h')
-    expect(paragraph.tagName).toBe('P')
-    expect(paragraph.getAttribute('data-slot')).toBe('card-description')
-    expect(paragraph.getAttribute('class')?.split(' ').sort()).toEqual(['description', 'text-body'])
+    const description = screen.getByText('Open until 20h')
+    expect(description.tagName).toBe('DIV')
+    expect(description.getAttribute('data-slot')).toBe('card-description')
+    expect(description.getAttribute('class')).toBe('description')
     expect(screen.getByRole('article', { description: 'Open until 20h' })).toBeTruthy()
   })
-  it('passes className and the remaining div props through to the root', () => {
+  it('passes className and the remaining paragraph props through to the root', () => {
     render(
       <CardDescription className="text-body" title="Closing time">
         Open until 20h
@@ -52,8 +56,8 @@ describe('CardDescription', () => {
     expect(description.getAttribute('class')).toBe('text-body')
     expect(description.getAttribute('title')).toBe('Closing time')
   })
-  it('hands its ref to the div root', () => {
-    const ref = createRef<HTMLDivElement>()
+  it('hands its ref to the p root', () => {
+    const ref = createRef<HTMLParagraphElement>()
     render(<CardDescription ref={ref}>Open until 20h</CardDescription>)
     expect(ref.current).toBe(screen.getByText('Open until 20h'))
   })

@@ -13,47 +13,50 @@ describe('CardTitle', () => {
         <CardDescription>Open until 20h</CardDescription>
       </Card>,
     )
-    const title = screen.getByText('Lot 12')
+    const title = screen.getByRole('heading', { name: 'Lot 12' })
     expect(title.getAttribute('data-slot')).toBe('card-title')
     expect(title.id).toBe(screen.getByRole('article').getAttribute('aria-labelledby'))
   })
-  it('renders a div with no typography of its own', () => {
+  it('renders an h2 with no typography of its own', () => {
     render(<CardTitle>Lot 12</CardTitle>)
-    const title = screen.getByText('Lot 12')
-    expect(title.tagName).toBe('DIV')
+    const title = screen.getByRole('heading', { level: 2, name: 'Lot 12' })
     expect(title.hasAttribute('class')).toBe(false)
   })
   it('sets no id outside a Card, where there is nothing to name', () => {
     render(<CardTitle>Lot 12</CardTitle>)
-    expect(screen.getByText('Lot 12').hasAttribute('id')).toBe(false)
+    expect(screen.getByRole('heading', { name: 'Lot 12' }).hasAttribute('id')).toBe(false)
   })
-  it('renders the child element with asChild, which keeps its role and takes the id and the slot', () => {
+  it('hands the id and the slot to the element a function child returns, whose own undefined id comes first', () => {
     render(
       <Card>
-        <CardTitle asChild className="title">
-          <h2 className="text-title">Lot 12</h2>
+        <CardTitle className="title">
+          {(props) => (
+            <h3 id={undefined} {...props}>
+              Lot 12
+            </h3>
+          )}
         </CardTitle>
         <CardDescription>Open until 20h</CardDescription>
       </Card>,
     )
-    const heading = screen.getByRole('heading', { level: 2, name: 'Lot 12' })
+    const heading = screen.getByRole('heading', { level: 3, name: 'Lot 12' })
     expect(heading.getAttribute('data-slot')).toBe('card-title')
-    expect(heading.getAttribute('class')?.split(' ').sort()).toEqual(['text-title', 'title'])
+    expect(heading.getAttribute('class')).toBe('title')
     expect(screen.getByRole('article', { name: 'Lot 12' })).toBeTruthy()
   })
-  it('passes className and the remaining div props through to the root', () => {
+  it('passes className and the remaining heading props through to the root', () => {
     render(
       <CardTitle className="text-title" title="Volkswagen Fusca 1973">
         Lot 12
       </CardTitle>,
     )
-    const title = screen.getByText('Lot 12')
+    const title = screen.getByRole('heading', { name: 'Lot 12' })
     expect(title.getAttribute('class')).toBe('text-title')
     expect(title.getAttribute('title')).toBe('Volkswagen Fusca 1973')
   })
-  it('hands its ref to the div root', () => {
-    const ref = createRef<HTMLDivElement>()
+  it('hands its ref to the h2 root', () => {
+    const ref = createRef<HTMLHeadingElement>()
     render(<CardTitle ref={ref}>Lot 12</CardTitle>)
-    expect(ref.current).toBe(screen.getByText('Lot 12'))
+    expect(ref.current).toBe(screen.getByRole('heading', { name: 'Lot 12' }))
   })
 })

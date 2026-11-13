@@ -35,9 +35,7 @@ export const TitleDescriptionButtonAndBadge: Story = {
   render: (args) => (
     <Card {...args} className="grid justify-items-start gap-16">
       <Badge>New</Badge>
-      <CardTitle asChild>
-        <h2 className="text-title">Volkswagen Fusca 1973</h2>
-      </CardTitle>
+      <CardTitle className="text-title">Volkswagen Fusca 1973</CardTitle>
       <CardDescription className="text-body">Lot 12, open until 20h</CardDescription>
       <Button data-tone="main">Place a bid</Button>
     </Card>

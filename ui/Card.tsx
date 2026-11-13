@@ -1,10 +1,16 @@
 'use client'
 import { forwardRef, useEffect, useId, useMemo } from 'react'
-import { createSlot } from '@radix-ui/react-slot'
 import { CardContext } from './CardContext.js'
-type CardProps = React.ComponentPropsWithoutRef<'article'> & { asChild?: boolean }
-const CardSlot = createSlot<HTMLElement, React.ComponentPropsWithoutRef<'article'>>('Card')
-export const Card = forwardRef<HTMLElement, CardProps>(({ asChild = false, ...rest }, ref) => {
+type CardOwnProps = Omit<React.ComponentPropsWithoutRef<'article'>, 'children'>
+type CardRenderProps = CardOwnProps & {
+  'aria-labelledby': string
+  'aria-describedby': string
+  'data-slot': 'card'
+}
+type CardProps = CardOwnProps & {
+  children?: React.ReactNode | ((props: CardRenderProps) => React.ReactNode)
+}
+export const Card = forwardRef<HTMLElement, CardProps>(({ children, ...rest }, ref) => {
   const id = useId()
   const ids = useMemo(() => ({ titleId: `${id}-title`, descriptionId: `${id}-description` }), [id])
   useEffect(() => {
@@ -23,17 +29,20 @@ export const Card = forwardRef<HTMLElement, CardProps>(({ asChild = false, ...re
       )
     }
   }, [ids])
-  const rootProps = {
+  const props: CardRenderProps = {
+    ...rest,
     'aria-labelledby': ids.titleId,
     'aria-describedby': ids.descriptionId,
     'data-slot': 'card',
   }
   return (
     <CardContext.Provider value={ids}>
-      {asChild ? (
-        <CardSlot ref={ref} {...rest} {...rootProps} />
+      {typeof children === 'function' ? (
+        children(props)
       ) : (
-        <article ref={ref} {...rest} {...rootProps} />
+        <article ref={ref} {...props}>
+          {children}
+        </article>
       )}
     </CardContext.Provider>
   )

@@ -62,7 +62,7 @@ A custom property resolves its `var()` on the element that declares it, and chil
 }
 ```
 
-Every component takes `asChild` and then renders its child with the same attributes, so a product extends one by wrapping its own element, such as its own `svg` inside an `Icon`.
+Every component but the three of the Card takes `asChild` and then renders its child with the same attributes, so a product extends one by wrapping its own element, such as its own `svg` inside an `Icon`. A Slot merges the child's props over its own, an `undefined` one included, so a component that wires ids onto its element would lose them to a child that sets the same key. The `Card`, the `CardTitle` and the `CardDescription` take a function child instead, which receives the wired props for the product to spread on its own element, as the `Field` does for its control.
 
 ## Nested radius
 
@@ -296,18 +296,29 @@ import { Badge, Button, Card, CardDescription, CardTitle } from '@soujvnunes/ui'
 export const LotCard = () => (
   <Card>
     <Badge>New</Badge>
-    <CardTitle asChild>
-      <h2>Volkswagen Fusca 1973</h2>
-    </CardTitle>
+    <CardTitle>Volkswagen Fusca 1973</CardTitle>
     <CardDescription>Lot 12, open until 20h</CardDescription>
     <Button data-tone="main">Place a bid</Button>
   </Card>
 )
 ```
 
-An `article` with `data-slot="card"`, padding and radius only, the static form of a `Button` of the `card` kind: 16 of inline and 12 of block padding inside `--radius-24`, the large pair of that kind, which leaves an inner radius of 8 for a card button inside it. It points `aria-labelledby` and `aria-describedby` at the `CardTitle` and the `CardDescription` inside it, wherever a product places them, around or inside its own markup. Each part is a `div` with `data-slot="card-title"` or `data-slot="card-description"`, no typography of its own and the id its card gives it. A Card needs both, so outside production it logs one error naming the part it is missing. The rest of a card, an action or a footer, is the product's own markup.
+An `article` with `data-slot="card"`, padding and radius only, the static form of a `Button` of the `card` kind: 16 of inline and 12 of block padding inside `--radius-24`, the large pair of that kind, which leaves an inner radius of 8 for a card button inside it. It points `aria-labelledby` and `aria-describedby` at the `CardTitle` and the `CardDescription` inside it, wherever a product places them, around or inside its own markup. The title is an `h2` and the description a `p`, with `data-slot="card-title"` or `data-slot="card-description"`, no typography of its own and the id its card gives it. A Card needs both, so outside production it logs one error naming the part it is missing. The rest of a card, an action or a footer, is the product's own markup.
 
-The ids travel through a context, so `Card`, `CardTitle` and `CardDescription` are client components, the only ones in the package, and what a server parent passes them as children stays server-rendered. Each takes `asChild`.
+Each of the three takes its children either as nodes, rendered in its own element, or as a function that receives the props it would put there (its other props, `data-slot` and the wired ids) and returns the product's own element, which spreads them. The product's ref goes on that element too. A key the element sets before the spread loses to the wired one:
+
+```tsx
+<Card>
+  {(props) => (
+    <section {...props}>
+      <CardTitle>{(title) => <h3 {...title}>Volkswagen Fusca 1973</h3>}</CardTitle>
+      <CardDescription>Lot 12, open until 20h</CardDescription>
+    </section>
+  )}
+</Card>
+```
+
+The ids travel through a context, so `Card`, `CardTitle` and `CardDescription` are client components, the only ones in the package, and what a server parent passes them as node children stays server-rendered. A function cannot be passed from a server component to a client one, so the function form is written inside a client component.
 
 | Variable                                                         | Default       |
 | ---------------------------------------------------------------- | ------------- |
