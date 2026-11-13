@@ -1,0 +1,82 @@
+import { Meta, Typeset } from '@storybook/addon-docs/blocks'
+import './foundations.css'
+
+<Meta title="Foundations/TypeScale" />
+
+export const SIDES = [
+  ['caption', '12 to 16', 'medium to regular'],
+  ['body', '16', 'regular to medium'],
+  ['subtitle', '24', 'medium'],
+  ['title', '24 to 40', 'semibold to medium'],
+  ['heading', '40 to 64', 'semibold to medium'],
+  ['headline', '64 to 104', 'bold to semibold'],
+  ['display', '104', 'bold'],
+]
+
+export const ALIASES = SIDES.map(([alias]) => alias)
+
+# Type scale
+
+Seven aliases are the only font-size utilities. Each one sets a size and a weight below the `lg` switch and above it, and a class never names a size directly.
+
+<table>
+  <thead>
+    <tr>
+      <th scope="col">Alias</th>
+      <th scope="col">
+        Size below <code>lg</code> to above
+      </th>
+      <th scope="col">
+        Weight below <code>lg</code> to above
+      </th>
+    </tr>
+  </thead>
+  <tbody>
+    {SIDES.map(([alias, size, weight]) => (
+      <tr key={alias}>
+        <th scope="row">
+          <code>text-{alias}</code>
+        </th>
+        <td>{size}</td>
+        <td>{weight}</td>
+      </tr>
+    ))}
+  </tbody>
+</table>
+
+The weights differ so that two texts that share a size on the phone still read apart: `text-subtitle` and `text-title` are both 24 there, one medium and one semibold.
+
+## In this window
+
+Each line below reads its size and weight from the theme, so resize the window across the `lg` switch to see both sides.
+
+<div className="foundations-panel sb-unstyled">
+  {ALIASES.map((alias) => (
+    <p key={alias} data-alias={alias}>
+      {alias}
+    </p>
+  ))}
+</div>
+
+## Sizes at a glance
+
+<div className="foundations-panel foundations-typeset sb-unstyled">
+  <Typeset
+    fontSizes={[
+      'var(--text-caption)',
+      'var(--text-body)',
+      'var(--text-subtitle)',
+      'var(--text-title)',
+      'var(--text-heading)',
+      'var(--text-headline)',
+      'var(--text-display)',
+    ]}
+    sampleText="Pack my box"
+  />
+</div>
+
+## Usage
+
+- Pick the alias by the text's job, not its size. A card's name is `text-title`, the line under it `text-subtitle` or `text-body`, a timestamp `text-caption`.
+- A page has one `text-display` or `text-headline`. A section opens with `text-heading`.
+- A weight class beside an alias outlives the switch, so `font-semibold` cancels the alias's change at `lg`. Add one only after a walk of the screen shows the need.
