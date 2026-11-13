@@ -26,4 +26,30 @@
     width: var(--badge-content-size, calc(var(--spacing) * 12));
     height: var(--badge-content-size, calc(var(--spacing) * 12));
   }
+  :where(:has(> [data-slot='badge'][data-corner])) {
+    position: relative;
+  }
+  [data-slot='badge'][data-corner] {
+    position: absolute;
+  }
+  [data-slot='badge'][data-corner='top-start'] {
+    inset-block-start: 0;
+    inset-inline-start: 0;
+    border-start-start-radius: inherit;
+  }
+  [data-slot='badge'][data-corner='top-end'] {
+    inset-block-start: 0;
+    inset-inline-end: 0;
+    border-start-end-radius: inherit;
+  }
+  [data-slot='badge'][data-corner='bottom-start'] {
+    inset-block-end: 0;
+    inset-inline-start: 0;
+    border-end-start-radius: inherit;
+  }
+  [data-slot='badge'][data-corner='bottom-end'] {
+    inset-block-end: 0;
+    inset-inline-end: 0;
+    border-end-end-radius: inherit;
+  }
 }

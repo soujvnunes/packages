@@ -103,6 +103,10 @@ export const RadiusCases: Story = {
           <Button>Watch</Button>
           <Button>Share</Button>
         </ButtonGroup>
+        <Button kind="card" size="lg" startItem="Lot 12">
+          Volkswagen Fusca 1973
+          <Badge data-corner="top-end">New</Badge>
+        </Button>
       </figure>
       <figure className="flex flex-wrap items-start gap-16">
         <figcaption className="basis-full">

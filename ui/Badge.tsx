@@ -1,6 +1,8 @@
 import { forwardRef } from 'react'
 import { createSlot, createSlottable } from '@radix-ui/react-slot'
+export const BADGE_CORNERS = ['top-start', 'top-end', 'bottom-start', 'bottom-end'] as const
 type BadgeProps = React.ComponentPropsWithoutRef<'span'> & {
+  'data-corner'?: (typeof BADGE_CORNERS)[number]
   startItem?: React.ReactNode
   asChild?: boolean
 }

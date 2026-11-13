@@ -1,4 +1,4 @@
-export { Badge } from './Badge.js'
+export { BADGE_CORNERS, Badge } from './Badge.js'
 export { Bar } from './Bar.js'
 export { BUTTON_KINDS, BUTTON_SIZES, BUTTON_TONES, Button } from './Button.js'
 export { BUTTON_GROUP_ORIENTATIONS, ButtonGroup } from './ButtonGroup.js'

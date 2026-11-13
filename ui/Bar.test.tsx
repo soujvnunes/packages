@@ -2,10 +2,11 @@ import { createRef } from 'react'
 import { cleanup, render, screen } from '@testing-library/react'
 import { readFileSync } from 'node:fs'
 import { afterEach, describe, expect, it } from 'vitest'
+import { BADGE_CORNERS, Badge } from './Badge'
 import { Bar } from './Bar'
 import { Button } from './Button'
 import { Input } from './Input'
-const STYLESHEET = ['bar', 'button', 'input', 'radius']
+const STYLESHEET = ['badge', 'bar', 'button', 'input', 'radius']
   .map((name) => readFileSync(`${import.meta.dirname}/styles/${name}.css`, 'utf8'))
   .join('\n')
 const selectorWith = (declaration: string) => {
@@ -18,6 +19,12 @@ const selectorWith = (declaration: string) => {
 }
 const PUBLISHES_64 = selectorWith('--ui-inner-radius-64:max(')
 const READS_64_FIRST = selectorWith('border-radius:var(--ui-inner-radius-64,')
+const CORNER_RADIUS: Record<(typeof BADGE_CORNERS)[number], string> = {
+  'top-start': 'border-start-start-radius',
+  'top-end': 'border-start-end-radius',
+  'bottom-start': 'border-end-start-radius',
+  'bottom-end': 'border-end-end-radius',
+}
 const ancestorsOf = (element: Element): Element[] =>
   element.parentElement ? [element.parentElement, ...ancestorsOf(element.parentElement)] : []
 const rootOf = (container: HTMLElement) => {
@@ -140,5 +147,60 @@ describe('Bar radius', () => {
     const published = STYLESHEET.replace(/\s/g, '').match(/--ui-inner-radius-64:([^;]+);/)?.[1]
     expect(published).toMatch(/^max\(0px,/)
     expect(published).not.toContain('min(')
+  })
+})
+describe('A badge on the corner of a bar or a button', () => {
+  it.each(BADGE_CORNERS)(
+    'takes the %s corner, where it inherits the radius of what holds it on that corner alone',
+    (corner) => {
+      const { container } = render(
+        <Bar>
+          <Badge data-corner={corner}>New</Badge>
+        </Bar>,
+      )
+      const badge = screen.getByText('New')
+      expect(badge.getAttribute('data-corner')).toBe(corner)
+      expect(badge.parentElement).toBe(rootOf(container))
+      expect(
+        Object.values(CORNER_RADIUS).filter((radius) =>
+          badge.matches(selectorWith(`${radius}:inherit;`)),
+        ),
+      ).toEqual([CORNER_RADIUS[corner]])
+    },
+  )
+  it('shares the own radius of the button it sits on, not the inner radius a badge within it reads', () => {
+    render(
+      <Button kind="card" startItem="Lot 12">
+        Volkswagen Fusca 1973
+        <Badge data-corner="top-end">New</Badge>
+      </Button>,
+    )
+    const button = screen.getByRole('button')
+    const badge = screen.getByText('New')
+    expect(badge.parentElement).toBe(button)
+    expect(badge.matches(selectorWith('border-start-end-radius:inherit;'))).toBe(true)
+    expect(button.matches(selectorWith('border-radius:var(--ui-inner-radius-64,'))).toBe(true)
+  })
+  it('lifts the badge onto the corner and positions what holds it, so the corner is its own', () => {
+    render(
+      <Button>
+        Lot 12
+        <Badge data-corner="top-end">New</Badge>
+      </Button>,
+    )
+    expect(screen.getByText('New').matches(selectorWith('position:absolute;'))).toBe(true)
+    expect(screen.getByRole('button').matches(selectorWith('position:relative;'))).toBe(true)
+  })
+  it('leaves a badge with no corner within its button, where it reads the inner radius', () => {
+    render(
+      <Button>
+        <Badge>New</Badge>
+        Lot 12
+      </Button>,
+    )
+    const badge = screen.getByText('New')
+    expect(badge.matches(selectorWith('position:absolute;'))).toBe(false)
+    expect(screen.getByRole('button').matches(selectorWith('position:relative;'))).toBe(false)
+    expect(badge.matches(selectorWith('border-radius:var(--ui-inner-radius-40,'))).toBe(true)
   })
 })
