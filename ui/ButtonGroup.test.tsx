@@ -154,7 +154,9 @@ describe('ButtonGroup', () => {
         </Bar>
       </Card>,
     )
-    expect(screen.getByRole('group').matches(selectorWith('--ui-inner-radius-card:initial;'))).toBe(true)
+    expect(screen.getByRole('group').matches(selectorWith('--ui-inner-radius-card:initial;'))).toBe(
+      true,
+    )
   })
   it('keeps the group radius on the outer side of the first and last buttons and squares every inner side', () => {
     render(
