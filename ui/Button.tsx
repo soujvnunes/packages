@@ -1,6 +1,6 @@
 import { Children, forwardRef, isValidElement } from 'react'
 import { createSlot, createSlottable } from '@radix-ui/react-slot'
-import { Badge } from './Badge'
+import { Badge } from './Badge.js'
 export const BUTTON_KINDS = ['text', 'icon', 'fullWidth', 'card'] as const
 export const BUTTON_SIZES = ['sm', 'md', 'lg'] as const
 export const BUTTON_TONES = ['main', 'accent', 'success', 'warning', 'error'] as const
