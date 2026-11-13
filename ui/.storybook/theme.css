@@ -151,6 +151,15 @@
     --button-success-color: var(--color-success);
     --button-warning-color: var(--color-warning);
     --button-error-color: var(--color-error);
+
+    --bar-color: var(--color-neutral);
+    --bar-background-color: var(--color-neutral-10);
+    --field-color: var(--color-neutral);
+    --field-background-color: var(--color-surface);
+    --button-group-background-color: var(--color-neutral-10);
+    --card-color: var(--color-neutral);
+    --card-background-color: var(--color-surface);
+    --card-border-color: var(--color-neutral-20);
   }
 
   [data-slot='button'][data-tone='accent'] {
