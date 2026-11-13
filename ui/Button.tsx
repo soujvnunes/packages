@@ -1,4 +1,4 @@
-import { forwardRef } from 'react'
+import { forwardRef, isValidElement } from 'react'
 import { createSlot, createSlottable } from '@radix-ui/react-slot'
 export const BUTTON_KINDS = ['text', 'icon', 'fullWidth', 'card'] as const
 export const BUTTON_SIZES = ['sm', 'md', 'lg'] as const
@@ -53,6 +53,8 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           {end}
         </span>
       ) : null
+    const stateSource =
+      asChild && isValidElement<React.AriaAttributes>(children) ? { ...rest, ...children.props } : rest
     const rootProps = {
       'data-slot': 'button',
       'data-kind': kind,
@@ -60,7 +62,10 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       'data-responsive': responsive,
       'data-content-between': !disableContentBetween,
       ...(stateful && {
-        'data-state': isOn(rest['aria-pressed']) || isOn(rest['aria-selected']) ? 'active' : 'inactive',
+        'data-state':
+          isOn(stateSource['aria-pressed']) || isOn(stateSource['aria-selected'])
+            ? 'active'
+            : 'inactive',
       }),
     }
     const leading = kind === 'card' ? items : start

@@ -200,6 +200,28 @@ describe('Button', () => {
     expect(selected.matches(selectorReading('--button-background-color--pressed'))).toBe(true)
     expect(other.matches(selectorReading('--button-background-color--pressed'))).toBe(false)
   })
+  it('reads the selection of the tab it wraps with asChild when stateful, so a selected tab is active', () => {
+    render(
+      <div role="tablist" aria-label="Lot">
+        <Button asChild stateful>
+          <button type="button" role="tab" aria-selected>
+            Bids
+          </button>
+        </Button>
+        <Button asChild stateful>
+          <button type="button" role="tab" aria-selected={false}>
+            History
+          </button>
+        </Button>
+      </div>,
+    )
+    expect(screen.getByRole('tab', { name: 'Bids', selected: true }).getAttribute('data-state')).toBe(
+      'active',
+    )
+    expect(
+      screen.getByRole('tab', { name: 'History', selected: false }).getAttribute('data-state'),
+    ).toBe('inactive')
+  })
   it('reads a variable a wrapper sets, the way a theme maps the button', () => {
     render(
       <div style={THEME}>
