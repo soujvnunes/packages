@@ -1,0 +1,29 @@
+@layer components {
+  [data-slot='badge'] {
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--badge-gap, calc(var(--spacing) * 4));
+    height: var(--badge-height, calc(var(--spacing) * 24));
+    padding-inline: var(--badge-px, calc(var(--spacing) * 16));
+    font-size: var(--badge-content-size, calc(var(--spacing) * 12));
+    line-height: 1;
+    white-space: nowrap;
+    border-style: solid;
+    border-width: var(--badge-border-width, calc(var(--spacing) * 1));
+    border-radius: var(--ui-inner-radius-40, var(--badge-radius, var(--radius-8)));
+    background-color: var(--badge-background-color, transparent);
+    color: var(--badge-color);
+    border-color: var(--badge-border-color, transparent);
+  }
+  [data-slot='badge-start-item'] {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    margin-inline-start: calc(var(--badge-px, calc(var(--spacing) * 16)) / -2);
+  }
+  [data-slot='badge'] svg {
+    width: var(--badge-content-size, calc(var(--spacing) * 12));
+    height: var(--badge-content-size, calc(var(--spacing) * 12));
+  }
+}
