@@ -199,7 +199,7 @@ describe('Field', () => {
     expect(item.contains(control)).toBe(true)
     expect(control.getAttribute('aria-invalid')).toBe('true')
   })
-  it('is a 64 pill with 12 of block padding and 24 inline, two steps below its height', () => {
+  it('is 64 high with 12 of block padding and 24 inline, two steps below its height, inside a radius of 40', () => {
     const { container } = render(<Field label="Max bid">{(control) => <Input {...control} />}</Field>)
     const root = rootOf(container)
     expect(root.matches(selectorWith('min-height:var(--field-height,calc(var(--spacing)*64));'))).toBe(
@@ -211,12 +211,24 @@ describe('Field', () => {
     expect(root.matches(selectorWith('padding-inline:var(--field-px,calc(var(--spacing)*24));'))).toBe(
       true,
     )
-    expect(root.matches(selectorWith('--ui-container-radius:var(--ui-field-radius,9999px);'))).toBe(
-      true,
-    )
+    expect(
+      root.matches(
+        selectorWith(
+          '--ui-container-radius:var(--ui-inner-radius-card,var(--field-radius,var(--radius-40)));',
+        ),
+      ),
+    ).toBe(true)
     expect(root.matches(selectorWith('border-radius:var(--ui-container-radius);'))).toBe(true)
   })
-  it('insets the label, the hint and the error rows by the control padding, so their text clears the pill curve as the input text does', () => {
+  it('leaves 16 for what it holds by default, its radius of 40 less its inline padding of 24', () => {
+    const declared = STYLESHEET.replace(/\s/g, '')
+    const radius = declared.match(/--field-radius,var\(--radius-(\d+)\)\)\);/)
+    const padding = declared.match(
+      /--ui-container-padding:var\(--field-px,calc\(var\(--spacing\)\*(\d+)\)\);/,
+    )
+    expect(Number(radius?.[1]) - Number(padding?.[1])).toBe(16)
+  })
+  it('insets the label, the hint and the error rows by the control padding, so their text lines up with the input text', () => {
     const { container } = render(
       <>
         <Field label="Max bid" hint={HINT}>
@@ -233,17 +245,13 @@ describe('Field', () => {
     const insets = selectorWith('padding-inline:var(--field-text-px,calc(var(--spacing)*16));')
     expect(rows.map((row) => row?.matches(insets))).toEqual([true, true, true])
   })
-  it('reads the inner radius of a card around it only once the product maps a numeric --field-radius', () => {
+  it('takes the inner radius of a card around it before its own radius, whatever that radius is', () => {
     const { container } = render(<Field label="Max bid">{(control) => <Input {...control} />}</Field>)
     expect(
-      rootOf(container).matches(
-        selectorWith(
-          '--ui-field-radius:calc(0*var(--field-radius)+var(--ui-inner-radius-card,var(--field-radius)));',
-        ),
-      ),
+      rootOf(container).matches(selectorWith('--ui-container-radius:var(--ui-inner-radius-card,')),
     ).toBe(true)
   })
-  it('publishes its inner radius, its radius less its inline padding, which the pill input within it never reads', () => {
+  it('publishes its inner radius, its radius less its inline padding, to the control it holds', () => {
     const { container } = render(<Field label="Max bid">{(control) => <Input {...control} />}</Field>)
     const root = rootOf(container)
     const input = container.querySelector('[data-slot="input"]')
@@ -258,8 +266,6 @@ describe('Field', () => {
       ),
     ).toBe(true)
     expect(input?.parentElement).toBe(root)
-    expect(input?.matches(selectorWith('border-radius:var(--input-md-radius,9999px);'))).toBe(true)
-    expect(STYLESHEET.replace(/\s/g, '')).not.toContain('border-radius:var(--ui-inner-radius-64,')
   })
   it('lets the control take the room the items and the padding leave', () => {
     const { container } = render(

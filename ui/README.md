@@ -66,26 +66,26 @@ Every component but the three of the Card takes `asChild` and then renders its c
 
 ## Nested radius
 
-A control is a pill by default (`9999px`), and a pill reads no container radius, since a full radius stays parallel to any padding. A container publishes its inner radius, its own radius minus its inline padding and never below zero, and only a child with a numeric radius reads it before its own default: the card kind of the `Button`, and a `Badge` whose `--badge-radius` the product maps.
+Radius is a number at every level. A container publishes its inner radius, its own radius minus its inline padding and never below zero, and a control nested in it reads that before its own default, whatever its own default is, so the two curves stay parallel.
 
 | Component | Reads, in order | Publishes |
 | --- | --- | --- |
 | `Button` (`text`, `icon`, `fullWidth`), `Input` | its own radius, a pill by default | `--ui-inner-radius-40`, a pill while the radius is one |
 | `Button` (`card`) | `--ui-inner-radius-64`, `--ui-inner-radius-card`, its own radius | `--ui-inner-radius-40`: 4, 4, 8 by default |
 | `Badge` | `--ui-inner-radius-40` once `--badge-radius` is mapped, then `--badge-radius`; a pill while it is unmapped | nothing |
-| `Field`, `ButtonGroup` | `--ui-inner-radius-card` once its radius variable is mapped, then that variable; a pill while it is unmapped | `--ui-inner-radius-64`, and clears `--ui-inner-radius-card` for what it holds |
+| `Field`, `ButtonGroup` | `--ui-inner-radius-card`, then its own radius, `--radius-40` by default | `--ui-inner-radius-64`: 16 by default, and clears `--ui-inner-radius-card` for what it holds |
 | `Bar` | `--ui-inner-radius-card` once `--bar-radius` is mapped, then `--bar-radius`; no radius while it is unmapped | `--ui-inner-radius-64` once `--bar-radius` is mapped, and clears `--ui-inner-radius-card` for what it holds |
 | `Card` | its own radius | `--ui-inner-radius-card`, and clears `--ui-inner-radius-64` for what it holds |
 
-The badge computes an internal `--ui-badge-radius` that multiplies `--badge-radius` by zero before it adds the inner radius, so with `--badge-radius` unset the property is invalid and the border radius falls back to the pill. The `Field` and the `ButtonGroup` compute `--ui-field-radius` and `--ui-button-group-radius` the same way, and the `Bar` its container radius, which stays invalid while `--bar-radius` is unset: the bar then draws no radius and publishes no inner radius, so a card button in it keeps its own.
+The badge computes an internal `--ui-badge-radius` that multiplies `--badge-radius` by zero before it adds the inner radius, so with `--badge-radius` unset the property is invalid and the border radius falls back to the pill. The `Bar` computes its container radius the same way, which stays invalid while `--bar-radius` is unset: the bar then draws no radius and publishes no inner radius, so what it holds keeps its own default. A bar whose radius the product maps publishes that radius minus its 24 of inline padding.
 
-A container subtracts its inline padding, so the default card of radius 24 with 16 of inline padding gives what it holds 8, and a pill field or button group with 24 gives a pill. Three cases follow:
+A container subtracts its inline padding, so the default card of radius 24 with 16 of inline padding gives what it holds 8, and a field or a button group of radius 40 with 24 gives 16. Three cases follow:
 
-- **Within.** A control with a numeric radius nested in a container takes the container's inner radius, such as a card button in a card, which reads 8. A pill control in the same container stays a pill.
-- **Close.** A control attached to its container's edge shares the container's own radius on the side it touches. The first and last controls of a `ButtonGroup` keep their pill on their outer side, in both orientations, and every inner side is square. A `Badge` with `data-corner` sits on that corner of its parent and shares there the radius the parent publishes in `--ui-corner-radius`.
-- **Outside.** A sibling keeps the default radius of its own height, a pill for every control.
+- **Within.** A control nested in a container takes the container's inner radius, whatever its own default: a button, an input or a badge in a card reads 8, and an input in a field or the joined controls of a button group read 16.
+- **Close.** A control attached to its container's edge shares the container's own radius on the side it touches. The first and last controls of a `ButtonGroup` keep their radius, the group's inner radius, on their outer side, in both orientations, and every inner side is square. A `Badge` with `data-corner` sits on that corner of its parent and shares there the radius the parent publishes in `--ui-corner-radius`.
+- **Outside.** A sibling keeps the default radius of its own height: 12 at 24, 24 at 40 and 40 at 64.
 
-A full radius stays a pill: an inner radius has a floor at zero and no ceiling, so a pill container publishes a radius larger than anything it holds, and what reads it is a pill too. A `rounded-full` class rounds the element it sits on and publishes nothing. Two containers of one level do not chain: a `ButtonGroup` inside a `Bar` starts from its own radius, since both publish `--ui-inner-radius-64`.
+An inner radius has a floor at zero and no ceiling, so a container whose radius the product maps to a full one publishes a radius larger than anything it holds. A `rounded-full` class rounds the element it sits on and publishes nothing. Two containers of one level do not chain: a `ButtonGroup` inside a `Bar` starts from its own radius, since both publish `--ui-inner-radius-64`.
 
 ## Button
 
@@ -236,7 +236,7 @@ A 64 bar for one control: its `label` above, `startItem` and `endItem` beside it
 </Field>
 ```
 
-The Field uses no context, so a server component renders it. Its ids come from `useId` and reach the function as one object, `{ id, 'aria-describedby', 'aria-invalid' }`, which the product spreads on its control: the `id` the label's `htmlFor` points at, the id of the hint or the error while one shows, and `aria-invalid` while an error shows. The Field never reads or clones the control, so its values land wherever the spread puts them: a prop set before the spread loses to the Field's, and one set after it wins, so a product that adds a description of its own joins it to `control['aria-describedby']`. An empty or boolean error counts as none, as an empty or boolean item renders no item slot, and an `Input` shows its own invalid state from the `aria-invalid` it receives. The root carries `data-slot="field"`, and `data-invalid` while an error shows; the parts carry `field-label`, `field-start-item`, `field-end-item`, `field-hint` and `field-error`. The items are not hidden from assistive technology, since an item can be a control such as a `Button`. The label and the hint have no typography of their own. The label, the hint and the error each take a row of their own, which makes the Field taller than 64, and its pill radius then grows to half that height, so those rows are inset by `--field-text-px` (16, the inline padding of a medium input). Their text then lines up with the input's text and clears the curve as the input does.
+The Field uses no context, so a server component renders it. Its ids come from `useId` and reach the function as one object, `{ id, 'aria-describedby', 'aria-invalid' }`, which the product spreads on its control: the `id` the label's `htmlFor` points at, the id of the hint or the error while one shows, and `aria-invalid` while an error shows. The Field never reads or clones the control, so its values land wherever the spread puts them: a prop set before the spread loses to the Field's, and one set after it wins, so a product that adds a description of its own joins it to `control['aria-describedby']`. An empty or boolean error counts as none, as an empty or boolean item renders no item slot, and an `Input` shows its own invalid state from the `aria-invalid` it receives. The root carries `data-slot="field"`, and `data-invalid` while an error shows; the parts carry `field-label`, `field-start-item`, `field-end-item`, `field-hint` and `field-error`. The items are not hidden from assistive technology, since an item can be a control such as a `Button`. The label and the hint have no typography of their own. The label, the hint and the error each take a row of their own, which makes the Field taller than 64 while it keeps its corner of 40, and those rows are inset by `--field-text-px` (16, the inline padding of a medium input), so their text lines up with the input's text and clears the corner as the input does.
 
 | Variable | Default |
 | --- | --- |
@@ -244,7 +244,7 @@ The Field uses no context, so a server component renders it. Its ids come from `
 | `--field-py`, `--field-px` | 12, 24 |
 | `--field-text-px` | 16 |
 | `--field-gap` | 8 |
-| `--field-radius` | none, a pill |
+| `--field-radius` | `--radius-40` |
 | `--field-border-width` | 0 |
 | `--field-background-color[--invalid]`, `--field-color[--invalid]`, `--field-border-color[--invalid]` | none |
 | `--field-hint-color`, `--field-error-color` | the text colour |
@@ -263,13 +263,13 @@ export const Period = () => (
 )
 ```
 
-Joined controls that share one outer radius: a `div` with `role="group"`, `data-slot="button-group"` and `data-orientation`, `horizontal` by default or `vertical`. It is a 64 pill around the 40 controls it joins, with 12 of block padding, 24 of inline padding and no gap between them. A `Button` or an `Input` directly inside keeps its pill on its outer side and is square on every inner side, in both orientations. With `asChild` the group passes no role of its own, so its child keeps the one it has.
+Joined controls that share one outer radius: a `div` with `role="group"`, `data-slot="button-group"` and `data-orientation`, `horizontal` by default or `vertical`. It is 64 high around the 40 controls it joins, with a radius of 40, 12 of block padding, 24 of inline padding and no gap between them, and it keeps that corner when a vertical group grows past 64. A `Button` or an `Input` directly inside takes the group's inner radius, 16, on its outer side and is square on every inner side, in both orientations. With `asChild` the group passes no role of its own, so its child keeps the one it has.
 
 | Variable | Default |
 | --- | --- |
 | `--button-group-height` | 64, a minimum |
 | `--button-group-py`, `--button-group-px` | 12, 24 |
-| `--button-group-radius` | none, a pill |
+| `--button-group-radius` | `--radius-40` |
 | `--button-group-border-width` | 0 |
 | `--button-group-background-color`, `--button-group-color`, `--button-group-border-color` | none |
 

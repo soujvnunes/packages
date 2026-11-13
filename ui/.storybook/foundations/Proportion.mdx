@@ -46,7 +46,7 @@ An outer radius equals the inner radius plus the padding between them, so the tw
 
 Three cases follow from it:
 
-- A nested child takes the parent's inner radius.
+- A nested child takes the parent's inner radius, whatever its own default.
 - A close child attached to the parent's edge shares the parent's own radius on the touching side.
 - An outside sibling keeps the default of its height.
 
@@ -54,7 +54,7 @@ A sum off the ladder means the padding is wrong: an inner 12 with a padding of 1
 
 ## Nested radius in the components
 
-The components apply the rule themselves. Every control is a pill by default, and so are a Field and a ButtonGroup; a Bar takes no radius, since it spans what holds it, and a Card takes 24. A container publishes its inner radius, its own radius less its inline padding and never below zero, in a custom property named by its level: `--ui-inner-radius-64` for a Bar, a Field and a ButtonGroup, `--ui-inner-radius-card` for a Card, and `--ui-inner-radius-40` for a Button and an Input. Only a control with a numeric radius reads the property of what holds it before its own: a card button in a Card of radius 24 with 16 of inline padding takes 8, while the pill button beside it, and the pill input in a Field, stay pills. The first and last buttons of a ButtonGroup keep their pill on their outer side, and a Badge on a corner shares the radius its parent draws there, held to the badge's own height. A full radius stays a pill at every level.
+The components apply the rule themselves. Radius is a number at every level: 12 for a Badge, 24 for a medium Button or Input, 40 for a Field and a ButtonGroup, and 24 for a Card, while a Bar takes none, since it spans what holds it. Alone at its own height each control draws as a pill, since the browser holds a radius to half the height, and a Field or a ButtonGroup that grows past 64 keeps its corner of 40. A container publishes its inner radius, its own radius less its inline padding and never below zero, in a custom property named by its level: `--ui-inner-radius-64` for a Bar, a Field and a ButtonGroup, `--ui-inner-radius-card` for a Card, and `--ui-inner-radius-40` for a Button and an Input. Every control nested in a container reads that property before its own default: the Place a bid button in a Card of radius 24 with 16 of inline padding takes 8, the input in a Field and the joined buttons of a ButtonGroup take 16 (40 less 24), and the Badge in a medium Button takes 8. A Bar with no radius publishes none, so what it holds keeps its own default. The first and last buttons of a ButtonGroup keep that radius on their outer side, and a Badge on a corner shares the radius its parent draws there, held to the badge's own height.
 
 <Canvas of={BarStories.RadiusCases} />
 

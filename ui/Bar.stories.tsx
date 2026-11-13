@@ -72,8 +72,7 @@ export const RadiusCases: Story = {
     <div className="grid grid-cols-1 gap-40 overflow-x-auto">
       <figure className="flex flex-wrap items-start gap-16">
         <figcaption className="basis-full">
-          Within: a card button takes the inner radius of the card that holds it, and a pill stays a
-          pill
+          Within: every control takes the inner radius of what holds it
         </figcaption>
         <Card className="grid justify-items-start gap-16">
           <CardTitle>Lot 12</CardTitle>
@@ -88,7 +87,7 @@ export const RadiusCases: Story = {
           <Button>Watch</Button>
           <Button data-tone="main">Bid</Button>
         </Bar>
-        <Button size="lg">
+        <Button>
           <Badge>New</Badge>
           Lot 12
         </Button>

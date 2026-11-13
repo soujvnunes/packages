@@ -9,10 +9,7 @@
     padding-inline: var(--button-group-px, calc(var(--spacing) * 24));
     border-style: solid;
     border-width: var(--button-group-border-width, 0px);
-    --ui-button-group-radius: calc(
-      0 * var(--button-group-radius) + var(--ui-inner-radius-card, var(--button-group-radius))
-    );
-    --ui-container-radius: var(--ui-button-group-radius, 9999px);
+    --ui-container-radius: var(--ui-inner-radius-card, var(--button-group-radius, var(--radius-40)));
     --ui-container-padding: var(--button-group-px, calc(var(--spacing) * 24));
     border-radius: var(--ui-container-radius);
     background-color: var(--button-group-background-color, transparent);

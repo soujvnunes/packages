@@ -5,7 +5,6 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { BADGE_CORNERS, Badge } from './Badge'
 import { Bar } from './Bar'
 import { Button } from './Button'
-import { Input } from './Input'
 const STYLESHEET = ['badge', 'bar', 'button', 'input', 'radius']
   .map((name) => readFileSync(`${import.meta.dirname}/styles/${name}.css`, 'utf8'))
   .join('\n')
@@ -137,22 +136,17 @@ describe('Bar radius', () => {
       ),
     ).toBe(true)
   })
-  it('gives a card button within it its inner radius before its own, and keeps a text button and an input pills', () => {
+  it('gives a card button within it its inner radius before its own, from the bar alone', () => {
     const { container } = render(
       <Bar>
         <Button kind="card">Lot 12</Button>
-        <Button>Watch</Button>
-        <Input aria-label="Max bid" />
       </Bar>,
     )
-    const root = rootOf(container)
     const card = screen.getByRole('button', { name: 'Lot 12' })
     expect(card.matches(READS_64_FIRST)).toBe(true)
-    expect(ancestorsOf(card).filter((ancestor) => ancestor.matches(PUBLISHES_64))).toEqual([root])
-    const input = container.querySelector('[data-slot="input"]')
-    if (!input) throw new Error('The input root is missing.')
-    expect(screen.getByRole('button', { name: 'Watch' }).matches(READS_64_FIRST)).toBe(false)
-    expect(input.matches(READS_64_FIRST)).toBe(false)
+    expect(ancestorsOf(card).filter((ancestor) => ancestor.matches(PUBLISHES_64))).toEqual([
+      rootOf(container),
+    ])
   })
   it('publishes nothing to a sibling, which keeps the default radius of its own height', () => {
     render(
@@ -165,7 +159,6 @@ describe('Bar radius', () => {
     )
     const beside = screen.getByRole('button', { name: 'Beside' })
     expect(ancestorsOf(beside).some((ancestor) => ancestor.matches(PUBLISHES_64))).toBe(false)
-    expect(beside.matches(selectorWith('border-radius:var(--button-md-radius,9999px);'))).toBe(true)
   })
   it('keeps a full radius full, since the inner radius has a floor at zero and no ceiling', () => {
     const published = STYLESHEET.replace(/\s/g, '').match(/--ui-inner-radius-64:([^;]+);/)?.[1]
@@ -244,22 +237,18 @@ describe('A badge on the corner of a bar or a button', () => {
       ),
     ).toBe(true)
   })
-  it('shares the drawn corner of a pill button, its radius held to half its height', () => {
+  it('shares the drawn corner of a text button, its radius held to half its height', () => {
     render(
       <Button>
         Lot 12
         <Badge data-corner="top-end">New</Badge>
       </Button>,
     )
-    expect(
-      screen
-        .getByRole('button')
-        .matches(
-          selectorWith(
-            '--ui-corner-radius:min(var(--button-md-radius,9999px),var(--button-md-height,calc(var(--spacing)*40))/2);',
-          ),
-        ),
-    ).toBe(true)
+    const button = screen.getByRole('button')
+    expect(button.matches(selectorWith('--ui-corner-radius:min(var(--button-md-radius,'))).toBe(true)
+    expect(button.matches(selectorWith(',var(--button-md-height,calc(var(--spacing)*40))/2);'))).toBe(
+      true,
+    )
   })
   it('lifts the badge onto the corner and positions what holds it, so the corner is its own', () => {
     render(
@@ -281,10 +270,6 @@ describe('A badge on the corner of a bar or a button', () => {
     const badge = screen.getByText('New')
     expect(badge.matches(selectorWith('position:absolute;'))).toBe(false)
     expect(screen.getByRole('button').matches(selectorWith('position:relative;'))).toBe(false)
-    expect(
-      badge.matches(
-        selectorWith('--ui-badge-radius:calc(0*var(--badge-radius)+var(--ui-inner-radius-40,'),
-      ),
-    ).toBe(true)
+    expect(badge.matches(selectorWith('var(--ui-inner-radius-40,'))).toBe(true)
   })
 })

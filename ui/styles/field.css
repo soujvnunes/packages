@@ -10,8 +10,7 @@
     padding-inline: var(--field-px, calc(var(--spacing) * 24));
     border-style: solid;
     border-width: var(--field-border-width, 0px);
-    --ui-field-radius: calc(0 * var(--field-radius) + var(--ui-inner-radius-card, var(--field-radius)));
-    --ui-container-radius: var(--ui-field-radius, 9999px);
+    --ui-container-radius: var(--ui-inner-radius-card, var(--field-radius, var(--radius-40)));
     --ui-container-padding: var(--field-px, calc(var(--spacing) * 24));
     border-radius: var(--ui-container-radius);
     background-color: var(--field-background-color, transparent);

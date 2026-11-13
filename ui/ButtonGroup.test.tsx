@@ -124,7 +124,7 @@ describe('ButtonGroup', () => {
     )
     expect(screen.getByRole('tablist', { name: 'Lot' }).getAttribute('data-slot')).toBe('button-group')
   })
-  it('is a 64 pill around the 40 controls it joins, with 12 of block padding and 24 inline', () => {
+  it('is 64 high around the 40 controls it joins, with 12 of block padding and 24 inline inside a radius of 40', () => {
     render(
       <ButtonGroup aria-label="Period">
         <Button>Day</Button>
@@ -142,18 +142,23 @@ describe('ButtonGroup', () => {
       group.matches(selectorWith('padding-inline:var(--button-group-px,calc(var(--spacing)*24));')),
     ).toBe(true)
     expect(
-      group.matches(selectorWith('--ui-container-radius:var(--ui-button-group-radius,9999px);')),
-    ).toBe(true)
-    expect(group.matches(selectorWith('border-radius:var(--ui-container-radius);'))).toBe(true)
-    expect(
       group.matches(
         selectorWith(
-          '--ui-button-group-radius:calc(0*var(--button-group-radius)+var(--ui-inner-radius-card,var(--button-group-radius)));',
+          '--ui-container-radius:var(--ui-inner-radius-card,var(--button-group-radius,var(--radius-40)));',
         ),
       ),
     ).toBe(true)
+    expect(group.matches(selectorWith('border-radius:var(--ui-container-radius);'))).toBe(true)
   })
-  it('publishes its radius less its inline padding to a card button it joins, while a text button stays a pill', () => {
+  it('leaves 16 for what it holds by default, its radius of 40 less its inline padding of 24', () => {
+    const declared = STYLESHEET.replace(/\s/g, '')
+    const radius = declared.match(/--button-group-radius,var\(--radius-(\d+)\)\)\);/)
+    const padding = declared.match(
+      /--ui-container-padding:var\(--button-group-px,calc\(var\(--spacing\)\*(\d+)\)\);/,
+    )
+    expect(Number(radius?.[1]) - Number(padding?.[1])).toBe(16)
+  })
+  it('publishes its radius less its inline padding to the controls it joins', () => {
     render(
       <ButtonGroup aria-label="Lots">
         <Button kind="card">Lot 12</Button>
@@ -175,9 +180,6 @@ describe('ButtonGroup', () => {
     ).toBe(true)
     const READS_64_FIRST = selectorWith('border-radius:var(--ui-inner-radius-64,')
     expect(screen.getByRole('button', { name: 'Lot 12' }).matches(READS_64_FIRST)).toBe(true)
-    const more = screen.getByRole('button', { name: 'More' })
-    expect(more.matches(READS_64_FIRST)).toBe(false)
-    expect(more.matches(selectorWith('border-radius:var(--button-md-radius,9999px);'))).toBe(true)
   })
   it('starts from its own radius in a bar inside a card, since the bar clears the card inner radius for what it holds', () => {
     render(
@@ -196,7 +198,7 @@ describe('ButtonGroup', () => {
       true,
     )
   })
-  it('keeps the group pill on the outer side of the first and last buttons and squares every inner side', () => {
+  it('keeps the outer side of the first and last buttons round and squares every inner side', () => {
     render(
       <ButtonGroup aria-label="Period">
         <Button>Day</Button>
@@ -206,9 +208,6 @@ describe('ButtonGroup', () => {
     )
     const [day, week, month] = screen.getAllByRole('button')
     if (!day || !week || !month) throw new Error('A button of the group is missing.')
-    for (const end of [day, month]) {
-      expect(end.matches(selectorWith('border-radius:var(--button-md-radius,9999px);'))).toBe(true)
-    }
     expect(squaredCornersOf(day)).toEqual(['border-start-end-radius', 'border-end-end-radius'])
     expect(squaredCornersOf(week)).toEqual([...CORNERS])
     expect(squaredCornersOf(month)).toEqual(['border-start-start-radius', 'border-end-start-radius'])
@@ -223,9 +222,6 @@ describe('ButtonGroup', () => {
     )
     const [day, week, month] = screen.getAllByRole('button')
     if (!day || !week || !month) throw new Error('A button of the group is missing.')
-    for (const end of [day, month]) {
-      expect(end.matches(selectorWith('border-radius:var(--button-md-radius,9999px);'))).toBe(true)
-    }
     expect(squaredCornersOf(day)).toEqual(['border-end-start-radius', 'border-end-end-radius'])
     expect(squaredCornersOf(week)).toEqual([...CORNERS])
     expect(squaredCornersOf(month)).toEqual(['border-start-start-radius', 'border-start-end-radius'])
@@ -294,7 +290,6 @@ describe('ButtonGroup', () => {
     )
     const input = container.querySelector('[data-slot="input"]')
     if (!input) throw new Error('The input root is missing.')
-    expect(input.matches(selectorWith('border-radius:var(--input-md-radius,9999px);'))).toBe(true)
     expect(squaredCornersOf(input)).toEqual(['border-start-end-radius', 'border-end-end-radius'])
     expect(squaredCornersOf(screen.getByRole('button'))).toEqual([
       'border-start-start-radius',

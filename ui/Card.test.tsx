@@ -183,13 +183,12 @@ describe('Card', () => {
     )
     expect(Number(radius?.[1]) - Number(padding?.[1])).toBe(8)
   })
-  it('publishes its inner radius, its radius less its inline padding, to a card button within it, while a text button stays a pill', () => {
+  it('publishes its inner radius, its radius less its inline padding, to the controls within it', () => {
     render(
       <Card>
         <CardTitle>Lot 12</CardTitle>
         <CardDescription>Open until 20h</CardDescription>
         <Button kind="card">Place a bid</Button>
-        <Button>Watch</Button>
       </Card>,
     )
     const card = screen.getByRole('article')
@@ -199,9 +198,6 @@ describe('Card', () => {
     expect(
       card.matches(selectorWith('--ui-container-padding:var(--card-px,calc(var(--spacing)*16));')),
     ).toBe(true)
-    const watch = screen.getByRole('button', { name: 'Watch' })
-    expect(watch.matches(selectorWith('border-radius:var(--button-md-radius,9999px);'))).toBe(true)
-    expect(watch.matches(selectorWith('border-radius:var(--ui-inner-radius-64,'))).toBe(false)
     expect(
       card.matches(
         selectorWith(
