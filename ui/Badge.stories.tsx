@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { Badge } from './Badge'
+import { Icon } from './Icon'
 import './styles/badge.css'
 const BADGE_THEME: React.CSSProperties & Record<`--${string}`, string> = {
   '--badge-background-color': 'var(--color-main-20)',
@@ -7,9 +8,11 @@ const BADGE_THEME: React.CSSProperties & Record<`--${string}`, string> = {
   '--badge-border-color': 'var(--color-main-40)',
 }
 const DOT = (
-  <svg viewBox="0 0 8 8" fill="currentColor">
-    <circle cx="4" cy="4" r="4" />
-  </svg>
+  <Icon
+    iconNode={[['circle', { cx: '12', cy: '12', r: '8', key: 'dot' }]]}
+    fill="currentColor"
+    stroke="none"
+  />
 )
 type BadgeMeta = Meta<typeof Badge>
 const meta = {

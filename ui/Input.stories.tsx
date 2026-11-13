@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
+import { Icon } from './Icon'
 import { INPUT_KINDS, INPUT_SIZES, Input } from './Input'
 import './styles/input.css'
 const INPUT_THEME: React.CSSProperties & Record<`--${string}`, string> = {
@@ -14,10 +15,12 @@ const INPUT_THEME: React.CSSProperties & Record<`--${string}`, string> = {
   '--input-outline-color--focus': 'var(--color-main-40)',
 }
 const SEARCH = (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
-    <circle cx="11" cy="11" r="7" />
-    <path d="m20 20-4-4" />
-  </svg>
+  <Icon
+    iconNode={[
+      ['circle', { cx: '11', cy: '11', r: '7', key: 'lens' }],
+      ['path', { d: 'm20 20-4-4', key: 'handle' }],
+    ]}
+  />
 )
 type InputMeta = Meta<typeof Input>
 const meta = {

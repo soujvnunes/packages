@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { Badge } from './Badge'
 import { BUTTON_KINDS, BUTTON_SIZES, BUTTON_TONES, Button } from './Button'
+import { Icon } from './Icon'
 import './styles/badge.css'
 import './styles/button.css'
 const BUTTON_THEME: React.CSSProperties & Record<`--${string}`, string> = {
@@ -30,16 +31,8 @@ const BUTTON_THEME: React.CSSProperties & Record<`--${string}`, string> = {
   '--badge-background-color': 'var(--color-surface)',
   '--badge-color': 'var(--color-neutral)',
 }
-const PLUS = (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
-    <path d="M12 5v14M5 12h14" />
-  </svg>
-)
-const ARROW = (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
-    <path d="M5 12h14M13 6l6 6-6 6" />
-  </svg>
-)
+const PLUS = <Icon iconNode={[['path', { d: 'M12 5v14M5 12h14', key: 'plus' }]]} />
+const ARROW = <Icon iconNode={[['path', { d: 'M5 12h14M13 6l6 6-6 6', key: 'arrow' }]]} />
 type ButtonMeta = Meta<typeof Button>
 const meta = {
   title: 'Components/Button',

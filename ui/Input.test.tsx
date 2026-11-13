@@ -2,9 +2,19 @@ import { createRef } from 'react'
 import { cleanup, render, screen } from '@testing-library/react'
 import { readFileSync } from 'node:fs'
 import { afterEach, describe, expect, it } from 'vitest'
+import { Icon, type IconNode } from './Icon'
 import { INPUT_KINDS, INPUT_SIZES, Input } from './Input'
 const STYLESHEET = readFileSync(`${import.meta.dirname}/styles/input.css`, 'utf8').replace(/\s/g, '')
 const SEARCH = <svg viewBox="0 0 24 24" />
+const SEARCH_NODE: IconNode = [['circle', { cx: '11', cy: '11', r: '7', key: 'lens' }]]
+const selectorWith = (declaration: string) => {
+  const selector = STYLESHEET.split('}')
+    .find((chunk) => chunk.includes(declaration))
+    ?.split('{')
+    .at(-2)
+  if (!selector) throw new Error(`No rule of the stylesheet holds ${declaration}.`)
+  return selector
+}
 const THEME: React.CSSProperties & Record<`--${string}`, string> = {
   '--input-border-color--invalid': 'rgb(1, 2, 3)',
 }
@@ -70,6 +80,15 @@ describe('Input', () => {
     expect(end?.getAttribute('data-slot')).toBe('input-end-item')
     expect(end?.getAttribute('aria-hidden')).toBe('true')
   })
+  it.each(INPUT_SIZES)(
+    'hands the %s content size to an Icon left at its default size, so the icon stays two steps below the height',
+    (size) => {
+      render(<Input aria-label="Search" size={size} startItem={<Icon iconNode={SEARCH_NODE} />} />)
+      const root = rootOf(screen.getByRole('textbox', { name: 'Search' }))
+      expect(root.querySelector('[data-slot="icon"]')?.getAttribute('data-size')).toBe('md')
+      expect(root.matches(selectorWith(`--icon-md-size:var(--input-${size}-content-size,`))).toBe(true)
+    },
+  )
   it('marks the root invalid when the input is, and only then', () => {
     render(
       <>

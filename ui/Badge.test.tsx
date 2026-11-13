@@ -1,8 +1,20 @@
 import { createRef } from 'react'
 import { cleanup, render, screen } from '@testing-library/react'
+import { readFileSync } from 'node:fs'
 import { afterEach, describe, expect, it } from 'vitest'
 import { Badge } from './Badge'
+import { Icon, type IconNode } from './Icon'
+const STYLESHEET = readFileSync(`${import.meta.dirname}/styles/badge.css`, 'utf8').replace(/\s/g, '')
 const DOT = <svg viewBox="0 0 8 8" />
+const DOT_NODE: IconNode = [['circle', { cx: '12', cy: '12', r: '8', key: 'dot' }]]
+const selectorWith = (declaration: string) => {
+  const selector = STYLESHEET.split('}')
+    .find((chunk) => chunk.includes(declaration))
+    ?.split('{')
+    .at(-2)
+  if (!selector) throw new Error(`No rule of the stylesheet holds ${declaration}.`)
+  return selector
+}
 const THEME: React.CSSProperties & Record<`--${string}`, string> = {
   '--badge-background-color': 'rgb(1, 2, 3)',
 }
@@ -25,6 +37,12 @@ describe('Badge', () => {
     expect(item?.getAttribute('data-slot')).toBe('badge-start-item')
     expect(item?.getAttribute('aria-hidden')).toBe('true')
     expect(item?.querySelector('svg')).not.toBeNull()
+  })
+  it('hands its content size to an Icon left at its default size, so the icon stays two steps below the height', () => {
+    const { container } = render(<Badge startItem={<Icon iconNode={DOT_NODE} />}>Live</Badge>)
+    const root = rootOf(container)
+    expect(root.querySelector('[data-slot="icon"]')?.getAttribute('data-size')).toBe('md')
+    expect(root.matches(selectorWith('--icon-md-size:var(--badge-content-size,'))).toBe(true)
   })
   it('renders no start item slot when it has none, so the label sits alone', () => {
     const { container } = render(<Badge>New</Badge>)
