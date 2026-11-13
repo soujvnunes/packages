@@ -1,4 +1,4 @@
-import { forwardRef, isValidElement } from 'react'
+import { Children, forwardRef, isValidElement } from 'react'
 import { createSlot, createSlottable } from '@radix-ui/react-slot'
 export const BUTTON_KINDS = ['text', 'icon', 'fullWidth', 'card'] as const
 export const BUTTON_SIZES = ['sm', 'md', 'lg'] as const
@@ -29,6 +29,16 @@ const itemOf = (slot: string, item: React.ReactNode) =>
       {item}
     </span>
   )
+const isElement = (node: React.ReactNode) => isValidElement(node)
+const elementEdgesOf = (nodes: React.ReactNode, pullStart: boolean, pullEnd: boolean) => {
+  const content = Children.toArray(nodes).filter((node) => !rendersNothing(node))
+  return [
+    pullStart && isElement(content.at(0)) && 'start',
+    pullEnd && isElement(content.at(-1)) && 'end',
+  ]
+    .filter(Boolean)
+    .join(' ')
+}
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   (
     {
@@ -59,12 +69,23 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       asChild && isValidElement<React.AriaAttributes>(children) ? { ...rest, ...children.props } : rest
     const declaresState =
       stateSource['aria-pressed'] !== undefined || stateSource['aria-selected'] !== undefined
+    const leading = kind === 'card' ? items : start
+    const trailing = kind === 'card' ? null : end
+    const content =
+      asChild && isValidElement<{ children?: React.ReactNode }>(children)
+        ? children.props.children
+        : children
+    const elementEdges =
+      kind === 'text' || kind === 'fullWidth'
+        ? elementEdgesOf(content, leading === null, trailing === null)
+        : ''
     const rootProps = {
       'data-slot': 'button',
       'data-kind': kind,
       'data-size': size,
       'data-responsive': responsive,
       'data-content-between': !disableContentBetween,
+      ...(elementEdges && { 'data-element-edge': elementEdges }),
       ...(stateful &&
         (!asChild || declaresState) && {
           'data-state':
@@ -73,8 +94,6 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
               : 'inactive',
         }),
     }
-    const leading = kind === 'card' ? items : start
-    const trailing = kind === 'card' ? null : end
     if (asChild) {
       return (
         <ButtonSlot ref={ref} {...(!responsive && { tabIndex: -1 })} {...rest} {...rootProps}>

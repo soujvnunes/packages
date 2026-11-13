@@ -89,10 +89,12 @@
   [data-slot='button'][data-size='sm'] > [data-slot='button-end-item'] {
     margin-inline-end: calc(var(--button-sm-px, calc(var(--spacing) * 12)) / -2);
   }
-  [data-slot='button'][data-size='md'] > [data-slot='button-start-item'] {
+  [data-slot='button'][data-size='md'] > [data-slot='button-start-item'],
+  [data-slot='button'][data-size='md'][data-element-edge~='start'] > [data-slot='badge']:first-child {
     margin-inline-start: calc(var(--button-md-px, calc(var(--spacing) * 16)) / -2);
   }
-  [data-slot='button'][data-size='md'] > [data-slot='button-end-item'] {
+  [data-slot='button'][data-size='md'] > [data-slot='button-end-item'],
+  [data-slot='button'][data-size='md'][data-element-edge~='end'] > [data-slot='badge']:last-child {
     margin-inline-end: calc(var(--button-md-px, calc(var(--spacing) * 16)) / -2);
   }
   [data-slot='button'][data-size='lg'] > [data-slot='button-start-item'] {
