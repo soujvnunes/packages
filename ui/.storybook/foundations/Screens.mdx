@@ -17,7 +17,7 @@ The switch from phone to desktop is the theme token `--breakpoint-lg`, which is 
 
 At the default root size `xl:` starts at 80rem (1280) and `2xl:` at 96rem (1536).
 
-The stock `sm:` and `md:` variants are never written, and neither is a width variant such as `min-[600px]:`. The theme removes them, so a class written with one compiles to nothing.
+The theme removes `sm:` and `md:`, so a class written with one compiles to nothing. A width variant such as `min-[600px]:` still compiles, since it reads no theme token, so it is never written.
 
 ## Designs
 
