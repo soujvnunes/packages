@@ -136,7 +136,7 @@ export const PlateField = () => (
 )
 ```
 
-A `label` root with the button's `text` or `fullWidth` proportions, wrapping one `input`. `kind` (`text` or `fullWidth`), `size`, `startItem`, `endItem` and `asChild` go to the root, `className` takes `{ root, input }`, and every other prop, the ref included, goes to the `input`. The root carries `data-slot="input"`, `data-kind` and `data-size`, `data-invalid` when `aria-invalid` is set and `data-disabled` when the input is disabled; the input carries `data-slot="input-control"`.
+A `label` root with the button's `text` or `fullWidth` proportions, wrapping one `input`. `kind` (`text` or `fullWidth`), `size`, `startItem`, `endItem` and `asChild` go to the root, `className` takes `{ root, input }`, and every other prop, the ref included, goes to the `input`. The root carries `data-slot="input"`, `data-kind` and `data-size`, `data-invalid` when `aria-invalid` is set and `data-disabled` when the input is disabled; the input carries `data-slot="input-control"`. The items render in `aria-hidden` `input-start-item` and `input-end-item` slots inside the label, so they are decoration: a control that acts on the field, such as a clear or a show-password button, goes beside the `Input`, never in `startItem` or `endItem`, where it would be a tab stop with no name.
 
 | Variable                                                                  | Default               |
 | ------------------------------------------------------------------------- | --------------------- |
