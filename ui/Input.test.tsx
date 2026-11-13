@@ -15,6 +15,7 @@ const selectorWith = (declaration: string) => {
   if (!selector) throw new Error(`No rule of the stylesheet holds ${declaration}.`)
   return selector
 }
+const INPUT_PADDING = { sm: 12, md: 16, lg: 24 } as const
 const THEME: React.CSSProperties & Record<`--${string}`, string> = {
   '--input-border-color--invalid': 'rgb(1, 2, 3)',
 }
@@ -89,6 +90,25 @@ describe('Input', () => {
       expect(root.matches(selectorWith(`--icon-md-size:var(--input-${size}-content-size,`))).toBe(true)
     },
   )
+  it.each(INPUT_SIZES)(
+    'pads the %s root inline two steps below its height and draws it as a pill, as the button does',
+    (size) => {
+      render(<Input aria-label="Plate" size={size} />)
+      const root = rootOf(screen.getByRole('textbox'))
+      const px = `var(--input-${size}-px,calc(var(--spacing)*${INPUT_PADDING[size]}))`
+      expect(root.matches(selectorWith(`padding-inline:${px};`))).toBe(true)
+      expect(root.matches(selectorWith(`border-radius:var(--input-${size}-radius,9999px);`))).toBe(true)
+      expect(
+        root.matches(
+          selectorWith(`--ui-inner-radius-40:max(0px,var(--input-${size}-radius,9999px)-${px});`),
+        ),
+      ).toBe(true)
+    },
+  )
+  it('reads no container radius, so a pill input stays a pill inside a bar or a card', () => {
+    expect(STYLESHEET).not.toContain('--ui-inner-radius-64')
+    expect(STYLESHEET).not.toContain('--ui-inner-radius-card')
+  })
   it('marks the root invalid when the input is, and only then', () => {
     render(
       <>

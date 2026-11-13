@@ -44,6 +44,30 @@ describe('Badge', () => {
     expect(root.querySelector('[data-slot="icon"]')?.getAttribute('data-size')).toBe('md')
     expect(root.matches(selectorWith('--icon-md-size:var(--badge-content-size,'))).toBe(true)
   })
+  it('pads inline 12, two steps below its height, and pulls the start item by half of it', () => {
+    const { container } = render(<Badge startItem={DOT}>Live</Badge>)
+    const root = rootOf(container)
+    expect(root.matches(selectorWith('padding-inline:var(--badge-px,calc(var(--spacing)*12));'))).toBe(
+      true,
+    )
+    expect(
+      root.firstElementChild?.matches(
+        selectorWith('margin-inline-start:calc(var(--badge-px,calc(var(--spacing)*12))/-2);'),
+      ),
+    ).toBe(true)
+  })
+  it('is a pill by default, and reads the inner radius of its container only through a mapped --badge-radius', () => {
+    const { container } = render(<Badge>New</Badge>)
+    const root = rootOf(container)
+    expect(root.matches(selectorWith('border-radius:var(--ui-badge-radius,9999px);'))).toBe(true)
+    expect(
+      root.matches(
+        selectorWith(
+          '--ui-badge-radius:calc(0*var(--badge-radius)+var(--ui-inner-radius-40,var(--badge-radius)));',
+        ),
+      ),
+    ).toBe(true)
+  })
   it('renders no start item slot when it has none, so the label sits alone', () => {
     const { container } = render(<Badge>New</Badge>)
     expect(container.querySelector('[data-slot="badge-start-item"]')).toBeNull()

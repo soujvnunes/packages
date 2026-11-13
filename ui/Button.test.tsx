@@ -19,6 +19,12 @@ const selectorWith = (declaration: string) => {
   return selectors.join(', ')
 }
 const selectorReading = (variable: string) => selectorWith(`var(${variable},`)
+const TEXT_PADDING = { sm: 12, md: 16, lg: 24 } as const
+const CARD_BOX = {
+  sm: { px: 8, py: 4, radius: 12 },
+  md: { px: 12, py: 8, radius: 16 },
+  lg: { px: 16, py: 12, radius: 24 },
+} as const
 afterEach(cleanup)
 describe('Button', () => {
   it('renders a button named by its label, of the text kind and md size by default', () => {
@@ -72,6 +78,58 @@ describe('Button', () => {
     expect(text.matches(selectorWith('{height:var(--button-md-height,'))).toBe(false)
     expect(icon.matches(selectorWith('{height:var(--button-md-height,'))).toBe(true)
   })
+  it.each(BUTTON_SIZES)(
+    'pads the %s text kind inline two steps below its height, the same number as its content',
+    (size) => {
+      render(<Button size={size}>Label</Button>)
+      const px = `var(--button-${size}-px,calc(var(--spacing)*${TEXT_PADDING[size]}))`
+      expect(screen.getByRole('button').matches(selectorWith(`padding-inline:${px};`))).toBe(true)
+      expect(STYLESHEET.replace(/\s/g, '')).toContain(
+        `font-size:var(--button-${size}-content-size,calc(var(--spacing)*${TEXT_PADDING[size]}));`,
+      )
+    },
+  )
+  it.each(BUTTON_SIZES)(
+    'draws the %s text kind as a pill that reads no container radius, and publishes a pill inner radius for a Badge',
+    (size) => {
+      render(<Button size={size}>Label</Button>)
+      const button = screen.getByRole('button')
+      const px = `var(--button-${size}-px,calc(var(--spacing)*${TEXT_PADDING[size]}))`
+      expect(button.matches(selectorWith(`border-radius:var(--button-${size}-radius,9999px);`))).toBe(
+        true,
+      )
+      expect(
+        button.matches(
+          selectorWith(`--ui-inner-radius-40:max(0px,var(--button-${size}-radius,9999px)-${px});`),
+        ),
+      ).toBe(true)
+      expect(button.matches(selectorReading('--ui-inner-radius-64'))).toBe(false)
+    },
+  )
+  it.each(BUTTON_SIZES)(
+    'sizes the %s card kind box from the ladder, and reads the container inner radius before its own',
+    (size) => {
+      render(
+        <Button kind="card" size={size}>
+          Lot 12
+        </Button>,
+      )
+      const button = screen.getByRole('button')
+      const { px, py, radius } = CARD_BOX[size]
+      const inlinePadding = `var(--button-card-${size}-px,calc(var(--spacing)*${px}))`
+      const cardRadius = `var(--ui-inner-radius-64,var(--ui-inner-radius-card,var(--button-card-${size}-radius,var(--radius-${radius}))))`
+      expect(
+        button.matches(
+          selectorWith(`padding-block:var(--button-card-${size}-py,calc(var(--spacing)*${py}));`),
+        ),
+      ).toBe(true)
+      expect(button.matches(selectorWith(`padding-inline:${inlinePadding};`))).toBe(true)
+      expect(button.matches(selectorWith(`border-radius:${cardRadius};`))).toBe(true)
+      expect(
+        button.matches(selectorWith(`--ui-inner-radius-40:max(0px,${cardRadius}-${inlinePadding});`)),
+      ).toBe(true)
+    },
+  )
   it('renders the start and end items in their own slots, hidden from assistive technology', () => {
     render(
       <Button startItem={PLUS} endItem="12">

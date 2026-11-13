@@ -24,56 +24,38 @@
   }
   [data-slot='button'][data-size='sm'] {
     min-height: var(--button-sm-height, calc(var(--spacing) * 24));
-    padding-inline: var(--button-sm-px, calc(var(--spacing) * 16));
+    padding-inline: var(--button-sm-px, calc(var(--spacing) * 12));
     gap: var(--button-sm-gap, calc(var(--spacing) * 4));
     font-size: var(--button-sm-content-size, calc(var(--spacing) * 12));
     --icon-md-size: var(--button-sm-content-size, calc(var(--spacing) * 12));
-    border-radius: var(
-      --ui-inner-radius-64,
-      var(--ui-inner-radius-card, var(--button-sm-radius, var(--radius-8)))
-    );
+    border-radius: var(--button-sm-radius, 9999px);
     --ui-inner-radius-40: max(
       0px,
-      var(--ui-inner-radius-64, var(--ui-inner-radius-card, var(--button-sm-radius, var(--radius-8)))) -
-        var(--button-sm-px, calc(var(--spacing) * 16))
+      var(--button-sm-radius, 9999px) - var(--button-sm-px, calc(var(--spacing) * 12))
     );
   }
   [data-slot='button'][data-size='md'] {
     min-height: var(--button-md-height, calc(var(--spacing) * 40));
-    padding-inline: var(--button-md-px, calc(var(--spacing) * 24));
+    padding-inline: var(--button-md-px, calc(var(--spacing) * 16));
     gap: var(--button-md-gap, calc(var(--spacing) * 8));
     font-size: var(--button-md-content-size, calc(var(--spacing) * 16));
     --icon-md-size: var(--button-md-content-size, calc(var(--spacing) * 16));
-    border-radius: var(
-      --ui-inner-radius-64,
-      var(--ui-inner-radius-card, var(--button-md-radius, var(--radius-12)))
-    );
+    border-radius: var(--button-md-radius, 9999px);
     --ui-inner-radius-40: max(
       0px,
-      var(
-          --ui-inner-radius-64,
-          var(--ui-inner-radius-card, var(--button-md-radius, var(--radius-12)))
-        ) -
-        var(--button-md-px, calc(var(--spacing) * 24))
+      var(--button-md-radius, 9999px) - var(--button-md-px, calc(var(--spacing) * 16))
     );
   }
   [data-slot='button'][data-size='lg'] {
     min-height: var(--button-lg-height, calc(var(--spacing) * 64));
-    padding-inline: var(--button-lg-px, calc(var(--spacing) * 40));
+    padding-inline: var(--button-lg-px, calc(var(--spacing) * 24));
     gap: var(--button-lg-gap, calc(var(--spacing) * 12));
     font-size: var(--button-lg-content-size, calc(var(--spacing) * 24));
     --icon-md-size: var(--button-lg-content-size, calc(var(--spacing) * 24));
-    border-radius: var(
-      --ui-inner-radius-64,
-      var(--ui-inner-radius-card, var(--button-lg-radius, var(--radius-16)))
-    );
+    border-radius: var(--button-lg-radius, 9999px);
     --ui-inner-radius-40: max(
       0px,
-      var(
-          --ui-inner-radius-64,
-          var(--ui-inner-radius-card, var(--button-lg-radius, var(--radius-16)))
-        ) -
-        var(--button-lg-px, calc(var(--spacing) * 40))
+      var(--button-lg-radius, 9999px) - var(--button-lg-px, calc(var(--spacing) * 24))
     );
   }
   :where([data-slot='button'][data-size='sm']) svg {
@@ -102,22 +84,22 @@
     margin-inline-end: auto;
   }
   [data-slot='button'][data-size='sm'] > [data-slot='button-start-item'] {
-    margin-inline-start: calc(var(--button-sm-px, calc(var(--spacing) * 16)) / -2);
+    margin-inline-start: calc(var(--button-sm-px, calc(var(--spacing) * 12)) / -2);
   }
   [data-slot='button'][data-size='sm'] > [data-slot='button-end-item'] {
-    margin-inline-end: calc(var(--button-sm-px, calc(var(--spacing) * 16)) / -2);
+    margin-inline-end: calc(var(--button-sm-px, calc(var(--spacing) * 12)) / -2);
   }
   [data-slot='button'][data-size='md'] > [data-slot='button-start-item'] {
-    margin-inline-start: calc(var(--button-md-px, calc(var(--spacing) * 24)) / -2);
+    margin-inline-start: calc(var(--button-md-px, calc(var(--spacing) * 16)) / -2);
   }
   [data-slot='button'][data-size='md'] > [data-slot='button-end-item'] {
-    margin-inline-end: calc(var(--button-md-px, calc(var(--spacing) * 24)) / -2);
+    margin-inline-end: calc(var(--button-md-px, calc(var(--spacing) * 16)) / -2);
   }
   [data-slot='button'][data-size='lg'] > [data-slot='button-start-item'] {
-    margin-inline-start: calc(var(--button-lg-px, calc(var(--spacing) * 40)) / -2);
+    margin-inline-start: calc(var(--button-lg-px, calc(var(--spacing) * 24)) / -2);
   }
   [data-slot='button'][data-size='lg'] > [data-slot='button-end-item'] {
-    margin-inline-end: calc(var(--button-lg-px, calc(var(--spacing) * 40)) / -2);
+    margin-inline-end: calc(var(--button-lg-px, calc(var(--spacing) * 24)) / -2);
   }
   [data-slot='button'][data-kind='icon'] {
     aspect-ratio: 1;
@@ -141,50 +123,54 @@
     flex-direction: column;
     align-items: stretch;
     justify-content: flex-start;
-    padding-block: var(--button-card-py, calc(var(--spacing) * 16));
-    padding-inline: var(--button-card-px, calc(var(--spacing) * 24));
     text-align: start;
   }
   [data-slot='button'][data-kind='card'][data-size='sm'] {
+    padding-block: var(--button-card-sm-py, calc(var(--spacing) * 4));
+    padding-inline: var(--button-card-sm-px, calc(var(--spacing) * 8));
     border-radius: var(
       --ui-inner-radius-64,
-      var(--ui-inner-radius-card, var(--button-card-radius, var(--radius-4)))
+      var(--ui-inner-radius-card, var(--button-card-sm-radius, var(--radius-12)))
     );
     --ui-inner-radius-40: max(
       0px,
       var(
           --ui-inner-radius-64,
-          var(--ui-inner-radius-card, var(--button-card-radius, var(--radius-4)))
+          var(--ui-inner-radius-card, var(--button-card-sm-radius, var(--radius-12)))
         ) -
-        var(--button-card-px, calc(var(--spacing) * 24))
+        var(--button-card-sm-px, calc(var(--spacing) * 8))
     );
   }
   [data-slot='button'][data-kind='card'][data-size='md'] {
+    padding-block: var(--button-card-md-py, calc(var(--spacing) * 8));
+    padding-inline: var(--button-card-md-px, calc(var(--spacing) * 12));
     border-radius: var(
       --ui-inner-radius-64,
-      var(--ui-inner-radius-card, var(--button-card-radius, var(--radius-8)))
+      var(--ui-inner-radius-card, var(--button-card-md-radius, var(--radius-16)))
     );
     --ui-inner-radius-40: max(
       0px,
       var(
           --ui-inner-radius-64,
-          var(--ui-inner-radius-card, var(--button-card-radius, var(--radius-8)))
+          var(--ui-inner-radius-card, var(--button-card-md-radius, var(--radius-16)))
         ) -
-        var(--button-card-px, calc(var(--spacing) * 24))
+        var(--button-card-md-px, calc(var(--spacing) * 12))
     );
   }
   [data-slot='button'][data-kind='card'][data-size='lg'] {
+    padding-block: var(--button-card-lg-py, calc(var(--spacing) * 12));
+    padding-inline: var(--button-card-lg-px, calc(var(--spacing) * 16));
     border-radius: var(
       --ui-inner-radius-64,
-      var(--ui-inner-radius-card, var(--button-card-radius, var(--radius-12)))
+      var(--ui-inner-radius-card, var(--button-card-lg-radius, var(--radius-24)))
     );
     --ui-inner-radius-40: max(
       0px,
       var(
           --ui-inner-radius-64,
-          var(--ui-inner-radius-card, var(--button-card-radius, var(--radius-12)))
+          var(--ui-inner-radius-card, var(--button-card-lg-radius, var(--radius-24)))
         ) -
-        var(--button-card-px, calc(var(--spacing) * 24))
+        var(--button-card-lg-px, calc(var(--spacing) * 16))
     );
   }
   [data-slot='button-items'] {
