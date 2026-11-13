@@ -353,14 +353,14 @@
 
 .foundations-concentric {
   display: inline-grid;
-  padding: calc(var(--spacing) * 16);
+  padding: calc(var(--spacing) * 12);
   border-radius: var(--radius-24);
   background: var(--color-main-20);
 }
 
 .foundations-concentric > div {
   padding: calc(var(--spacing) * 24);
-  border-radius: var(--radius-8);
+  border-radius: var(--radius-12);
   background: var(--color-main);
   color: var(--color-neutral);
 }

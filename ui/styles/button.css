@@ -53,6 +53,10 @@
         ) -
         var(--button-sm-px, calc(var(--spacing) * 12))
     );
+    --ui-corner-radius: min(
+      var(--ui-inner-radius-64, var(--ui-inner-radius-card, var(--button-sm-radius, var(--radius-12)))),
+      var(--button-sm-height, calc(var(--spacing) * 24)) / 2
+    );
   }
   [data-slot='button'][data-size='md'] {
     min-height: var(--button-md-height, calc(var(--spacing) * 40));
@@ -80,6 +84,10 @@
         ) -
         var(--button-md-px, calc(var(--spacing) * 16))
     );
+    --ui-corner-radius: min(
+      var(--ui-inner-radius-64, var(--ui-inner-radius-card, var(--button-md-radius, var(--radius-24)))),
+      var(--button-md-height, calc(var(--spacing) * 40)) / 2
+    );
   }
   [data-slot='button'][data-size='lg'] {
     min-height: var(--button-lg-height, calc(var(--spacing) * 64));
@@ -106,6 +114,10 @@
           var(--ui-inner-radius-card, var(--button-lg-radius, var(--radius-40)))
         ) -
         var(--button-lg-px, calc(var(--spacing) * 24))
+    );
+    --ui-corner-radius: min(
+      var(--ui-inner-radius-64, var(--ui-inner-radius-card, var(--button-lg-radius, var(--radius-40)))),
+      var(--button-lg-height, calc(var(--spacing) * 64)) / 2
     );
   }
   :where([data-slot='button'][data-size='sm']) svg {
@@ -215,6 +227,10 @@
         ) -
         var(--button-card-sm-px, calc(var(--spacing) * 8))
     );
+    --ui-corner-radius: var(
+      --ui-inner-radius-64,
+      var(--ui-inner-radius-card, var(--button-card-sm-radius, var(--radius-12)))
+    );
   }
   [data-slot='button'][data-kind='card'][data-size='md'] {
     padding-block: var(--button-card-md-py, calc(var(--spacing) * 8));
@@ -231,6 +247,10 @@
         ) -
         var(--button-card-md-px, calc(var(--spacing) * 12))
     );
+    --ui-corner-radius: var(
+      --ui-inner-radius-64,
+      var(--ui-inner-radius-card, var(--button-card-md-radius, var(--radius-16)))
+    );
   }
   [data-slot='button'][data-kind='card'][data-size='lg'] {
     padding-block: var(--button-card-lg-py, calc(var(--spacing) * 12));
@@ -246,6 +266,10 @@
           var(--ui-inner-radius-card, var(--button-card-lg-radius, var(--radius-24)))
         ) -
         var(--button-card-lg-px, calc(var(--spacing) * 16))
+    );
+    --ui-corner-radius: var(
+      --ui-inner-radius-64,
+      var(--ui-inner-radius-card, var(--button-card-lg-radius, var(--radius-24)))
     );
   }
   [data-slot='button-items'] {
@@ -557,5 +581,34 @@
     --button-outline-color--active: var(--button-error-outline-color--active);
     --button-outline-color--pressed: var(--button-error-outline-color--pressed);
     --button-outline-color--disabled: var(--button-error-outline-color--disabled);
+  }
+  [data-slot='button-group'][data-orientation='horizontal'] > [data-slot='button']:not(:first-child) {
+    border-start-start-radius: 0;
+    border-end-start-radius: 0;
+    margin-inline-start: calc(var(--button-border-width, calc(var(--spacing) * 1)) * -1);
+  }
+  [data-slot='button-group'][data-orientation='horizontal'] > [data-slot='button']:not(:last-child) {
+    border-start-end-radius: 0;
+    border-end-end-radius: 0;
+  }
+  [data-slot='button-group'][data-orientation='vertical'] > [data-slot='button']:not(:first-child) {
+    border-start-start-radius: 0;
+    border-start-end-radius: 0;
+    margin-block-start: calc(var(--button-border-width, calc(var(--spacing) * 1)) * -1);
+  }
+  [data-slot='button-group'][data-orientation='vertical'] > [data-slot='button']:not(:last-child) {
+    border-end-start-radius: 0;
+    border-end-end-radius: 0;
+  }
+  [data-slot='button-group']
+    > [data-slot='button']:is(
+      :hover,
+      :focus-visible,
+      [aria-pressed='true'],
+      [aria-selected='true'],
+      [data-state='active']
+    ) {
+    position: relative;
+    z-index: 1;
   }
 }

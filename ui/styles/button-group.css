@@ -1,0 +1,28 @@
+@layer components {
+  [data-slot='button-group'] {
+    box-sizing: border-box;
+    display: inline-flex;
+    flex-direction: row;
+    align-items: stretch;
+    min-height: var(--button-group-height, calc(var(--spacing) * 64));
+    padding-block: var(--button-group-py, calc(var(--spacing) * 12));
+    padding-inline: var(--button-group-px, calc(var(--spacing) * 24));
+    border-style: solid;
+    border-width: var(--button-group-border-width, 0px);
+    --ui-container-radius: var(--ui-inner-radius-card, var(--button-group-radius, var(--radius-40)));
+    --ui-container-padding: var(--button-group-px, calc(var(--spacing) * 24));
+    border-radius: var(--ui-container-radius);
+    background-color: var(
+      --button-group-background-color,
+      color-mix(in oklab, var(--button-group-color, transparent) 20%, transparent)
+    );
+    color: var(--button-group-text-color, var(--button-group-color));
+    border-color: var(
+      --button-group-border-color,
+      color-mix(in oklab, var(--button-group-color, transparent) 60%, transparent)
+    );
+  }
+  [data-slot='button-group'][data-orientation='vertical'] {
+    flex-direction: column;
+  }
+}
