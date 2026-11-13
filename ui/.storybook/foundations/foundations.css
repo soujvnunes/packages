@@ -68,14 +68,14 @@
   --ambient-ground: var(--palette-grey-900);
   --ambient-surface: color-mix(in oklab, var(--palette-grey-900), var(--palette-white) 10%);
   --ambient-ink: var(--palette-white);
-  --ambient-strength: 80%;
+  --ambient-strength: 100%;
 }
 
 .foundations-matrix [data-ambient='dark'] {
   --ambient-ground: var(--palette-black);
   --ambient-surface: var(--palette-grey-900);
   --ambient-ink: var(--palette-white);
-  --ambient-strength: 80%;
+  --ambient-strength: 100%;
 }
 
 .foundations-matrix [data-ambient='contrast'] {
