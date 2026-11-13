@@ -1,0 +1,9 @@
+@layer components {
+  [data-slot='bar'] {
+    border-radius: var(--ui-inner-radius-card, var(--ui-container-radius));
+    --ui-inner-radius-64: max(
+      0px,
+      var(--ui-inner-radius-card, var(--ui-container-radius)) - var(--ui-container-padding)
+    );
+  }
+}
