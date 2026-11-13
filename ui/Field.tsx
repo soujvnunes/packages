@@ -1,22 +1,21 @@
-import { forwardRef, isValidElement, useId } from 'react'
+import { forwardRef, useId } from 'react'
 import { createSlot, createSlottable } from '@radix-ui/react-slot'
-type FieldControlProps = Pick<
-  React.ComponentPropsWithoutRef<'input'>,
-  'id' | 'aria-describedby' | 'aria-invalid'
->
+type FieldControl = {
+  id: string
+  'aria-describedby': string | undefined
+  'aria-invalid': true | undefined
+}
 type FieldProps = Omit<React.ComponentPropsWithoutRef<'div'>, 'children'> & {
   label: React.ReactNode
   hint?: React.ReactNode
   error?: React.ReactNode
   startItem?: React.ReactNode
   endItem?: React.ReactNode
-} & (
-    | { asChild?: false; children: React.ReactElement<FieldControlProps> }
-    | { asChild: true; children: React.ReactElement<{ children?: React.ReactNode }> }
-  )
+  asChild?: boolean
+  children: (control: FieldControl) => React.ReactNode
+}
 const FieldSlot = createSlot<HTMLDivElement, React.ComponentPropsWithoutRef<'div'>>('Field')
 const FieldSlottable = createSlottable('Field')
-const FieldControlSlot = createSlot<HTMLElement, FieldControlProps>('FieldControl')
 const shows = (node: React.ReactNode) =>
   node !== undefined && node !== null && node !== false && node !== ''
 const itemOf = (slot: string, item: React.ReactNode) =>
@@ -28,41 +27,37 @@ export const Field = forwardRef<HTMLDivElement, FieldProps>(
     const messageSlot = invalid ? 'field-error' : 'field-hint'
     const messageId = `${id}-${messageSlot}`
     const message = invalid ? error : hint
-    const rootProps = { 'data-slot': 'field', ...(invalid && { 'data-invalid': true }) }
-    const partsAround = (control: React.ReactNode) => {
-      const ownId = isValidElement<FieldControlProps>(control) ? control.props.id : undefined
-      const controlId = ownId ?? `${id}-control`
-      return (
-        <>
-          <label data-slot="field-label" htmlFor={controlId}>
-            {label}
-          </label>
-          {itemOf('field-start-item', startItem)}
-          <FieldControlSlot
-            id={controlId}
-            aria-describedby={shows(message) ? messageId : undefined}
-            aria-invalid={invalid || undefined}>
-            {control}
-          </FieldControlSlot>
-          {itemOf('field-end-item', endItem)}
-          {shows(message) ? (
-            <div data-slot={messageSlot} id={messageId}>
-              {message}
-            </div>
-          ) : null}
-        </>
-      )
+    const control: FieldControl = {
+      id: `${id}-control`,
+      'aria-describedby': shows(message) ? messageId : undefined,
+      'aria-invalid': invalid || undefined,
     }
+    const rootProps = { 'data-slot': 'field', ...(invalid && { 'data-invalid': true }) }
+    const partsAround = (controlNode: React.ReactNode) => (
+      <>
+        <label data-slot="field-label" htmlFor={control.id}>
+          {label}
+        </label>
+        {itemOf('field-start-item', startItem)}
+        {controlNode}
+        {itemOf('field-end-item', endItem)}
+        {shows(message) ? (
+          <div data-slot={messageSlot} id={messageId}>
+            {message}
+          </div>
+        ) : null}
+      </>
+    )
     if (asChild) {
       return (
         <FieldSlot ref={ref} {...rest} {...rootProps}>
-          <FieldSlottable child={children}>{partsAround}</FieldSlottable>
+          <FieldSlottable child={children(control)}>{partsAround}</FieldSlottable>
         </FieldSlot>
       )
     }
     return (
       <div ref={ref} {...rest} {...rootProps}>
-        {partsAround(children)}
+        {partsAround(children(control))}
       </div>
     )
   },

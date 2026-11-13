@@ -77,9 +77,7 @@ export const RadiusCases: Story = {
           <Button>Watch</Button>
           <Button data-tone="main">Bid</Button>
         </Bar>
-        <Field label="Plate">
-          <Input placeholder="ABC1D23" />
-        </Field>
+        <Field label="Plate">{(control) => <Input {...control} placeholder="ABC1D23" />}</Field>
         <Card className="grid justify-items-start gap-16">
           <CardTitle>Lot 12</CardTitle>
           <CardDescription>Open until 20h</CardDescription>

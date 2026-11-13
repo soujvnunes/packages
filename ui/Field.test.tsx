@@ -28,7 +28,7 @@ describe('Field', () => {
   it('names the control by its label and describes it by its hint', () => {
     const { container } = render(
       <Field label="Max bid" hint={HINT}>
-        <Input />
+        {(control) => <Input {...control} />}
       </Field>,
     )
     const control = screen.getByRole('textbox', { name: 'Max bid', description: HINT })
@@ -40,7 +40,7 @@ describe('Field', () => {
   it('wires a native control as it wires an Input', () => {
     render(
       <Field label="Notes" hint="Shown to the buyer">
-        <textarea />
+        {(control) => <textarea {...control} />}
       </Field>,
     )
     expect(
@@ -50,7 +50,7 @@ describe('Field', () => {
   it('shows the error in place of the hint, describes the control by it and marks it invalid', () => {
     const { container } = render(
       <Field label="Max bid" hint={HINT} error={ERROR}>
-        <Input />
+        {(control) => <Input {...control} />}
       </Field>,
     )
     const control = screen.getByRole('textbox', { name: 'Max bid', description: ERROR })
@@ -62,7 +62,7 @@ describe('Field', () => {
   it('lets the Input it wraps show its own invalid state from the aria-invalid it receives', () => {
     const { container } = render(
       <Field label="Max bid" error={ERROR}>
-        <Input />
+        {(control) => <Input {...control} />}
       </Field>,
     )
     expect(container.querySelector('[data-slot="input"]')?.getAttribute('data-invalid')).toBe('true')
@@ -74,7 +74,7 @@ describe('Field', () => {
   ])('leaves the control valid and the root unmarked with %s', (_, error) => {
     const { container } = render(
       <Field label="Max bid" hint={HINT} error={error}>
-        <Input />
+        {(control) => <Input {...control} />}
       </Field>,
     )
     const control = screen.getByRole('textbox', { name: 'Max bid', description: HINT })
@@ -82,29 +82,37 @@ describe('Field', () => {
     expect(rootOf(container).hasAttribute('data-invalid')).toBe(false)
   })
   it('describes the control by nothing when it has neither a hint nor an error', () => {
-    render(
-      <Field label="Max bid">
-        <Input />
-      </Field>,
-    )
+    render(<Field label="Max bid">{(control) => <Input {...control} />}</Field>)
     expect(screen.getByRole('textbox', { name: 'Max bid' }).hasAttribute('aria-describedby')).toBe(
       false,
     )
   })
-  it('keeps the id the control brings and points the label at it', () => {
+  it('keeps its wiring over props the control takes before the spread, an undefined one included', () => {
+    const passedThrough = { id: undefined, 'aria-invalid': false }
     render(
-      <Field label="Plate">
-        <Input id="plate" />
+      <Field label="Max bid" error={ERROR}>
+        {(control) => <Input {...passedThrough} {...control} />}
       </Field>,
     )
-    expect(screen.getByRole('textbox', { name: 'Plate' }).id).toBe('plate')
+    const control = screen.getByRole('textbox', { name: 'Max bid', description: ERROR })
+    expect(control.getAttribute('aria-invalid')).toBe('true')
   })
-  it('adds its description to the one the control brings', () => {
+  it('lets a product override its wiring on purpose, by setting the prop after the spread', () => {
+    render(
+      <Field label="Max bid" error={ERROR}>
+        {(control) => <Input {...control} aria-invalid={false} />}
+      </Field>,
+    )
+    expect(screen.getByRole('textbox', { name: 'Max bid' }).getAttribute('aria-invalid')).toBe('false')
+  })
+  it('lets a product join a description of its own to the one it hands the control', () => {
     render(
       <>
         <p id="rules">Bids close at 20h</p>
         <Field label="Max bid" hint={HINT}>
-          <Input aria-describedby="rules" />
+          {(control) => (
+            <Input {...control} aria-describedby={`rules ${control['aria-describedby'] ?? ''}`} />
+          )}
         </Field>
       </>,
     )
@@ -116,10 +124,10 @@ describe('Field', () => {
     render(
       <>
         <Field label="Max bid" hint={HINT}>
-          <Input />
+          {(control) => <Input {...control} />}
         </Field>
         <Field label="Plate" hint="Seven characters">
-          <Input />
+          {(control) => <Input {...control} />}
         </Field>
       </>,
     )
@@ -130,7 +138,7 @@ describe('Field', () => {
   it('renders the items beside the control in their own slots, where a control in one stays reachable', () => {
     const { container } = render(
       <Field label="Max bid" startItem="R$" endItem={<Button>Bid</Button>}>
-        <Input />
+        {(control) => <Input {...control} />}
       </Field>,
     )
     const slots = [...rootOf(container).children].map((child) => child.getAttribute('data-slot'))
@@ -138,17 +146,13 @@ describe('Field', () => {
     expect(screen.getByRole('button', { name: 'Bid' })).toBeTruthy()
   })
   it('renders no item slot it was not given', () => {
-    const { container } = render(
-      <Field label="Max bid">
-        <Input />
-      </Field>,
-    )
+    const { container } = render(<Field label="Max bid">{(control) => <Input {...control} />}</Field>)
     expect(container.querySelector('[data-slot$="-item"]')).toBeNull()
   })
   it('passes className and the remaining div props through to the root', () => {
     const { container } = render(
       <Field label="Max bid" className="col-span-6" title="Your bid">
-        <Input />
+        {(control) => <Input {...control} />}
       </Field>,
     )
     const root = rootOf(container)
@@ -160,18 +164,20 @@ describe('Field', () => {
     const ref = createRef<HTMLDivElement>()
     const { container } = render(
       <Field ref={ref} label="Max bid">
-        <Input />
+        {(control) => <Input {...control} />}
       </Field>,
     )
     expect(ref.current).toBe(rootOf(container))
   })
-  it('renders the child element as the root with asChild, around the control it holds', () => {
+  it('renders the element the function returns as the root with asChild, around the control it holds', () => {
     render(
       <ul>
         <Field asChild label="Plate" hint="Seven characters" error="Unknown plate" className="field">
-          <li className="row">
-            <Input />
-          </li>
+          {(control) => (
+            <li className="row">
+              <Input {...control} />
+            </li>
+          )}
         </Field>
       </ul>,
     )
@@ -184,11 +190,7 @@ describe('Field', () => {
     expect(control.getAttribute('aria-invalid')).toBe('true')
   })
   it('publishes its inner radius, its radius less its block padding, which the pill input within it never reads', () => {
-    const { container } = render(
-      <Field label="Max bid">
-        <Input />
-      </Field>,
-    )
+    const { container } = render(<Field label="Max bid">{(control) => <Input {...control} />}</Field>)
     const root = rootOf(container)
     const input = container.querySelector('[data-slot="input"]')
     expect(
@@ -205,7 +207,7 @@ describe('Field', () => {
   it('lets the control take the room the items and the padding leave', () => {
     const { container } = render(
       <Field label="Max bid" endItem="BRL">
-        <Input />
+        {(control) => <Input {...control} />}
       </Field>,
     )
     const input = container.querySelector('[data-slot="input"]')

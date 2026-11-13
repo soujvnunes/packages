@@ -39,21 +39,21 @@ type Story = StoryObj<typeof Field>
 export const WithInput: Story = {
   render: () => (
     <Field label="Max bid" hint="At least R$ 51.000">
-      <Input kind="fullWidth" placeholder="R$ 51.000" />
+      {(control) => <Input {...control} kind="fullWidth" placeholder="R$ 51.000" />}
     </Field>
   ),
 }
 export const WithError: Story = {
   render: () => (
     <Field label="Max bid" hint="At least R$ 51.000" error="Your bid must be at least R$ 51.000">
-      <Input kind="fullWidth" placeholder="R$ 51.000" />
+      {(control) => <Input {...control} kind="fullWidth" placeholder="R$ 51.000" />}
     </Field>
   ),
 }
 export const WithItems: Story = {
   render: () => (
     <Field label="Max bid" startItem="R$" endItem={<Button data-tone="main">Bid</Button>}>
-      <Input kind="fullWidth" placeholder="51.000" />
+      {(control) => <Input {...control} kind="fullWidth" placeholder="51.000" />}
     </Field>
   ),
 }

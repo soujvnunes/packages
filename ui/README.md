@@ -218,14 +218,24 @@ import { Field, Input } from '@soujvnunes/ui'
 
 export const MaxBid = ({ error }: { error?: string }) => (
   <Field label="Max bid" hint="At least R$ 51.000" error={error}>
-    <Input kind="fullWidth" />
+    {(control) => <Input {...control} kind="fullWidth" />}
   </Field>
 )
 ```
 
-A 64 bar for one control: its `label` above, `startItem` and `endItem` beside it, and its `hint` below, or its `error` in place of the hint while one is set. The control is the one child, and it grows into the room the items leave. With `asChild` the child element becomes the root and the control is its one child.
+A 64 bar for one control: its `label` above, `startItem` and `endItem` beside it, and its `hint` below, or its `error` in place of the hint while one is set. The child is a function that takes the control's wiring and returns the control, and the control grows into the room the items leave. With `asChild` the function returns the root element, and the control is that element's one child:
 
-The Field uses no context, so a server component renders it. Its ids come from `useId` and reach the control as props: an `id` for the label's `htmlFor` (a control that has its own keeps it), the hint or the error added to the `aria-describedby` the control already carries, and `aria-invalid` while an error shows. An empty or `false` error counts as none, and an `Input` shows its own invalid state from the `aria-invalid` it receives. The root carries `data-slot="field"`, and `data-invalid` while an error shows; the parts carry `field-label`, `field-start-item`, `field-end-item`, `field-hint` and `field-error`. The items are not hidden from assistive technology, since an item can be a control such as a `Button`. The label and the hint have no typography of their own.
+```tsx
+<Field asChild label="Plate" error={error}>
+  {(control) => (
+    <li>
+      <Input {...control} />
+    </li>
+  )}
+</Field>
+```
+
+The Field uses no context, so a server component renders it. Its ids come from `useId` and reach the function as one object, `{ id, 'aria-describedby', 'aria-invalid' }`, which the product spreads on its control: the `id` the label's `htmlFor` points at, the id of the hint or the error while one shows, and `aria-invalid` while an error shows. The Field never reads or clones the control, so its values land wherever the spread puts them: a prop set before the spread loses to the Field's, and one set after it wins, so a product that adds a description of its own joins it to `control['aria-describedby']`. An empty or `false` error counts as none, and an `Input` shows its own invalid state from the `aria-invalid` it receives. The root carries `data-slot="field"`, and `data-invalid` while an error shows; the parts carry `field-label`, `field-start-item`, `field-end-item`, `field-hint` and `field-error`. The items are not hidden from assistive technology, since an item can be a control such as a `Button`. The label and the hint have no typography of their own.
 
 | Variable | Default |
 | --- | --- |
