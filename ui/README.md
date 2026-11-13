@@ -103,7 +103,7 @@ export const PlaceBid = () => (
 
 | Variable | Default |
 | --- | --- |
-| `--button-<size>-height` | 24, 40, 64, a minimum that a wrapped label grows past, and the fixed height of the icon kind |
+| `--button-<size>-height` | 24, 40, 64, a minimum that a wrapped label grows past, and the fixed height of the icon kind; the card kind reads none and takes its height from its padding and content |
 | `--button-<size>-px` | 12, 16, 24, two steps below the height and equal to the content size; the items pull toward the edge by half of it |
 | `--button-<size>-content-size` | 12, 16, 24, the font size and the `svg` size |
 | `--button-<size>-gap` | 4, 8, 12 |

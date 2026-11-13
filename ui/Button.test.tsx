@@ -79,6 +79,26 @@ describe('Button', () => {
     expect(icon.matches(selectorWith('{height:var(--button-md-height,'))).toBe(true)
   })
   it.each(BUTTON_SIZES)(
+    'drops the %s height minimum on the card kind, which takes its height from its padding and content',
+    (size) => {
+      render(
+        <>
+          <Button size={size}>Label</Button>
+          <Button kind="card" size={size}>
+            Lot 12
+          </Button>
+        </>,
+      )
+      const flat = STYLESHEET.replace(/\s/g, '')
+      const autoHeight = selectorWith('min-height:auto;')
+      expect(screen.getByRole('button', { name: 'Lot 12' }).matches(autoHeight)).toBe(true)
+      expect(screen.getByRole('button', { name: 'Label' }).matches(autoHeight)).toBe(false)
+      expect(flat.indexOf('min-height:auto;')).toBeGreaterThan(
+        flat.indexOf(`min-height:var(--button-${size}-height,`),
+      )
+    },
+  )
+  it.each(BUTTON_SIZES)(
     'pads the %s text kind inline two steps below its height, the same number as its content',
     (size) => {
       render(<Button size={size}>Label</Button>)
