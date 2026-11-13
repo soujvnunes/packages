@@ -55,18 +55,21 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       ) : null
     const stateSource =
       asChild && isValidElement<React.AriaAttributes>(children) ? { ...rest, ...children.props } : rest
+    const declaresState =
+      stateSource['aria-pressed'] !== undefined || stateSource['aria-selected'] !== undefined
     const rootProps = {
       'data-slot': 'button',
       'data-kind': kind,
       'data-size': size,
       'data-responsive': responsive,
       'data-content-between': !disableContentBetween,
-      ...(stateful && {
-        'data-state':
-          isOn(stateSource['aria-pressed']) || isOn(stateSource['aria-selected'])
-            ? 'active'
-            : 'inactive',
-      }),
+      ...(stateful &&
+        (!asChild || declaresState) && {
+          'data-state':
+            isOn(stateSource['aria-pressed']) || isOn(stateSource['aria-selected'])
+              ? 'active'
+              : 'inactive',
+        }),
     }
     const leading = kind === 'card' ? items : start
     const trailing = kind === 'card' ? null : end

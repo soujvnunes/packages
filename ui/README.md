@@ -92,7 +92,7 @@ export const PlaceBid = () => (
 | `data-tone` | `main`, `accent`, `success`, `warning`, `error` | none |
 | `startItem`, `endItem` | any node, rendered in an `aria-hidden` span | none |
 | `disableContentBetween` | keeps the start item beside the label and moves the end item alone to the far edge | `false` |
-| `stateful` | sets `data-state` to `active` while `aria-pressed` or `aria-selected` is true, `inactive` otherwise | `false` |
+| `stateful` | sets `data-state` to `active` while `aria-pressed` or `aria-selected` is true, `inactive` otherwise; with `asChild`, only when the child's props declare one of the two, so a child that sets its own selection keeps its own `data-state` | `false` |
 | `responsive` | `false` drops the hover, focus, active and pressed styles, makes the text unselectable and sets `tabIndex` to -1, so the element leaves the tab order; a `tabIndex` prop overrides it | `true` |
 | `asChild` | renders its one child with the button's attributes | `false` |
 

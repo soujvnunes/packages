@@ -277,6 +277,21 @@ describe('Button', () => {
       screen.getByRole('tab', { name: 'History', selected: false }).getAttribute('data-state'),
     ).toBe('inactive')
   })
+  it('leaves data-state to a wrapped tab that sets its own selection, so a selected tab stays active', () => {
+    const Trigger = (props: React.ComponentProps<'button'>) => (
+      <button type="button" role="tab" aria-selected data-state="active" {...props} />
+    )
+    render(
+      <div role="tablist" aria-label="Lot">
+        <Button asChild stateful>
+          <Trigger>Bids</Trigger>
+        </Button>
+      </div>,
+    )
+    expect(screen.getByRole('tab', { name: 'Bids', selected: true }).getAttribute('data-state')).toBe(
+      'active',
+    )
+  })
   it('reads a variable a wrapper sets, the way a theme maps the button', () => {
     render(
       <div style={THEME}>
