@@ -15,10 +15,11 @@ Monorepo for the shared `@soujvnunes/*` packages.
 | [`@soujvnunes/lib`](./lib) | Stateful modules (subpath exports): a Mongoose client and Typegoose bases |
 | [`@soujvnunes/react`](./react) | React utilities (subpath exports): hooked-context, error-boundary, motion |
 | [`@soujvnunes/nextjs`](./nextjs) | Next.js utilities (subpath exports): server-seeded, cookie-persisted state (`createPersistedToggle`) |
+| [`@soujvnunes/ui`](./ui) | Unstyled React component skeletons (`Icon`), themed through CSS custom properties, with a [Storybook](https://main--6af4b1d8205ec2517800544d.chromatic.com) |
 
-Separate packages when deps are bundled (the configs); subpaths in one package when deps are peer or zero (`util`, `lib`, `react`, `nextjs`).
+Separate packages when deps are bundled (the configs); subpaths in one package when deps are peer or zero (`util`, `lib`, `react`, `nextjs`). `ui` is one package too, with a module per component and an index that re-exports them all, since its components share one stylesheet and one variable grammar.
 
-This repo lints itself with the base preset of `@soujvnunes/eslint-config` and formats itself with `@soujvnunes/prettier-config`, minus the Tailwind plugin and its options, since no package here holds Tailwind classes. The ESLint config is stricter than most shared configs on a few points: no blank lines between statements, no warning severity (a rule either fails or is absent), and type-aware rules enabled. See [its README](./eslint-config#style-rules-worth-knowing-before-you-adopt) before adopting it elsewhere.
+This repo lints itself with the base preset of `@soujvnunes/eslint-config` and formats itself with `@soujvnunes/prettier-config`, minus the Tailwind plugin and its options, since no published module here holds Tailwind classes (only a few stories in the ui Storybook do). The ESLint config is stricter than most shared configs on a few points: no blank lines between statements, no warning severity (a rule either fails or is absent), and type-aware rules enabled. See [its README](./eslint-config#style-rules-worth-knowing-before-you-adopt) before adopting it elsewhere.
 
 ## Convention: every package is a customizable factory
 
@@ -38,13 +39,16 @@ export default createNextConfig({ ignores: ['generated/**'], importGroups: [/* p
 
 ```bash
 pnpm install
+pnpm dev         # the ui Storybook, on port 6006
 pnpm test
 pnpm lint
 pnpm format
 pnpm changeset   # record a change for release
 ```
 
-Tests run on Vitest, one project per package, and sit next to the module they cover (`util/ellipses.ts` and `util/ellipses.test.ts`). The `react` project runs in jsdom against React Testing Library; every other project runs in node. Nothing reaches a real database or network: `lib/mongoose` runs against a mocked driver, and `createApi` against a stubbed `fetch`. CI runs `format` on every pull request and on every push to `main`. It runs `build`, `typecheck`, `test` and `lint` on every push to `main`, and on a pull request that changes any file beyond Markdown, `.changeset/`, `.gitignore`, `.prettierignore` and the release workflow; a pull request that changes only those skips them.
+Tests run on Vitest, one project per package, and sit next to the module they cover (`util/ellipses.ts` and `util/ellipses.test.ts`). The `react`, `nextjs` and `ui` projects run in jsdom against React Testing Library; every other project runs in node. Nothing reaches a real database or network: `lib/mongoose` runs against a mocked driver, and `createApi` against a stubbed `fetch`. CI runs `format` on every pull request and on every push to `main`. It runs `build`, `typecheck`, `test` and `lint` on every push to `main`, and on a pull request that changes any file beyond Markdown, `.changeset/`, `.gitignore`, `.prettierignore` and the release workflow; a pull request that changes only those skips them.
+
+The Chromatic workflow builds the ui Storybook on every branch push and publishes it to Chromatic, snapshotting only the stories a change reaches; changes on `main` become the new baseline. The Storybook of `main` is at [main--6af4b1d8205ec2517800544d.chromatic.com](https://main--6af4b1d8205ec2517800544d.chromatic.com) and serves the component docs to agents at `/mcp`.
 
 ## Release
 

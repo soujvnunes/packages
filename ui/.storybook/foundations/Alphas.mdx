@@ -1,0 +1,72 @@
+import { Meta } from '@storybook/addon-docs/blocks'
+import './foundations.css'
+import { ROLE_TONES } from './roles'
+
+<Meta title="Foundations/Alphas" />
+
+export const ROLES = Object.keys(ROLE_TONES)
+
+export const STEPS = [100, 80, 60, 40, 20, 10]
+
+# Alphas
+
+Every role colour comes in six alpha steps, and each step has one job. The steps apply to backgrounds, borders and text alike.
+
+- **Primary, 100:** text and backgrounds only, never a border.
+- **Secondary, 80:** a hovered input border, and low-emphasis text on a role whose primary is 100.
+- **Tertiary, 60:** an idle input border, a toned button background, lower or disabled text.
+- **Quaternary, 40:** the border or background of a disabled control.
+- **Quinary, 20:** faint fills and shadows.
+- **Senary, 10:** faint fills and shadows.
+
+In code a step is a token, never an opacity modifier: the primary step is the bare role (`bg-main`, `text-neutral`) and every other step carries its number (`text-neutral-60`, `border-neutral-60` with `hover:border-neutral-80`). The primary step of `neutral` on a light surface already holds 80, so its secondary step looks the same there.
+
+## Every role at every step
+
+<div
+  aria-label="Every role at every alpha step"
+  className="foundations-panel foundations-scroll sb-unstyled"
+  role="region"
+  tabIndex={0}>
+  <table aria-describedby="alpha-steps-note" className="foundations-alphas">
+    <thead>
+      <tr>
+        <th scope="col">Role</th>
+        {STEPS.map((step) => (
+          <th key={step} scope="col">
+            {step}
+          </th>
+        ))}
+      </tr>
+    </thead>
+    <tbody>
+      {ROLES.map((role) => (
+        <tr key={role}>
+          <th scope="row">{role}</th>
+          {STEPS.map((step) => (
+            <td key={step}>
+              <span
+                aria-label={`${role} at ${step}`}
+                className="foundations-swatch"
+                data-role={role}
+                data-step={step}
+                role="img"
+              />
+            </td>
+          ))}
+        </tr>
+      ))}
+    </tbody>
+  </table>
+  <p className="foundations-note" id="alpha-steps-note">
+    Each swatch is a role at one alpha step, drawn over a checkerboard so the alpha shows.
+  </p>
+</div>
+
+## What each step is for
+
+- **Text:** `text-neutral` for running text.
+- **Low-emphasis text:** `text-neutral-60` for low-emphasis, lower or disabled text.
+- **Borders:** `border-neutral-60` idle, `hover:border-neutral-80` hovered, `disabled:border-neutral-40` disabled. A border never starts at the primary step.
+- **Disabled:** `disabled:border-neutral-40` and `disabled:text-neutral-60`.
+- **Faint fills:** `bg-main-10` behind a selected row, `shadow-neutral-20` under a raised card.

@@ -1,0 +1,57 @@
+import { ColorItem, ColorPalette, Meta } from '@storybook/addon-docs/blocks'
+import { ColourMatrix } from './ColourMatrix'
+
+<Meta title="Foundations/Palette" />
+
+# Palette
+
+A class names what a colour does, never what it is. Eight roles carry every colour of a screen, and the theme gives each role its value, so a rebrand is a change of values in one file.
+
+## Roles
+
+- `main`: a call to action, and high-emphasis text such as a display, headline, heading or title.
+- `accent`: the companion of a call to action, a less important alternative beside it.
+- `success`: a done or accepted state.
+- `warning`: a state that needs attention before it becomes an error.
+- `error`: a failed or refused state.
+- `background`: the app ground only.
+- `surface`: a card, a panel, a sheet, anything that sits on the ground.
+- `neutral`: running text and a dismissible action. On an element over `main` or `accent` it behaves as them.
+
+## Every role on every surface
+
+The matrix has one row per ambient surface (light, dim, dark and high contrast) and one column per role. Each chip is the role's colour on that surface. The three dots inside a chip are text in the disabled, default and focused state, so a reader sees every role against every surface with its type states at once.
+
+<ColourMatrix />
+
+On a chip of `main`, `accent`, `success`, `warning` or `error`, text takes `neutral`. The element that paints the coloured ground carries `data-tone` with the role's name, and the theme re-declares `neutral` and its steps on that attribute as a dark ink, so the text inside reads `text-neutral` in every mode. On a `neutral` chip the dots take the `surface` colour, since `neutral` text on `neutral` would vanish.
+
+## Role tokens
+
+<ColorPalette>
+  <ColorItem
+    title="Ground and text"
+    subtitle="background, surface, neutral"
+    colors={{
+      background: 'var(--color-background)',
+      surface: 'var(--color-surface)',
+      neutral: 'var(--color-neutral)',
+    }}
+  />
+  <ColorItem
+    title="Emphasis"
+    subtitle="main, accent"
+    colors={{ main: 'var(--color-main)', accent: 'var(--color-accent)' }}
+  />
+  <ColorItem
+    title="State"
+    subtitle="success, warning, error"
+    colors={{
+      success: 'var(--color-success)',
+      warning: 'var(--color-warning)',
+      error: 'var(--color-error)',
+    }}
+  />
+</ColorPalette>
+
+Each role also comes in six alpha steps, which the Alphas page shows.

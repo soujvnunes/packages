@@ -1,0 +1,58 @@
+import { Meta } from '@storybook/addon-docs/blocks'
+import './foundations.css'
+import { ProportionChart } from './ProportionChart'
+
+<Meta title="Foundations/Proportion" />
+
+export const LADDER = [
+  ['64 (a bar)', '40', '24'],
+  ['40 (a button, an input)', '24', '16'],
+  ['24 (a badge)', '16', '12'],
+]
+
+# Proportion
+
+The spacing and sizing values form one ladder of steps. A container's proportions follow from its height: its inline padding is one step below its height, and its content (the font size, the icon) two steps below.
+
+<table>
+  <thead>
+    <tr>
+      <th scope="col">Height</th>
+      <th scope="col">Inline padding</th>
+      <th scope="col">Content</th>
+    </tr>
+  </thead>
+  <tbody>
+    {LADDER.map(([height, padding, content]) => (
+      <tr key={height}>
+        <th scope="row">{height}</th>
+        <td>{padding}</td>
+        <td>{content}</td>
+      </tr>
+    ))}
+  </tbody>
+</table>
+
+## Radius is concentric
+
+An outer radius equals the inner radius plus the padding between them, so the two curves stay parallel. In the example, the inner box has a radius of 8 and the padding is 16, so the outer radius is 24.
+
+<div className="foundations-panel sb-unstyled">
+  <div className="foundations-concentric">
+    <div data-tone="main">8 inside 16 makes 24</div>
+  </div>
+</div>
+
+Three cases follow from it:
+
+- A nested child takes the parent's inner radius.
+- A close child attached to the parent's edge shares the parent's own radius on the touching side.
+- An outside sibling keeps the default of its height.
+
+A sum off the ladder means the padding is wrong: an inner 12 with a padding of 16 gives 28, which is no step, so move the padding to 12 or the inner radius to 8.
+
+## The steps against the two screens
+
+The designs are drawn at 320 and at 1024. Each row shows one step as a share of each width, so the same step reads large on the phone and small at the switch.
+
+<ProportionChart />
