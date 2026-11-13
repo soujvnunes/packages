@@ -371,6 +371,7 @@ describe('Button', () => {
       expect(screen.getByText(text).matches(endPull)).toBe(false)
     }
     const pushedToTheEnd = selectorWith('margin-inline-start:auto;')
+    const spreadApart = selectorWith('margin-inline-end:auto;')
     for (const size of BUTTON_SIZES) {
       const button = screen.getByRole('button', { name: `Add ${size}` })
       const sizeStartPull = selectorWith(`margin-inline-start:calc(var(--button-${size}-px,`)
@@ -381,6 +382,7 @@ describe('Button', () => {
         expect(item?.matches(sizeEndPull)).toBe(false)
         expect(item?.matches(pushedToTheEnd)).toBe(false)
       }
+      expect(button.querySelector('[data-slot="button-start-item"]')?.matches(spreadApart)).toBe(false)
     }
   })
   it('pulls a Badge at the start of the child it renders with asChild', () => {
