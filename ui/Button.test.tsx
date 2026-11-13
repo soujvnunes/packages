@@ -337,7 +337,7 @@ describe('Button', () => {
       screen.getByText('New').matches(selectorWith('margin-inline-start:calc(var(--button-md-px,')),
     ).toBe(false)
   })
-  it('pulls no Badge that a start item precedes, nor one inside the card or icon kind', () => {
+  it('pulls no Badge that a start item precedes, nor one inside the card or icon kind, and no item of the icon kind, which has no inline padding to pull into', () => {
     render(
       <>
         <Button startItem={PLUS}>
@@ -351,6 +351,17 @@ describe('Button', () => {
         <Button kind="icon" aria-label="Lot 14">
           <Badge>Icon</Badge>
         </Button>
+        {BUTTON_SIZES.map((size) => (
+          <Button
+            key={size}
+            kind="icon"
+            size={size}
+            aria-label={`Add ${size}`}
+            startItem="+"
+            endItem="1">
+            {PLUS}
+          </Button>
+        ))}
       </>,
     )
     const startPull = selectorWith('margin-inline-start:calc(var(--button-md-px,')
@@ -358,6 +369,20 @@ describe('Button', () => {
     for (const text of ['After item', 'Card', 'Icon']) {
       expect(screen.getByText(text).matches(startPull)).toBe(false)
       expect(screen.getByText(text).matches(endPull)).toBe(false)
+    }
+    const pushedToTheEnd = selectorWith('margin-inline-start:auto;')
+    const spreadApart = selectorWith('margin-inline-end:auto;')
+    for (const size of BUTTON_SIZES) {
+      const button = screen.getByRole('button', { name: `Add ${size}` })
+      const sizeStartPull = selectorWith(`margin-inline-start:calc(var(--button-${size}-px,`)
+      const sizeEndPull = selectorWith(`margin-inline-end:calc(var(--button-${size}-px,`)
+      for (const slot of ['button-start-item', 'button-end-item']) {
+        const item = button.querySelector(`[data-slot="${slot}"]`)
+        expect(item?.matches(sizeStartPull)).toBe(false)
+        expect(item?.matches(sizeEndPull)).toBe(false)
+        expect(item?.matches(pushedToTheEnd)).toBe(false)
+      }
+      expect(button.querySelector('[data-slot="button-start-item"]')?.matches(spreadApart)).toBe(false)
     }
   })
   it('pulls a Badge at the start of the child it renders with asChild', () => {
