@@ -8,14 +8,13 @@ const PLUS = <svg viewBox="0 0 24 24" />
 const THEME: React.CSSProperties & Record<`--${string}`, string> = {
   '--button-main-background-color': 'rgb(1, 2, 3)',
 }
-const selectorReading = (variable: string) => {
-  const rule = STYLESHEET.split('}').find((chunk) =>
-    chunk.replace(/\s/g, '').includes(`var(${variable},`),
-  )
+const selectorWith = (declaration: string) => {
+  const rule = STYLESHEET.split('}').find((chunk) => chunk.replace(/\s/g, '').includes(declaration))
   const selector = rule?.split('{').at(-2)?.trim()
-  if (!selector) throw new Error(`No rule of the stylesheet reads ${variable}.`)
+  if (!selector) throw new Error(`No rule of the stylesheet holds ${declaration}.`)
   return selector
 }
+const selectorReading = (variable: string) => selectorWith(`var(${variable},`)
 afterEach(cleanup)
 describe('Button', () => {
   it('renders a button named by its label, of the text kind and md size by default', () => {
@@ -102,6 +101,23 @@ describe('Button', () => {
     expect(screen.getByRole('button', { name: 'Packed' }).getAttribute('data-content-between')).toBe(
       'false',
     )
+  })
+  it('pushes the label away from the start item only when an end item follows it', () => {
+    render(
+      <>
+        <Button kind="fullWidth" startItem={PLUS} endItem="12">
+          Both
+        </Button>
+        <Button kind="fullWidth" startItem={PLUS}>
+          Start only
+        </Button>
+      </>,
+    )
+    const pushed = selectorWith('margin-inline-end:auto;')
+    const startOf = (name: string) =>
+      screen.getByRole('button', { name }).querySelector('[data-slot="button-start-item"]')
+    expect(startOf('Both')?.matches(pushed)).toBe(true)
+    expect(startOf('Start only')?.matches(pushed)).toBe(false)
   })
   it('passes className and the remaining button props through to the root', () => {
     render(
